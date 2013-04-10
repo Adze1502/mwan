@@ -1,0 +1,284 @@
+#!/bin/sh
+mwan2_track()
+{
+	[ -e /var/run/mwan2track-$DEVICE.pid ] && kill $(cat /var/run/mwan2track-$DEVICE.pid) && rm /var/run/mwan2track-$DEVICE.pid
+	config_get track_ip $INTERFACE track_ip
+	if [ -n "$track_ip" ]; then
+		config_get count $INTERFACE count 1
+		config_get timeout $INTERFACE timeout 4
+		config_get interval $INTERFACE interval 10
+		config_get down $INTERFACE down 5
+		config_get up $INTERFACE up 5
+        	[ -x /usr/sbin/mwan2track ] && /usr/sbin/mwan2track $INTERFACE $DEVICE $track_ip $count $timeout $interval $down $up &
+	fi
+}
+
+mwan2_set_rule()
+{
+	case $proto in
+		icmp)
+		iptables -I mwan2_rules $rulenumber -t mangle -p "$proto" -s "$src_ip" -d "$dest_ip" -m mark --mark 0/65280 $probability -j MARK --set-xmark $(($ifvalue*256))/65280 &> /dev/null
+		;;
+		tcp|udp)
+		iptables -I mwan2_rules $rulenumber -t mangle -p "$proto" -s "$src_ip" -d "$dest_ip" -m multiport --sports "$src_port" -m multiport --dports "$dest_port" -m mark --mark 0/65280 $probability -j MARK --set-xmark $(($ifvalue*256))/65280 &> /dev/null
+		;;
+		*)
+		iptables -I mwan2_rules $rulenumber -t mangle -s "$src_ip" -d "$dest_ip" -m mark --mark 0/65280 $probability -j MARK --set-xmark $(($ifvalue*256))/65280 &> /dev/null
+		;;
+	esac
+}
+
+mwan2_load_rules()
+{
+	nf_mark=0
+        config_get proto $1 proto
+        config_get equalize $1 equalize 0
+        config_get src_ip $1 src_ip 0.0.0.0/0
+        config_get src_port $1 src_port 0:65535
+        config_get dest_ip $1 dest_ip 0.0.0.0/0
+        config_get dest_port $1 dest_port 0:65535
+
+        mwan2_calc_nf_mark()
+	{
+                if [ $1 = "default" ]; then
+                nf_mark=128
+                else
+                eval nf_mark=$(echo '$(($'$1'+$nf_mark))')
+		fi
+	}
+        config_list_foreach "$1" use_interface mwan2_calc_nf_mark
+
+	lowest_metric=$(ip route list table $nf_mark | grep -m 1 default | egrep -o 'metric [0-9]{1,9}' | awk '{print $2}')
+	equalize_ifaces=$(ip route list table $nf_mark | awk '/default  metric ('$lowest_metric')/ {flag=1;next} /default/{flag=0} flag { print }' | sed 's/.*dev \([^ ]*\) .*/\1/')
+	rulenumber=$(($(iptables -L mwan2_rules -t mangle -n | wc -l)-1))
+	iftotalweight=0
+        unset probability
+
+	if [ $equalize -eq 1 ] && [ -n "$equalize_ifaces" ]; then
+		for equalize_iface in $equalize_ifaces; do
+			ifname=$(uci show -P /var/state network | awk -F'=' ' $2 == ( "'$equalize_iface'" ) ' | grep ifname | awk -F'.' ' { print $2 } ' | grep -v '@')
+			ifweight=$(uci get -P /var/state mwan2.$ifname.weight)
+			iftotalweight=$(($ifweight+$iftotalweight))
+			eval ifvalue=$(echo '$(($'$ifname'))')
+			probability=$(($ifweight*1000/$iftotalweight))
+
+			if [ $probability -lt 10 ]; then
+				probability="0.00${probability}"
+			elif [ $probability -lt 100 ]; then
+				probability="0.0${probability}"
+			elif [ $probability -lt 1000 ]; then
+				probability="0.${probability}"
+			else
+				probability="1"
+			fi
+
+			probability="-m statistic --mode random --probability ${probability}"
+	                mwan2_set_rule
+		done
+	else
+	        ifvalue=$nf_mark
+		mwan2_set_rule
+	fi
+}
+
+mwan2_ifup()
+{
+	logger "mwan2: Adding rules for interface $INTERFACE ($DEVICE)"
+
+	if ! iptables -L mwan2_rules -t mangle &> /dev/null; then
+		iptables -N mwan2_rules -t mangle
+	fi
+
+	if ! iptables -L mwan2_default -t mangle &> /dev/null; then
+		iptables -N mwan2_default -t mangle
+	fi
+
+	if ! iptables -L mwan2_pre -t mangle &> /dev/null; then
+		iptables -N mwan2_pre -t mangle
+		iptables -A mwan2_pre -t mangle -j CONNMARK --restore-mark --nfmask 65280 --ctmask 65280
+		iptables -A mwan2_pre -t mangle -m mark ! --mark 32768/32768 -j mwan2_default
+		iptables -A mwan2_pre -t mangle -m mark --mark 0/65280 -j mwan2_rules
+	fi
+
+	if ! iptables -L mwan2_post -t mangle &> /dev/null; then
+		iptables -N mwan2_post -t mangle
+		iptables -A mwan2_post -t mangle -m mark --mark 32768/32768 -j MARK --set-xmark 0/32768
+		iptables -A mwan2_post -t mangle -j CONNMARK --save-mark --nfmask 65280 --ctmask 65280
+	fi
+
+	if ! iptables -L mwan2_pre -t mangle -v | grep $DEVICE &> /dev/null; then
+		iptables -I mwan2_pre 2 -t mangle -i $DEVICE -j MARK --set-xmark $((2**($interface_number-1)*256+32768))/65280
+	fi
+
+	if ! iptables -L mwan2_post -t mangle -v | grep $DEVICE &> /dev/null; then
+		iptables -I mwan2_post 1 -t mangle -o $DEVICE -m mark ! --mark 32768/32768 -j MARK --set-xmark $((2**($interface_number-1)*256))/65280
+	fi
+
+	if ! iptables -L PREROUTING -t mangle -v | grep mwan2_pre &> /dev/null; then
+		iptables -A PREROUTING -t mangle -j mwan2_pre
+	fi
+
+	if ! iptables -L OUTPUT -t mangle -v | grep mwan2_pre &> /dev/null; then
+		iptables -A OUTPUT -t mangle -j mwan2_pre
+	fi
+
+	if ! iptables -L POSTROUTING -t mangle -v | grep mwan2_post &> /dev/null; then
+		iptables -A POSTROUTING -t mangle -j mwan2_post
+	fi
+
+	iptables -F mwan2_default -t mangle
+	iptables -A mwan2_default -t mangle -d 224.0.0.0/3 -m mark ! --mark 32768/32768 -j MARK --set-xmark 32768/32768
+
+	for local_networks in $(ip -f inet route list table main scope link | awk '{print $1}' | egrep '[0-9]{1,3}(\.[0-9]{1,3}){3}'); do
+		iptables -A mwan2_default -t mangle -d $local_networks -m mark ! --mark 32768/32768 -j MARK --set-xmark 32768/32768 &> /dev/null
+	done
+
+	if [ -z "$route_args" ]; then
+		route_args=$(eval echo $(ip route list scope global dev $DEVICE 0.0.0.0/0 | grep "^default" | awk '{print "nexthop",$2,$3,"weight","$weight"}'))
+	fi
+
+	if [ -z "$route_args" ]; then
+		route_args=$(eval echo $(ip route list dev $DEVICE 0.0.0.0/0 | grep "^default  scope" | awk '{print "nexthop","dev",("'$DEVICE'"),"weight","$weight"}'))
+	fi
+
+	a=1
+	b=$((2**($interface_number-1)-1))
+
+	while [ $b -le $((2**$interface_number-2)) ]; do
+		while [ $a -le $((2**$total_interfaces)) ]; do
+
+			unset old_args
+
+			if [ -z "$old_args" ]; then
+				old_args=$(eval echo $(ip route list table $(($a+$b)) | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u))
+			fi
+
+			if [ -z "$old_args" ]; then
+				old_args=$(eval echo $(ip route list table $(($a+$b)) 0.0.0.0/0 | grep "^default via" | awk '$5 != ("'$DEVICE'")' | awk '$7 == ("'$metric'")' | awk '{print "nexthop",$2,$3,"weight","1"}'))
+			fi
+
+			if [ -z "$old_args" ]; then
+				old_args=$(eval echo $(ip route list table $(($a+$b)) 0.0.0.0/0 | grep "^default dev" | awk '$3 != ("'$DEVICE'")' | awk '$5 == ("'$metric'")' | awk '{print "nexthop",$2,$3,"weight","1"}'))
+			fi
+
+			ip route del table $(($a+$b)) metric $metric default &> /dev/null
+			ip route add table $(($a+$b)) metric $metric default $route_args $old_args &> /dev/null
+
+			ip rule del pref $(($a+$b+255)) &> /dev/null
+			ip rule add pref $(($a+$b+255)) fwmark $((($a+$b)*256))/65280 table $(($a+$b)) &> /dev/null
+
+			a=$(($a+2**$interface_number))
+
+		done
+		a=1
+		b=$(($b+1))
+	done
+
+	for interface_address in $(ip -f inet route list table 0 scope host | awk '$4 == ( "'$DEVICE'" )' | awk '{print $2}' | egrep '[0-9]{1,3}(\.[0-9]{1,3}){3}'); do
+		ip rule del pref $(($interface_number+191)) from $interface_address fwmark 0/32768 table $((2**($interface_number-1))) &> /dev/null
+		ip rule add pref $(($interface_number+191)) from $interface_address fwmark 0/32768 table $((2**($interface_number-1))) &> /dev/null
+	done
+
+	iptables -F mwan2_rules -t mangle
+        config_foreach mwan2_load_rules rule
+}
+
+mwan2_ifdown()
+{
+	logger "mwan2: Deleting rules for interface $INTERFACE ($DEVICE)"
+
+	metric=$(/sbin/uci -P /var/state get mwan2.$INTERFACE.metric)
+
+	if [ -n "$metric" ]; then
+
+		a=1
+		b=$((2**($interface_number-1)-1))
+
+		while [ $b -le $((2**$interface_number-2)) ]; do
+			while [ $a -le $((2**$total_interfaces)) ]; do
+
+				unset old_args
+
+				if [ -z "$old_args" ]; then
+					old_args=$(eval echo $(ip route list table $(($a+$b)) | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u))
+				fi
+
+				if [ -z "$old_args" ]; then
+					old_args=$(eval echo $(ip route list table $(($a+$b)) 0.0.0.0/0 | grep "^default via" | awk '$5 != ("'$DEVICE'")' | awk '$7 == ("'$metric'")' | awk '{print "nexthop",$2,$3,"weight","1"}'))
+				fi
+
+				if [ -z "$old_args" ]; then
+					old_args=$(eval echo $(ip route list table $(($a+$b)) 0.0.0.0/0 | grep "^default dev" | awk '$3 != ("'$DEVICE'")' | awk '$5 == ("'$metric'")' | awk '{print "nexthop",$2,$3,"weight","1"}'))
+				fi
+
+				ip route del table $(($a+$b)) metric $metric default &> /dev/null
+
+				if [ -n "$old_args" ]; then
+					ip route add table $(($a+$b)) metric $metric default $old_args &> /dev/null
+				else
+					if [ -z "$(ip route list table $(($a+$b)) 0.0.0.0/0)" ]; then
+						ip rule del pref $(($a+$b+255)) &> /dev/null
+					fi
+				fi
+
+				a=$(($a+2**$interface_number))
+			done
+			a=1
+			b=$(($b+1))
+		done
+	fi
+
+	iptables -D mwan2_pre -t mangle -i $DEVICE -j MARK --set-xmark $(((2**($interface_number-1)*256)+32768))/65280 &> /dev/null
+	iptables -D mwan2_post -t mangle -o $DEVICE -m mark ! --mark 32768/32768 -j MARK --set-xmark $((2**($interface_number-1)*256))/65280 &> /dev/null
+
+	for c in $(ip rule list | awk '$1 == ( "'$(($interface_number+191)):'" )'); do
+		ip rule del pref $(($interface_number+191)) &> /dev/null
+	done
+
+	iptables -F mwan2_rules -t mangle
+	config_foreach mwan2_load_rules rule
+}
+
+mwan2_flush_route_cache()
+{
+	ip route flush cache
+}
+
+mwan2_init()
+{
+	config_load mwan2
+	mwan2_get_interfaces()
+	{
+		total_interfaces=$(($total_interfaces+1))
+		config_get_bool enabled $1 enabled
+		[ "$enabled" = "1" ] || return 0
+		eval $1=$((2**($total_interfaces-1)))
+		[ "$1" = "$INTERFACE" ] || return 0
+		interface_number=$(($total_interfaces))
+		config_get metric $1 metric
+		config_get weight $1 weight
+		check_iface=1
+	}
+	config_foreach mwan2_get_interfaces interface
+
+	[ "$check_iface" = "1" ] || exit 0
+	[ "$total_interfaces" -le "7" ] || exit 0
+
+	while [ $(pgrep -f -o /sbin/hotplug-call) -ne $$ ]; do
+		sleep 1
+	done
+}
+
+case "$ACTION" in
+	ifup)
+		mwan2_init
+		mwan2_ifup
+		mwan2_flush_route_cache
+		mwan2_track
+	;;
+	ifdown)
+		mwan2_init
+		mwan2_ifdown
+		mwan2_flush_route_cache
+	;;
+esac

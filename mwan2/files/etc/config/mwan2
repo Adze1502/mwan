@@ -1,0 +1,76 @@
+#This is an mwan2 example config. In this config we define three load-balanced interfaces. Interface
+#wan and wan2 are primary and load-balanced. Interface wan3 is a backup in case both wan and wan2 have
+#failed. Load between wan and wan2 is shared on factor of 3:2. Both wan and wan2 have connection
+#monitoring active. Interface wan3 is a last resort, so no connection monitoring there.
+
+config 'interface' 'wan'
+	option 'enabled' '1'
+	option 'metric' '1'
+	option 'weight' '3'
+	option 'track_ip' '8.8.8.8'
+	option 'count' '1'
+	option 'timeout' '2'
+	option 'interval' '5'
+	option 'down' '3'
+	option 'up' '8'
+
+config 'interface' 'wan2'
+	option 'enabled' '1'
+	option 'metric' '1'
+	option 'weight' '2'
+	option 'track_ip' '8.8.4.4'
+	option 'count' '1'
+	option 'timeout' '2'
+	option 'interval' '5'
+	option 'down' '3'
+	option 'up' '8'
+
+config 'interface' 'wan3'
+	option 'enabled' '1'
+	option 'metric' '2'
+	option 'weight' '1'
+
+#Below are the load balancing rules. These rules are matched in order, so if you define a matching
+#rule, all following matches are ignored. By default mwan2 will load-balance nothing so to make mwan2
+#work you have to define at least a default rule.
+
+#Below an example to divert traffic to 192.168.0.0/16 to use the default routing table. This is used
+#to reach subnets that are e.g. behind vpn tunnels or behind routers on the local lan.
+
+config 'rule'
+	option 'dest_ip' '192.168.0.0/16'
+	list 'use_interface' 'default'
+
+#Next an example rule which will send tcp traffic from 192.168.21.0 with destination port 563 only
+#out on interface wan.
+ 
+config 'rule'
+	option 'src_ip' '192.168.21.0/24'
+	option 'proto' 'tcp'
+	option 'dest_port' '563'
+	list 'use_interface' 'wan'
+
+#Next example will send tcp traffic from 192.168.21.0 with destination port 995 out on interfaces wan
+#and wan2. This time we equalize the load on a session basis instead of route based.
+
+config 'rule'
+	option 'src_ip' '192.168.21.0/24'
+	option 'proto' 'tcp'
+	option 'dest_port' '995'
+	option 'equalize' '1'
+	list 'use_interface' 'wan'
+	list 'use_interface' 'wan2'
+
+#The last example is the default rule. All traffic that did not match before will be route balanced
+#over all three interfaces. Option equalize is available, but to maintain compatibility we leave it
+#out for now.
+
+config 'rule'
+	option 'dest_ip' '0.0.0.0/0'
+	#option 'equalize' '1'
+	list 'use_interface' 'wan'
+	list 'use_interface' 'wan2'
+	list 'use_interface' 'wan3'
+
+
+

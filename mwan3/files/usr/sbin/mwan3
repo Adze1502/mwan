@@ -1,0 +1,31 @@
+#!/bin/sh /etc/rc.common
+
+. /lib/network/config.sh
+
+EXTRA_COMMANDS="mwan_apply"
+
+
+mwan_apply() {
+
+	# load /etc/config/mwan3 and run wan_ifup function on each configured and enabled mwan3 interface
+	config_load mwan3
+	config_foreach mwan_ifup interface
+
+}
+
+mwan_ifup() {
+
+	local INTERFACE="$1"
+	local ENABLED DEVICE
+
+	config_get ENABLED "$INTERFACE" enabled
+
+	# send hotplug ifup event if tunnel is enabled
+	[ "$ENABLED" = "1" ] && {
+		DEVICE=$(uci get -p /var/state network.$INTERFACE.ifname)
+		[ "$DEVICE" ] && [ "$(ifconfig $DEVICE 2>&1 >/dev/null; echo $?)" = "0" ] && {
+			ACTION=ifup INTERFACE=$INTERFACE DEVICE=$DEVICE /sbin/hotplug-call iface
+		}
+	}
+
+}

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+uci batch <<-EOF
+        add ucitrack mwan3
+        set ucitrack.@mwan3[-1].exec="/usr/sbin/mwan3 mwan_apply"
+        commit ucitrack
+EOF

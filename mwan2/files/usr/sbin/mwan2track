@@ -1,0 +1,50 @@
+#!/bin/sh
+[ -z "$8" ] && echo "Error: should not be started manually" && exit 1
+echo "$$" > /var/run/mwan2track-$2.pid
+
+score=$(($7+$8))
+lost=0
+
+while [ $score -le $(($7+$8)) ] ; do
+
+	ping -I $2 -c $4 -W $5 $3 &> /dev/null
+
+	if [ $? != 0 ] ; then
+		score=$(($score-1))
+		lost=$(($lost+1))
+
+		if [ $score -lt $8 ] ; then score=0 ; fi
+		if [ $score -eq $8 ] ; then
+
+				logger "mwan2: Interface $1 ($2) is offline"
+				env -i ACTION=ifdown INTERFACE=$1 DEVICE=$2 /sbin/hotplug-call iface
+				score=0
+
+		fi
+
+	else
+
+		if [ $score -lt $(($7+$8)) ] && [ $lost -gt 0 ] ; then
+
+			logger "mwan2: Lost $(($lost*$4)) ping(s) on interface $1 ($2)"
+			lost=0
+
+		fi
+
+		score=$(($score+1))
+
+		if [ $score -gt $8 ] ; then score=$(($7+$8)) ; fi
+		if [ $score -eq $8 ] ; then
+
+				logger "mwan2: Interface $1 ($2) is back online"
+				env -i ACTION=ifup INTERFACE=$1 DEVICE=$2 /sbin/hotplug-call iface
+				score=$(($7+$8))
+
+		fi
+	fi
+
+	sleep $6
+
+done
+
+logger "mwan2: Something went wrong here... ($1) $2"

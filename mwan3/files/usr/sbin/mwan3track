@@ -1,0 +1,56 @@
+#!/bin/sh
+[ -z "$9" ] && echo "Error: should not be started manually" && exit 1
+echo "$$" > /var/run/mwan3track-$2.pid
+
+score=$(($7+$8))
+track_ips=$(echo $* | cut -d ' ' -f 9-99)
+host_up_count=0
+lost=0
+
+while [ $score -le $(($7+$8)) ] ; do
+
+	for track_ip in $track_ips ; do
+		ping -I $2 -c $4 -W $5 $track_ip &> /dev/null
+		if [ $? = 0 ] ; then
+			host_up_count=$(($host_up_count+1))
+		fi
+	done
+		
+	if [ $host_up_count -lt $3 ] ; then
+		score=$(($score-1))
+		lost=$(($lost+1))
+
+		if [ $score -lt $8 ] ; then score=0 ; fi
+		if [ $score -eq $8 ] ; then
+
+				logger "mwan3: Interface $1 ($2) is offline"
+				env -i ACTION=ifdown INTERFACE=$1 DEVICE=$2 /sbin/hotplug-call iface
+				score=0
+
+		fi
+
+	else
+
+		if [ $score -lt $(($7+$8)) ] && [ $lost -gt 0 ] ; then
+
+			logger "mwan3: Lost $(($lost*$4)) ping(s) on interface $1 ($2)"
+			lost=0
+
+		fi
+
+		score=$(($score+1))
+
+		if [ $score -gt $8 ] ; then score=$(($7+$8)) ; fi
+		if [ $score -eq $8 ] ; then
+
+				logger "mwan3: Interface $1 ($2) is online"
+				env -i ACTION=ifup INTERFACE=$1 DEVICE=$2 /sbin/hotplug-call iface
+				score=$(($7+$8))
+
+		fi
+	fi
+
+	host_up_count=0
+	sleep $6
+
+done
