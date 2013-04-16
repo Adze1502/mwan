@@ -1,6 +1,15 @@
 local dsp = require "luci.dispatcher"
+local uci = require "luci.model.uci"
 
 arg[1] = arg[1] or ""
+
+function cbi_add_mwan(field)
+        uci.cursor():foreach("mwan3", "policy",
+                function (section)
+                        field:value(section[".name"])
+                end
+        )
+end
 
 -- ------ rule configuration ------ --
 
@@ -44,6 +53,7 @@ proto = mwan_rule:option(ListValue, "proto", translate("Protocol"))
 
 use_policy = mwan_rule:option(Value, "use_policy", translate("Policy assigned"),
 	translate("Choose a policy from the 'Available policies' section below and enter its name here"))
+	cbi_add_mwan(use_policy)
 
 equalize = mwan_rule:option(Flag, "equalize", translate("Equalize"),
 	translate("") .. "<br />" ..
@@ -53,9 +63,9 @@ equalize = mwan_rule:option(Flag, "equalize", translate("Equalize"),
 	equalize.enabled = "1"
 
 
--- ------ available policies ------ --
+-- ------ currently configured policies ------ --
 
-mwan_policy = m5:section(TypedSection, "policy", translate("Available policies"))
+mwan_policy = m5:section(TypedSection, "policy", translate("Currently configured policies"))
 	mwan_policy.addremove = false
 	mwan_policy.dynamic = false
 	mwan_policy.sortable = false

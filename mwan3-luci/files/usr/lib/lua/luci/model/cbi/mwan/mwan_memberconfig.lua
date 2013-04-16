@@ -1,6 +1,15 @@
 local dsp = require "luci.dispatcher"
+local uci = require "luci.model.uci"
 
 arg[1] = arg[1] or ""
+
+function cbi_add_mwan(field)
+        uci.cursor():foreach("mwan3", "interface",
+                function (section)
+                        field:value(section[".name"])
+                end
+        )
+end
 
 -- ------ member configuration ------ --
 
@@ -21,6 +30,7 @@ mwan_member = m20:section(NamedSection, arg[1], "member", "")
 
 interface = mwan_member:option(Value, "interface", translate("Interface"),
 	translate("Choose an interface from the 'Available interfaces' section below and enter its name here"))
+	cbi_add_mwan(interface)
 
 metric = mwan_member:option(Value, "metric", translate("Metric"),
 	translate("Acceptable values: 1-1000"))
@@ -31,9 +41,9 @@ weight = mwan_member:option(Value, "weight", translate("Weight"),
 	weight.datatype = "range(1, 1000)"
 
 
--- ------ available interfaces ------ --
+-- ------ currently configured interfaces ------ --
 
-mwan_interface = m20:section(TypedSection, "interface", translate("Available interfaces"))
+mwan_interface = m20:section(TypedSection, "interface", translate("Currently configured interfaces"))
 	mwan_interface.addremove = false
 	mwan_interface.dynamic = false
 	mwan_interface.sortable = false
