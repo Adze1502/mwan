@@ -2,16 +2,7 @@
 
 . /lib/network/config.sh
 
-EXTRA_COMMANDS="mwan_apply"
-
-
-mwan_apply() {
-
-	# load /etc/config/mwan3 and run wan_ifup function on each configured and enabled mwan3 interface
-	config_load mwan3
-	config_foreach mwan_ifup interface
-
-}
+EXTRA_COMMANDS="mwan_apply mwan_unload"
 
 mwan_ifup() {
 
@@ -29,3 +20,52 @@ mwan_ifup() {
 	}
 
 }
+
+mwan_ifdown() {
+
+	local INTERFACE="$1"
+	local ENABLED DEVICE
+
+	config_get ENABLED "$INTERFACE" enabled
+
+	# send hotplug ifdown event if tunnel is enabled
+	[ "$ENABLED" = "1" ] && {
+		DEVICE=$(uci get -p /var/state network.$INTERFACE.ifname)
+		[ "$DEVICE" ] && [ "$(ifconfig $DEVICE 2>&1 >/dev/null; echo $?)" = "0" ] && {
+			ACTION=ifdown INTERFACE=$INTERFACE DEVICE=$DEVICE /sbin/hotplug-call iface
+		}
+
+		iptables -D PREROUTING -t mangle -j mwan3_pre &> /dev/null
+		iptables -D INPUT -t mangle -j mwan3_post &> /dev/null
+		iptables -D OUTPUT -t mangle -j mwan3_pre &> /dev/null
+		iptables -D POSTROUTING -t mangle -j mwan3_post &> /dev/null
+
+		for table_name in $(iptables -S -t mangle | awk '{print $2}' | grep mwan3 | sort -u); do
+			iptables -F $table_name -t mangle &> /dev/null
+		done
+
+		for table_name in $(iptables -S -t mangle | awk '{print $2}' | grep mwan3 | sort -u); do
+			iptables -X $table_name -t mangle &> /dev/null
+		done
+
+	}
+
+}
+
+
+mwan_unload() {
+
+	killall mwan3track &> /dev/null
+	config_load mwan3
+	config_foreach mwan_ifdown interface
+
+}
+
+mwan_apply() {
+
+	# load /etc/config/mwan3 and run wan_ifup function on each configured and enabled mwan3 interface
+	config_load mwan3
+	config_foreach mwan_ifup interface
+
+}
+

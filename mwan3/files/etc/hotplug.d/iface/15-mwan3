@@ -1,7 +1,8 @@
 #!/bin/sh
 mwan3_track()
 {
-	[ -e /var/run/mwan3track-$DEVICE.pid ] && kill $(cat /var/run/mwan3track-$DEVICE.pid) && rm /var/run/mwan3track-$DEVICE.pid
+	[ -e /var/run/mwan3track-$DEVICE.pid ] && kill $(cat /var/run/mwan3track-$DEVICE.pid) &> /dev/null
+	rm /var/run/mwan3track-$DEVICE.pid &> /dev/null
 
 	local track_ips
 	local reliability
@@ -10,6 +11,8 @@ mwan3_track()
 	local interval
 	local down
 	local up
+	local src
+	local dst
 
 	mwan3_list_track_ips()
 	{
@@ -24,6 +27,25 @@ mwan3_track()
 		config_get interval $INTERFACE interval 10
 		config_get down $INTERFACE down 5
 		config_get up $INTERFACE up 5
+
+	        if ! iptables -S mwan3_track_$DEVICE -t mangle &> /dev/null; then
+        	        iptables -N mwan3_track_$DEVICE -t mangle                  
+        	fi
+
+		iptables -F mwan3_track_$DEVICE -t mangle &> /dev/null
+
+		unset src
+		unset dst
+
+		for src in $(ip route list table local scope host dev $DEVICE | sed 's/.*src \([^ ]*\) .*/\1/' | sort -u); do
+			for dst in $track_ips; do
+				iptables -A mwan3_track_$DEVICE -t mangle -p icmp -s $src -d $dst -j MARK --set-xmark 32768/32768 &> /dev/null
+			done
+		done
+
+	        iptables -D mwan3_pre -t mangle -m mark ! --mark 32768/32768 -j mwan3_track_$DEVICE &> /dev/null                                    
+        	iptables -I mwan3_pre 2 -t mangle -m mark ! --mark 32768/32768 -j mwan3_track_$DEVICE &> /dev/null	
+
         	[ -x /usr/sbin/mwan3track ] && /usr/sbin/mwan3track $INTERFACE $DEVICE $reliability $count $timeout $interval $down $up $track_ips &
 	fi
 }
@@ -201,13 +223,13 @@ mwan3_update_basic_interface_route_table()
 {
 	mwan3_interface_route_args
 	ip route flush table $(($interface_number+1000))
-	ip route add table $(($interface_number+1000)) default $route_args
+	[ $ACTION = "ifup" ] && ip route add table $(($interface_number+1000)) default $route_args
 
-	for c in $(ip rule list | awk '$1 == ( "'$(($interface_number+1007)):'" )' | awk '{print $1}'); do
-		ip rule del pref $(($interface_number+1007))
+	for c in $(ip rule list | awk '$1 == ( "'$(($interface_number+1000)):'" )' | awk '{print $1}'); do
+		ip rule del pref $(($interface_number+1000))
 	done
 
-	ip rule add pref $(($interface_number+1007)) fwmark $(($interface_number*256))/65280 table $(($interface_number+1000))
+	[ $ACTION = "ifup" ] && ip rule add pref $(($interface_number+1000)) fwmark $(($interface_number*256))/65280 table $(($interface_number+1000))
 }
 
 mwan3_policy_routes()
@@ -259,8 +281,10 @@ mwan3_update_policy_route_tables()
 
 	ip rule del pref $policy_number &> /dev/null
 
-	if [ -n "$(ip route list table $policy_number 0.0.0.0/0)" ]; then
+	if [ -n "$(ip route list table $policy_number 0.0.0.0/0 | grep -v blackhole)" ]; then
 		ip rule add pref $policy_number fwmark $((($policy_number-1000)*256))/65280 table $policy_number &> /dev/null
+	else
+		ip route flush table $policy_number
 	fi
 }
 
@@ -297,7 +321,7 @@ mwan3_ifupdown()
 	config_foreach mwan3_get_interfaces interface
 
 	[ "$check_iface" = "1" ] || exit 0
-	[ "$total_interfaces" -le "7" ] || exit 0
+	[ "$total_interfaces" -le "15" ] || exit 0
 
 	while [ $(pgrep -f -o /sbin/hotplug-call) -ne $$ ]; do
 		sleep 1

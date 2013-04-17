@@ -2,8 +2,14 @@
 START=99
 
 start() {
+	/usr/sbin/mwan3 mwan_apply
+}
 
-	# load /etc/config/mwan3 and run wan_ifup function on each configured and enabled mwan3 interface
-	/usr/sbin/mwan3 mwan_apply &
+stop() {
+	/usr/sbin/mwan3 mwan_unload
+}
 
+restart() {
+	stop
+	start
 }
