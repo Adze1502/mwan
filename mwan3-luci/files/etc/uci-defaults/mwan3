@@ -2,6 +2,6 @@
 
 uci batch <<-EOF
         add ucitrack mwan3
-        set ucitrack.@mwan3[-1].exec="/usr/sbin/mwan3 mwan_apply"
+        set ucitrack.@mwan3[-1].exec="/etc/init.d/mwan3 restart"
         commit ucitrack
 EOF

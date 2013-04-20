@@ -43,8 +43,9 @@ function track_ip.cfgvalue(self, s)
 			str = str .. v .. "<br />"
 		end
 	else
-		str = "none"
+		str = "none" .. "<br />"
 	end
+	str = str .. "<br />"
 	return str
 end
 

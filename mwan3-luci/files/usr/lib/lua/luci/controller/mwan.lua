@@ -7,12 +7,8 @@ function index()
         end
 
         entry({"admin", "network", "multiwan"},
-                alias("admin", "network", "multiwan", "overview"),
+                alias("admin", "network", "multiwan", "interface"),
                 _("Multiwan"), 600)
-
-	entry({"admin", "network", "multiwan", "overview"},
-		cbi("mwan/mwan_overview", {autoapply=true}),
-		_("Overview"), 10).leaf = true
 
         entry({"admin", "network", "multiwan", "interface"},
                 arcombine(cbi("mwan/mwan_interface"), cbi("mwan/mwan_interfaceconfig")),
@@ -29,5 +25,9 @@ function index()
 	entry({"admin", "network", "multiwan", "rule"},
 		arcombine(cbi("mwan/mwan_rule"), cbi("mwan/mwan_ruleconfig")),
 		_("Rules"), 50).leaf = true
+
+	entry({"admin", "network", "multiwan", "troubleshoot"},
+		cbi("mwan/mwan_troubleshoot"),
+		_("Troubleshooting"), 60).leaf = true
 
 end
