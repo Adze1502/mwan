@@ -4,11 +4,11 @@ local uci = require "luci.model.uci"
 arg[1] = arg[1] or ""
 
 function cbi_add_mwan(field)
-        uci.cursor():foreach("mwan3", "policy",
-                function (section)
-                        field:value(section[".name"])
-                end
-        )
+	uci.cursor():foreach("mwan3", "policy",
+		function (section)
+			field:value(section[".name"])
+		end
+	)
 end
 
 -- ------ rule configuration ------ --
@@ -16,12 +16,13 @@ end
 m5 = Map("mwan3", translate("Multiwan rule configuration"),
 	translate("The mwan3 multiwan package traffic rules are configured here"))
 
-m5.redirect = dsp.build_url("admin", "network", "multiwan", "rule")
+	m5.redirect = dsp.build_url("admin", "network", "multiwan", "rule")
 
-if not m5.uci:get(arg[1]) == "rule" then
-	luci.http.redirect(m5.redirect)
-	return
-end
+	if not m5.uci:get(arg[1]) == "rule" then
+		luci.http.redirect(m5.redirect)
+		return
+	end
+
 
 mwan_rule = m5:section(NamedSection, arg[1], "rule", "")
 	mwan_rule.anonymous = false

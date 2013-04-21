@@ -7,17 +7,19 @@ arg[1] = arg[1] or ""
 m30 = Map("mwan3", translate("Multiwan interface configuration"),
 	translate("The mwan3 multiwan package interfaces are configured here"))
 
-m30.redirect = dsp.build_url("admin", "network", "multiwan", "interface")
+	m30.redirect = dsp.build_url("admin", "network", "multiwan", "interface")
 
-if not m30.uci:get(arg[1]) == "interface" then
-	luci.http.redirect(m30.redirect)
-	return
-end
+	if not m30.uci:get(arg[1]) == "interface" then
+		luci.http.redirect(m30.redirect)
+		return
+	end
+
 
 mwan_interface = m30:section(NamedSection, arg[1], "interface", "")
 	mwan_interface.anonymous = false
 	mwan_interface.addremove = false
 	mwan_interface.dynamic = false
+
 
 enabled = mwan_interface:option(ListValue, "enabled", translate("Enabled"))
 	enabled.default = "1"

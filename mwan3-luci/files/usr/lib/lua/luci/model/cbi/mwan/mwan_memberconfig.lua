@@ -4,11 +4,11 @@ local uci = require "luci.model.uci"
 arg[1] = arg[1] or ""
 
 function cbi_add_mwan(field)
-        uci.cursor():foreach("mwan3", "interface",
-                function (section)
-                        field:value(section[".name"])
-                end
-        )
+	uci.cursor():foreach("mwan3", "interface",
+		function (section)
+			field:value(section[".name"])
+		end
+	)
 end
 
 -- ------ member configuration ------ --
@@ -16,17 +16,19 @@ end
 m20 = Map("mwan3", translate("Multiwan member configuration"),
 	translate("The mwan3 multiwan package members are configured here"))
 
-m20.redirect = dsp.build_url("admin", "network", "multiwan", "member")
+	m20.redirect = dsp.build_url("admin", "network", "multiwan", "member")
 
-if not m20.uci:get(arg[1]) == "member" then
-	luci.http.redirect(m20.redirect)
-	return
-end
+	if not m20.uci:get(arg[1]) == "member" then
+		luci.http.redirect(m20.redirect)
+		return
+	end
+
 
 mwan_member = m20:section(NamedSection, arg[1], "member", "")
 	mwan_member.anonymous = false
 	mwan_member.addremove = false
 	mwan_member.dynamic = false
+
 
 interface = mwan_member:option(Value, "interface", translate("Interface"),
 	translate("Choose an interface from the 'Available interfaces' section below and enter its name here"))
