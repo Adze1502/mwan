@@ -49,10 +49,23 @@ mwan_version = troubleshoot:option(DummyValue, "mwan_version", translate("mwan3 
 		return version .. "<br />" .. "<br />"
 	end
 
-mwan_iprules = troubleshoot:option(DummyValue, "mwan_iprules", translate("Output of \"ip rule\""))
+mwan_routeshow = troubleshoot:option(DummyValue, "mwan_routeshow", translate("Output of \"ip route show\""))
+	mwan_routeshow.rawhtml = true
+
+	routeshow = luci.sys.exec("ip route show")
+	routeshowtbl = mwan_str2tbl(routeshow, "\n")
+	function mwan_routeshow.cfgvalue(self, section)
+		local str = ""
+		for _, sup in pairs(routeshowtbl) do
+			str = str .. sup .. "<br />"
+		end
+		return str .. "<br />"
+	end
+
+mwan_iprules = troubleshoot:option(DummyValue, "mwan_iprules", translate("Output of \"ip rule show\""))
 	mwan_iprules.rawhtml = true
 
-	rulelisting = luci.sys.exec("ip rule")
+	rulelisting = luci.sys.exec("ip rule show")
 	rulelistingtbl = mwan_str2tbl(rulelisting, "\n")
 	function mwan_iprules.cfgvalue(self, section)
 		local str = ""
@@ -83,6 +96,30 @@ mwan_iptables = troubleshoot:option(DummyValue, "mwan_iptables", translate("Outp
 
 	function mwan_iptables.cfgvalue(self, section)
 		return luci.sys.exec("iptables -L -t mangle -v -n")
+	end
+
+mwan_ifconfig = troubleshoot:option(DummyValue, "mwan_ifconfig", translate("Output of \"ifconfig\""))
+	mwan_ifconfig.template = "cbi/tvalue"
+	mwan_ifconfig.rows = 15
+
+	function mwan_ifconfig.cfgvalue(self, section)
+		return luci.sys.exec("ifconfig")
+	end
+
+mwan_config = troubleshoot:option(DummyValue, "mwan_config", translate("Output of \"cat /etc/config/mwan3\""))
+	mwan_config.template = "cbi/tvalue"
+	mwan_config.rows = 15
+
+	function mwan_config.cfgvalue(self, section)
+		return luci.sys.exec("cat /etc/config/mwan3")
+	end
+
+mwan_netconfig = troubleshoot:option(DummyValue, "mwan_netconfig", translate("Output of \"cat /etc/config/network\""))
+	mwan_netconfig.template = "cbi/tvalue"
+	mwan_netconfig.rows = 15
+
+	function mwan_netconfig.cfgvalue(self, section)
+		return luci.sys.exec("cat /etc/config/network")
 	end
 
 
