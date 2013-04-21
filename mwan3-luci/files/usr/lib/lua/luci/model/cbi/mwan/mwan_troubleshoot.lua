@@ -41,6 +41,14 @@ mwan_troubleshoot_refresh = troubleshoot:option(Button, "mwan_troubleshoot_refre
 		luci.util.exec("ls")
 	end
 
+mwan_version = troubleshoot:option(DummyValue, "mwan_version", translate("mwan3 version"))
+	mwan_version.rawhtml = true
+
+	version = luci.sys.exec("cat /usr/sbin/mwan3 | grep MWAN3_VERSION | awk -F: '{ print $2 }'")
+	function mwan_version.cfgvalue(self, section)
+		return version .. "<br />" .. "<br />"
+	end
+
 mwan_iprules = troubleshoot:option(DummyValue, "mwan_iprules", translate("Output of \"ip rule\""))
 	mwan_iprules.rawhtml = true
 
@@ -51,7 +59,7 @@ mwan_iprules = troubleshoot:option(DummyValue, "mwan_iprules", translate("Output
 		for _, rll in pairs(rulelistingtbl) do
 			str = str .. rll .. "<br />"
 		end
-		return str
+		return str .. "<br />"
 	end
 
 mwan_iproutes = troubleshoot:option(DummyValue, "mwan_iproutes", translate("Output of \"ip route list table 1001-1015\""))
@@ -65,7 +73,7 @@ mwan_iproutes = troubleshoot:option(DummyValue, "mwan_iproutes", translate("Outp
 			bro = luci.sys.exec("ip route list table " .. rtl)
 			str = str .. rtl .. "<br />" .. bro .. "<br />"
 		end
-		return str
+		return str .. "<br />"
 	end
 	
 
