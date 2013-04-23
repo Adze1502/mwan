@@ -1,0 +1,71 @@
+<script type="text/javascript">//<![CDATA[
+	XHR.poll(5, '<%=luci.dispatcher.build_url("admin", "network", "mwan3", "status")%>', null,
+		function(x, st)
+		{
+			var tx = document.getElementById('mwan3_status_text');
+			if (tx)
+			{
+				if (st && st.wans)
+				{
+					var temp = '';
+
+					for( var i = 0; i < st.wans.length; i++ )
+					{
+						var stat = '<%:Unknown%>';
+						var cssc = '';
+
+						switch (st.wans[i].status)
+						{
+							case 'on':
+								stat = '<%:ONLINE%>';
+								cssc = 'wanon';
+								break;
+
+							case 'off':
+								stat = '<%:OFFLINE%>';
+								cssc = 'wanoff';
+								break;
+
+							case 'nm':
+								stat = '<%:not monitored%>';
+								cssc = 'wannm';
+								break;
+
+							case 'ne':
+								stat = '<%:not enabled%>';
+								cssc = 'wanne';
+								break;
+						}
+
+						temp += String.format(
+							'<span class="%s"><strong>%s (<a href="%q">%s</a>) :</strong> %s</span>',
+								cssc, st.wans[i].name, stat
+						);
+					}
+					
+					tx.innerHTML = temp;
+				}
+				else
+				{
+					tx.innerHTML = '';
+				}
+			}
+		}
+	);
+//]]></script>
+
+<style type="text/css">
+  .wanon { background-color: rgb(144, 240, 144); }
+  .wanoff { background-color: rgb(240, 144, 144); }
+  .wannm { background-color: rgb(255, 165, 0); }
+  .wanne { background-color: rgb(255, 165, 0); }
+  .wanon, .wanoff, .wannm, .wanne {
+	padding: 0.4em;
+	margin: 0.4em;
+  }
+</style>
+
+<fieldset class="cbi-section">
+	<legend><%:Multi-WAN (mwan3) Status%></legend>
+	<div id="mwan3_status_text" style="text-align:center;"><em><%:Collecting data...%></em></div>
+</fieldset>

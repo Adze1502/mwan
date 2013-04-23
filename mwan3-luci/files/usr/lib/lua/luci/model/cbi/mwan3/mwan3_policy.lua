@@ -13,12 +13,12 @@ mwan_policy = m10:section(TypedSection, "policy", translate("Policies"),
 	mwan_policy.dynamic = false
 	mwan_policy.sortable = false
 	mwan_policy.template = "cbi/tblsection"
-	mwan_policy.extedit = ds.build_url("admin", "network", "multiwan", "policy", "%s")
+	mwan_policy.extedit = ds.build_url("admin", "network", "mwan3", "policy", "%s")
 
 	function mwan_policy.create(self, section)
 		if TypedSection.create(self, section) then
 			m10.uci:save("mwan3")
-			luci.http.redirect(ds.build_url("admin", "network", "multiwan", "policy", section))
+			luci.http.redirect(ds.build_url("admin", "network", "mwan3", "policy", section))
 			return true
 		else
 			m10.message = translatef("There is already an entry named %q", section)

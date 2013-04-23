@@ -13,12 +13,12 @@ mwan_interface = m30:section(TypedSection, "interface", translate("Multiwan inte
 	mwan_interface.dynamic = false
 	mwan_interface.sortable = false
 	mwan_interface.template = "cbi/tblsection"
-	mwan_interface.extedit = ds.build_url("admin", "network", "multiwan", "interface", "%s")
+	mwan_interface.extedit = ds.build_url("admin", "network", "mwan3", "interface", "%s")
 
 	function mwan_interface.create(self, section)
 		if TypedSection.create(self, section) then
 			m30.uci:save("mwan3")
-			luci.http.redirect(ds.build_url("admin", "network", "multiwan", "interface", section))
+			luci.http.redirect(ds.build_url("admin", "network", "mwan3", "interface", section))
 			return true
 		else
 			m30.message = translatef("There is already an entry named %q", section)

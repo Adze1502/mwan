@@ -13,12 +13,12 @@ mwan_member = m20:section(TypedSection, "member", translate("Members"),
 	mwan_member.dynamic = false
 	mwan_member.sortable = false
 	mwan_member.template = "cbi/tblsection"
-	mwan_member.extedit = ds.build_url("admin", "network", "multiwan", "member", "%s")
+	mwan_member.extedit = ds.build_url("admin", "network", "mwan3", "member", "%s")
 
 	function mwan_member.create(self, section)
 		if TypedSection.create(self, section) then
 			m20.uci:save("mwan3")
-			luci.http.redirect(ds.build_url("admin", "network", "multiwan", "member", section))
+			luci.http.redirect(ds.build_url("admin", "network", "mwan3", "member", section))
 			return true
 		else
 			m20.message = translatef("There is already an entry named %q", section)

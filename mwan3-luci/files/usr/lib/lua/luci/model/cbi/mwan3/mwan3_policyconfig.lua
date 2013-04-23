@@ -16,7 +16,7 @@ end
 m10 = Map("mwan3", translate("Multiwan policy configuration"),
 	translate("The mwan3 multiwan package policies are configured here"))
 
-	m10.redirect = dsp.build_url("admin", "network", "multiwan", "policy")
+	m10.redirect = dsp.build_url("admin", "network", "mwan3", "policy")
 
 	if not m10.uci:get(arg[1]) == "policy" then
 		luci.http.redirect(m10.redirect)

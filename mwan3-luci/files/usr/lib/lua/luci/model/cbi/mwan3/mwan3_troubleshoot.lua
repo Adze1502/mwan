@@ -1,3 +1,4 @@
+local ntm = require "luci.model.network".init()
 function mwan_str2tbl(s, p)
 	local temp = {}
 	local index = 0
@@ -55,11 +56,15 @@ mwan_routeshow = troubleshoot:option(DummyValue, "mwan_routeshow", translate("Ou
 	routeshow = luci.sys.exec("ip route show")
 	routeshowtbl = mwan_str2tbl(routeshow, "\n")
 	function mwan_routeshow.cfgvalue(self, section)
-		local str = ""
-		for _, sup in pairs(routeshowtbl) do
-			str = str .. sup .. "<br />"
+		if routeshowtbl == nil then
+			return "<br />" .. "<br />"
+		else
+			local str = ""
+			for _, sup in pairs(routeshowtbl) do
+				str = str .. sup .. "<br />"
+			end
+			return str .. "<br />"
 		end
-		return str .. "<br />"
 	end
 
 mwan_iprules = troubleshoot:option(DummyValue, "mwan_iprules", translate("Output of \"ip rule show\""))
@@ -68,11 +73,15 @@ mwan_iprules = troubleshoot:option(DummyValue, "mwan_iprules", translate("Output
 	rulelisting = luci.sys.exec("ip rule show")
 	rulelistingtbl = mwan_str2tbl(rulelisting, "\n")
 	function mwan_iprules.cfgvalue(self, section)
-		local str = ""
-		for _, rll in pairs(rulelistingtbl) do
-			str = str .. rll .. "<br />"
+		if rulelistingtbl == nil then
+			return "<br />" .. "<br />"
+		else
+			local str = ""
+			for _, rll in pairs(rulelistingtbl) do
+				str = str .. rll .. "<br />"
+			end
+			return str .. "<br />"
 		end
-		return str .. "<br />"
 	end
 
 mwan_iproutes = troubleshoot:option(DummyValue, "mwan_iproutes", translate("Output of \"ip route list table 1001-1015\""))
@@ -81,12 +90,16 @@ mwan_iproutes = troubleshoot:option(DummyValue, "mwan_iproutes", translate("Outp
 	routelisting = luci.sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1015'")
 	routelistingtbl = mwan_str2tbl(routelisting, "\n")
 	function mwan_iproutes.cfgvalue(self, section)
-		local str = ""
-		for _, rtl in pairs(routelistingtbl) do
-			bro = luci.sys.exec("ip route list table " .. rtl)
-			str = str .. rtl .. "<br />" .. bro .. "<br />"
+		if routelistingtbl == nil then
+			return "<br />" .. "<br />"
+		else
+			local str = ""
+			for _, rtl in pairs(routelistingtbl) do
+				bro = luci.sys.exec("ip route list table " .. rtl)
+				str = str .. rtl .. "<br />" .. bro .. "<br />"
+			end
+			return str .. "<br />"
 		end
-		return str .. "<br />"
 	end
 	
 
@@ -120,6 +133,14 @@ mwan_netconfig = troubleshoot:option(DummyValue, "mwan_netconfig", translate("Ou
 
 	function mwan_netconfig.cfgvalue(self, section)
 		return luci.sys.exec("cat /etc/config/network")
+	end
+
+mwan_logread = troubleshoot:option(DummyValue, "mwan_logread", translate("Output of \"logread | grep mwan3\""))
+	mwan_logread.template = "cbi/tvalue"
+	mwan_logread.rows = 15
+
+	function mwan_logread.cfgvalue(self, section)
+		return luci.sys.exec("logread | grep mwan3")
 	end
 
 

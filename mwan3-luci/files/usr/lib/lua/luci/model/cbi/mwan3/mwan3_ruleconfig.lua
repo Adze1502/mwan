@@ -16,7 +16,7 @@ end
 m5 = Map("mwan3", translate("Multiwan rule configuration"),
 	translate("The mwan3 multiwan package traffic rules are configured here"))
 
-	m5.redirect = dsp.build_url("admin", "network", "multiwan", "rule")
+	m5.redirect = dsp.build_url("admin", "network", "mwan3", "rule")
 
 	if not m5.uci:get(arg[1]) == "rule" then
 		luci.http.redirect(m5.redirect)

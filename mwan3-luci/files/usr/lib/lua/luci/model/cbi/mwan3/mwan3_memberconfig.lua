@@ -16,7 +16,7 @@ end
 m20 = Map("mwan3", translate("Multiwan member configuration"),
 	translate("The mwan3 multiwan package members are configured here"))
 
-	m20.redirect = dsp.build_url("admin", "network", "multiwan", "member")
+	m20.redirect = dsp.build_url("admin", "network", "mwan3", "member")
 
 	if not m20.uci:get(arg[1]) == "member" then
 		luci.http.redirect(m20.redirect)
