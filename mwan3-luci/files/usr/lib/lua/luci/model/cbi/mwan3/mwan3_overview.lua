@@ -70,6 +70,11 @@ overview = m5:section(NamedSection, "main", translate("UPDOWN"))
 	overview.dynamic = false
 
 
+mwan_overview_refresh = overview:option(Button, "mwan_overview_refresh", translate("Refresh overview tab"))
+	function mwan_overview_refresh.write(self, section, value)
+		luci.util.exec("ls")
+	end
+
 mwan_updown = overview:option(DummyValue, "mwan_updown", translate("Online status"))
 	mwan_updown.rawhtml = true
 
