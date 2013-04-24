@@ -1,7 +1,7 @@
 function mwan_get_status(rulenum)
 	local status = luci.sys.exec("ip route list table " .. rulenum)
-	local statuslen = string.len(status)
-	if statuslen > 0 then
+		status = string.len(status)
+	if status > 0 then
 		return "ONLINE"
 	else
 		return "OFFLINE"
@@ -14,18 +14,25 @@ function mwan_get_iface()
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			rulenum = rulenum+1
+			local wanifname = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".ifname") or "x"
+				local wanifnamelen = string.len(wanifname)
+				if wanifnamelen == 0 then
+					wanifname = "x"
+				else
+					wanifname = string.gsub(wanifname, "\n", "")
+				end
 			local enabled = luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".enabled")
 			local tracked = luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".track_ip")
-			local trackedlen = string.len(tracked)
+				tracked = string.len(tracked)
 			local status = mwan_get_status(rulenum)
 			if enabled == "1\n" then
-				if trackedlen > 0 then
-					str = str .. section[".name"] .. ": " .. status .. "\n"
+				if tracked > 0 then
+					str = str .. section[".name"] .. " (" .. wanifname .. ") " .. ": " .. status .. "\n"
 				else
-					str = str .. section[".name"] .. ": " .. "not tracked" .. "\n"
+					str = str .. section[".name"] .. " (" .. wanifname .. ") " .. ": " .. "not tracked" .. "\n"
 				end
 			else
-				str = str .. section[".name"] .. ": " .. "not enabled" .. "\n"
+				str = str .. section[".name"] .. " (" .. wanifname .. ") " .. ": " .. "not enabled" .. "\n"
 			end
 		end
 	)
@@ -61,6 +68,7 @@ end
 -- ------ rule configuration ------ --
 
 m5 = Map("luci", translate("Multiwan status"),
+	translate("The mwan3 package can be configured for failover and load balancing with up to 15 interfaces") .. "<br />" ..
 	translate("This page shows the current ONLINE/OFFLINE status of enabled and tracked mwan3 interfaces"))
 
 

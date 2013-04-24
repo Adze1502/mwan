@@ -41,8 +41,8 @@ end
 
 function mwan_get_status(rulenum)
 	local status = luci.sys.exec("ip route list table " .. rulenum)
-	local statuslen = string.len(status)
-	if statuslen > 0 then
+		status = string.len(status)
+	if status > 0 then
 		return "on"
 	else
 		return "off"
@@ -50,17 +50,17 @@ function mwan_get_status(rulenum)
 end
 
 function mwan_get_iface()
-	local str = "\n"
+	local str = ""
 	local rulenum = 1000
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			rulenum = rulenum+1
 			local enabled = luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".enabled")
 			local tracked = luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".track_ip")
-			local trackedlen = string.len(tracked)
+				tracked = string.len(tracked)
 			local status = mwan_get_status(rulenum)
 			if enabled == "1\n" then
-				if trackedlen > 0 then
+				if tracked > 0 then
 					str = str .. section[".name"] .. "[" .. status .. "]"
 				else
 					str = str .. section[".name"] .. "[" .. "nm" .. "]"
@@ -83,8 +83,18 @@ function mwan3_status()
 
 	statstr = mwan_get_iface()
 	for wanname, ifstat in string.gfind(statstr, "([^%[]+)%[([^%]]+)%]") do
+		local wanifname = luci.sys.exec("uci get -p /var/state network." .. wanname .. ".ifname")
+			local wanifnamelen = string.len(wanifname)
+			if wanifnamelen == 0 then
+				wanifname = "x"
+			else
+				wanifname = string.gsub(wanifname, "\n", "")
+			end
+		local wanlink = ntm:get_interface(wanifname)
+			wanlink = wanlink and wanlink:get_network()
+			wanlink = wanlink and wanlink:adminlink() or "#"
 		wansid[wanname] = #rv.wans + 1
-		rv.wans[wansid[wanname]] = { name = wanname, status = ifstat }
+		rv.wans[wansid[wanname]] = { name = wanname, link = wanlink, ifname = wanifname, status = ifstat }
 	end
 
 	luci.http.prepare_content("application/json")
