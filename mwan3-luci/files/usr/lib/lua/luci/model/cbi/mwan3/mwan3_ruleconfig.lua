@@ -13,8 +13,7 @@ end
 
 -- ------ rule configuration ------ --
 
-m5 = Map("mwan3", translate("Multiwan rule configuration"),
-	translate("The mwan3 multiwan package traffic rules are configured here"))
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN rule configuration"))
 
 	m5.redirect = dsp.build_url("admin", "network", "mwan3", "rule")
 
@@ -25,7 +24,6 @@ m5 = Map("mwan3", translate("Multiwan rule configuration"),
 
 
 mwan_rule = m5:section(NamedSection, arg[1], "rule", "")
-	mwan_rule.anonymous = false
 	mwan_rule.addremove = false
 	mwan_rule.dynamic = false
 

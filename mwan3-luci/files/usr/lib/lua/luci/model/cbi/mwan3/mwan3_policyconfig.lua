@@ -13,8 +13,7 @@ end
 
 -- ------ policy configuration ------ --
 
-m10 = Map("mwan3", translate("Multiwan policy configuration"),
-	translate("The mwan3 multiwan package policies are configured here"))
+m10 = Map("mwan3", translate("MWAN3 Multi-WAN policy configuration"))
 
 	m10.redirect = dsp.build_url("admin", "network", "mwan3", "policy")
 
@@ -25,7 +24,6 @@ m10 = Map("mwan3", translate("Multiwan policy configuration"),
 
 
 mwan_policy = m10:section(NamedSection, arg[1], "policy", "")
-	mwan_policy.anonymous = false
 	mwan_policy.addremove = false
 	mwan_policy.dynamic = false
 

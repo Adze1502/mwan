@@ -4,8 +4,7 @@ arg[1] = arg[1] or ""
 
 -- ------ interface configuration ------ --
 
-m30 = Map("mwan3", translate("Multiwan interface configuration"),
-	translate("The mwan3 multiwan package interfaces are configured here"))
+m30 = Map("mwan3", translate("MWAN3 Multi-WAN interface configuration"))
 
 	m30.redirect = dsp.build_url("admin", "network", "mwan3", "interface")
 
@@ -16,7 +15,6 @@ m30 = Map("mwan3", translate("Multiwan interface configuration"),
 
 
 mwan_interface = m30:section(NamedSection, arg[1], "interface", "")
-	mwan_interface.anonymous = false
 	mwan_interface.addremove = false
 	mwan_interface.dynamic = false
 
@@ -63,7 +61,7 @@ interval = mwan_interface:option(ListValue, "interval", translate("Ping interval
 	interval:value("30", translate("30 seconds"))
 
 down = mwan_interface:option(ListValue, "down", translate("Interface down"),
-	translate("Interface will be deemed down after this many failed pings"))
+	translate("Interface will be deemed down after this many failed ping tests"))
 	down.default = "3"
 	down:value("1")
 	down:value("2")
@@ -77,7 +75,7 @@ down = mwan_interface:option(ListValue, "down", translate("Interface down"),
 	down:value("10")
 
 up = mwan_interface:option(ListValue, "up", translate("Interface up"),
-	translate("Downed interface will be deemed up after this many successful pings"))
+	translate("Downed interface will be deemed up after this many successful ping tests"))
 	up.default = "3"
 	up:value("1")
 	up:value("2")

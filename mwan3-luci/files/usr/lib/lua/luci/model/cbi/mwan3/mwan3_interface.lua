@@ -2,12 +2,12 @@ local ds = require "luci.dispatcher"
 
 -- ------ interface configuration ------ --
 
-m30 = Map("mwan3", translate("Multiwan interface configuration"),
-	translate("The mwan3 multiwan package interfaces are configured here"))
+m30 = Map("mwan3", translate("MWAN3 Multi-WAN interface configuration"))
 
 
-mwan_interface = m30:section(TypedSection, "interface", translate("Multiwan interface aliases"),
+mwan_interface = m30:section(TypedSection, "interface", translate("Interfaces"),
 	translate("Name must match the interface name found on the Network->Interfaces tab") .. "<br />" ..
+	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces") .. "<br />" ..
 	translate("Interfaces may not share the same name as configured members, policies or rules"))
 	mwan_interface.addremove = true
 	mwan_interface.dynamic = false

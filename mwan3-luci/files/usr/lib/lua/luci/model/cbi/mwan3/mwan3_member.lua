@@ -2,8 +2,7 @@ local ds = require "luci.dispatcher"
 
 -- ------ member configuration ------ --
 
-m20 = Map("mwan3", translate("Multiwan member configuration"),
-	translate("The mwan3 multiwan package members are configured here"))
+m20 = Map("mwan3", translate("MWAN3 Multi-WAN member configuration"))
 
 
 mwan_member = m20:section(TypedSection, "member", translate("Members"),

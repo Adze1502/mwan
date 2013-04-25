@@ -13,8 +13,7 @@ end
 
 -- ------ member configuration ------ --
 
-m20 = Map("mwan3", translate("Multiwan member configuration"),
-	translate("The mwan3 multiwan package members are configured here"))
+m20 = Map("mwan3", translate("MWAN3 Multi-WAN member configuration"))
 
 	m20.redirect = dsp.build_url("admin", "network", "mwan3", "member")
 
@@ -25,7 +24,6 @@ m20 = Map("mwan3", translate("Multiwan member configuration"),
 
 
 mwan_member = m20:section(NamedSection, arg[1], "member", "")
-	mwan_member.anonymous = false
 	mwan_member.addremove = false
 	mwan_member.dynamic = false
 

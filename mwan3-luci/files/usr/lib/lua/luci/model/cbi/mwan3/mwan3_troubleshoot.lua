@@ -25,13 +25,12 @@ function mwan_str2tbl(s, p)
 	return temp
 end
 
--- ------ rule configuration ------ --
+-- ------ troubleshooting ------ --
 
-m5 = Map("luci", translate("Multiwan troubleshooting"),
-	translate("This page will help troubleshoot mwan issues"))
+m5 = Map("luci", translate("MWAN3 Multi-WAN troubleshooting"))
 
 
-troubleshoot = m5:section(NamedSection, "main", translate("Multiwan troubleshooting"))
+troubleshoot = m5:section(NamedSection, "main", translate("Multi-WAN troubleshooting"))
 	troubleshoot.addremove = false
 	troubleshoot.anonymous = true
 	troubleshoot.dynamic = false
@@ -84,10 +83,10 @@ mwan_iprules = troubleshoot:option(DummyValue, "mwan_iprules", translate("Output
 		end
 	end
 
-mwan_iproutes = troubleshoot:option(DummyValue, "mwan_iproutes", translate("Output of \"ip route list table 1001-1015\""))
+mwan_iproutes = troubleshoot:option(DummyValue, "mwan_iproutes", translate("Output of \"ip route list table 1001-1027\""))
 	mwan_iproutes.rawhtml = true
 
-	routelisting = luci.sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1015'")
+	routelisting = luci.sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1027'")
 	routelistingtbl = mwan_str2tbl(routelisting, "\n")
 	function mwan_iproutes.cfgvalue(self, section)
 		if routelistingtbl == nil then

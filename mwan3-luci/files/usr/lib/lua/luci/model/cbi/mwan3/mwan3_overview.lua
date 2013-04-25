@@ -29,7 +29,7 @@ function mwan_get_iface()
 				if tracked > 0 then
 					str = str .. section[".name"] .. " (" .. wanifname .. ") " .. ": " .. status .. "\n"
 				else
-					str = str .. section[".name"] .. " (" .. wanifname .. ") " .. ": " .. "not tracked" .. "\n"
+					str = str .. section[".name"] .. " (" .. wanifname .. ") " .. ": " .. "not monitored" .. "\n"
 				end
 			else
 				str = str .. section[".name"] .. " (" .. wanifname .. ") " .. ": " .. "not enabled" .. "\n"
@@ -67,9 +67,9 @@ end
 
 -- ------ rule configuration ------ --
 
-m5 = Map("luci", translate("Multiwan status"),
-	translate("The mwan3 package can be configured for failover and load balancing with up to 15 interfaces") .. "<br />" ..
-	translate("This page shows the current ONLINE/OFFLINE status of enabled and tracked mwan3 interfaces"))
+m5 = Map("luci", translate("MWAN3 Multi-WAN status"),
+	translate("The MWAN3 package can use up to 15 WAN interface for failover and load balancing") .. "<br />" ..
+	translate("This page shows the current ONLINE/OFFLINE status of enabled and tracked MWAN3 interfaces"))
 
 
 overview = m5:section(NamedSection, "main", translate("UPDOWN"))

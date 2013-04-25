@@ -2,8 +2,7 @@ local ds = require "luci.dispatcher"
 
 -- ------ policy configuration ------ --
 
-m10 = Map("mwan3", translate("Multiwan policy configuration"),
-	translate("The mwan3 multiwan package policies are configured here"))
+m10 = Map("mwan3", translate("MWAN3 Multi-WAN policy configuration"))
 
 
 mwan_policy = m10:section(TypedSection, "policy", translate("Policies"),

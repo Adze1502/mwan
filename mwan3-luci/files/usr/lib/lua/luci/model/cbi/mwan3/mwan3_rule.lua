@@ -2,9 +2,8 @@ local ds = require "luci.dispatcher"
 
 -- ------ rule configuration ------ --
 
-m5 = Map("mwan3", translate("Multiwan rule configuration"),
-	translate("The mwan3 multiwan package traffic rules are configured here") .. "<br />" ..
-	translate("<em>Sorting of rules affects multiwan. Rules are read from top to bottom</em>"))
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN traffic rule configuration"),
+	translate("<em>Sorting of rules affects MWAN3! Rules are read from top to bottom</em>"))
 
 
 mwan_rule = m5:section(TypedSection, "rule", translate("Traffic rules"),
