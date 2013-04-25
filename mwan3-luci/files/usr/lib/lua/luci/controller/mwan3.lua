@@ -8,14 +8,14 @@ function index()
 
 	entry({"admin", "network", "mwan3"},
 		alias("admin", "network", "mwan3", "overview"),
-		_("Multi-WAN (mwan3)"), 600)
+		_("MWAN3 Multi-WAN"), 600)
 
 	entry({"admin", "network", "mwan3", "status"},
 		call("mwan3_status"))
 
 	entry({"admin", "network", "mwan3", "overview"},
-		cbi("mwan3/mwan3_overview"),
-		_("Overview"), 10).leaf = true
+		template("mwan3_overview"),
+		_("Overview"), 10)
 
 	entry({"admin", "network", "mwan3", "interface"},
 		arcombine(cbi("mwan3/mwan3_interface"), cbi("mwan3/mwan3_interfaceconfig")),
@@ -35,7 +35,7 @@ function index()
 
 	entry({"admin", "network", "mwan3", "troubleshoot"},
 		cbi("mwan3/mwan3_troubleshoot"),
-		_("Troubleshooting"), 60).leaf = true
+		_("Troubleshooting"), 60)
 
 end
 

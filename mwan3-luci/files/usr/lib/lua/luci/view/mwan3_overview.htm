@@ -1,3 +1,6 @@
+<%+header%>
+
+<script type="text/javascript" src="<%=resource%>/cbi.js"></script>
 <script type="text/javascript">//<![CDATA[
 	XHR.poll(5, '<%=luci.dispatcher.build_url("admin", "network", "mwan3", "status")%>', null,
 		function(x, st)
@@ -69,3 +72,5 @@
 	<legend><%:MWAN3 Multi-WAN Status%></legend>
 	<div id="mwan3_status_text" style="text-align:center;"><em><%:Collecting data...%></em></div>
 </fieldset>
+
+<%+footer%>
