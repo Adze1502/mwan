@@ -18,7 +18,7 @@ define Package/mwan3
   CATEGORY:=Network
   DEPENDS:=+ip +iptables +iptables-mod-conntrack-extra +iptables-mod-ipopt
   TITLE:=A multiwan hotplug script with connection tracking support
-  URL:=http://213.136.13.52/mwan3_$(PKG_VERSION)-$(PKG_RELEASE).ipk
+#  URL:=http://213.136.13.52/mwan3_$(PKG_VERSION)-$(PKG_RELEASE).ipk
   MAINTAINER:=Jeroen Louwes <jeroen.louwes@gmail.com>
 endef
 
@@ -34,7 +34,15 @@ define Build/Compile
 endef
 
 define Package/mwan3/install
-	$(CP) ./files/* $(1)
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) ./files/usr/sbin/mwan3 $(1)/usr/sbin/mwan3
+	$(INSTALL_BIN) ./files/usr/sbin/mwan3track $(1)/usr/sbin/mwan3track
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DATA) ./files/etc/config/mwan3 $(1)/etc/config/mwan3
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
+	$(INSTALL_BIN) ./files/etc/hotplug.d/iface/15-mwan3 $(1)/etc/hotplug.d/iface/15-mwan3
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/etc/init.d/mwan3 $(1)/etc/init.d/mwan3
 endef
 
 define Package/mwan3/postinst
