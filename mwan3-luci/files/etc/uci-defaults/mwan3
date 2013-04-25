@@ -1,7 +1,12 @@
 #!/bin/sh
 
-uci batch <<-EOF
-        add ucitrack mwan3
-        set ucitrack.@mwan3[-1].exec="/etc/init.d/mwan3 restart"
-        commit ucitrack
-EOF
+# prevent duplicate ucitrack entry
+dupcheck="$(uci get -p /var/state ucitrack.@mwan3[0])"
+[ "$dupcheck" == "mwan3" ] || {
+	# add mwan3 ucitrack entry
+	uci batch <<-EOF
+		add ucitrack mwan3
+		set ucitrack.@mwan3[-1].exec="/etc/init.d/mwan3 restart"
+		commit ucitrack
+	EOF
+}
