@@ -49,6 +49,14 @@ mwan_version = troubleshoot:option(DummyValue, "mwan_version", translate("mwan3 
 		return version .. "<br />" .. "<br />"
 	end
 
+mwan_fwdefault = troubleshoot:option(DummyValue, "mwan_fwdefault", translate("Firewall default output policy (must be ACCEPT)"))
+	mwan_fwdefault.rawhtml = true
+
+	outdef = luci.sys.exec("uci get -p /var/state firewall.@defaults[0].output")
+	function mwan_fwdefault.cfgvalue(self, section)
+		return outdef .. "<br />" .. "<br />"
+	end
+
 mwan_routeshow = troubleshoot:option(DummyValue, "mwan_routeshow", translate("Output of \"ip route show\""))
 	mwan_routeshow.rawhtml = true
 
