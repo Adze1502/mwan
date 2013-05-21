@@ -1,7 +1,6 @@
 module("luci.controller.mwan3", package.seeall)
 
 function index()
-
 	if not nixio.fs.access("/etc/config/mwan3") then
 		return
 	end
@@ -39,7 +38,6 @@ function index()
 	entry({"admin", "network", "mwan3", "troubleshoot"},
 		template("mwan3_troubleshoot"),
 		_("Troubleshooting"), 60)
-
 end
 
 function mwan_get_status(rulenum)

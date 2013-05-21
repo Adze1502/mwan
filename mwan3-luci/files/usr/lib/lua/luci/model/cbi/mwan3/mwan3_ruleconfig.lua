@@ -33,14 +33,14 @@ src_ip = mwan_rule:option(Value, "src_ip", translate("Source address"),
 	src_ip.datatype = ipaddr
 
 src_port = mwan_rule:option(Value, "src_port", translate("Source port"),
-	translate("May be entered as a single port (eg \"1024\") or as a portrange (eg \"1024:2048\") without quotes"))
+	translate("May be entered as a single or multiple port(s) (eg \"22\" or \"80,443\") or as a portrange (eg \"1024:2048\") without quotes"))
 
 dest_ip = mwan_rule:option(Value, "dest_ip", translate("Destination address"),
 	translate("Supports CIDR notation (eg \"192.168.100.0/24\") without quotes"))
 	dest_ip.datatype = ipaddr
 
 dest_port = mwan_rule:option(Value, "dest_port", translate("Destination port"),
-	translate("May be entered as a single port (eg \"1024\") or as a portrange (eg \"1024:2048\") without quotes"))
+	translate("May be entered as a single or multiple port(s) (eg \"22\" or \"80,443\") or as a portrange (eg \"1024:2048\") without quotes"))
 
 proto = mwan_rule:option(ListValue, "proto", translate("Protocol"))
 	proto.default = "all"
