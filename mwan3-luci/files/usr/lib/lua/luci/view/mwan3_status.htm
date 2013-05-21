@@ -3,52 +3,49 @@
 		function(x, st)
 		{
 			var tx = document.getElementById('mwan3_status_text');
-			if (tx)
+			if (st.wans)
 			{
-				if (st && st.wans)
-				{
-					var temp = '';
+				var temp = '';
 
-					for( var i = 0; i < st.wans.length; i++ )
+				for( var i = 0; i < st.wans.length; i++ )
+				{
+					var stat = '<%:Unknown%>';
+					var cssc = '';
+
+					switch (st.wans[i].status)
 					{
-						var stat = '<%:Unknown%>';
-						var cssc = '';
+						case 'on':
+							stat = '<%:ONLINE%>';
+							cssc = 'wanon';
+							break;
 
-						switch (st.wans[i].status)
-						{
-							case 'on':
-								stat = '<%:ONLINE%>';
-								cssc = 'wanon';
-								break;
+						case 'off':
+							stat = '<%:OFFLINE%>';
+							cssc = 'wanoff';
+							break;
 
-							case 'off':
-								stat = '<%:OFFLINE%>';
-								cssc = 'wanoff';
-								break;
+						case 'nm':
+							stat = '<%:not monitored%>';
+							cssc = 'wannm';
+							break;
 
-							case 'nm':
-								stat = '<%:not monitored%>';
-								cssc = 'wannm';
-								break;
-
-							case 'ne':
-								stat = '<%:not enabled%>';
-								cssc = 'wanne';
-								break;
-						}
-
-						temp += String.format(
-							'<span class="%s"><strong>%s (<a href="%q">%s</a>) :</strong> %s</span>',
-								cssc, st.wans[i].name, st.wans[i].link, st.wans[i].ifname, stat
-						);
+						case 'ne':
+							stat = '<%:not enabled%>';
+							cssc = 'wanne';
+							break;
 					}
-					
-					tx.innerHTML = temp;
+
+					temp += String.format(
+						'<span class="%s"><strong>%s (<a href="%q">%s</a>) :</strong> %s</span>',
+							cssc, st.wans[i].name, st.wans[i].link, st.wans[i].ifname, stat
+					);
 				}
-				else
-				{
-					tx.innerHTML = '';
-				}
+				
+				tx.innerHTML = temp;
+			}
+			else
+			{
+				tx.innerHTML = '';
 			}
 		}
 	);
