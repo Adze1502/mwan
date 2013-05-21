@@ -99,6 +99,7 @@ mwan3_policy_routes_and_rules()
 	local policy_number
 	local probability
 	local proto
+	local route_args
 	local rulenumber
 	local src_ip
 	local src_port
