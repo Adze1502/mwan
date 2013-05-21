@@ -10,9 +10,11 @@ mwan_ifup()
 	local ENABLED
 	
 	config_get ENABLED "$1" enabled 0
-	DEVICE=$(uci get -p /var/state network.$1.ifname)
-
-	[ "$ENABLED" = "1" ] && [ "$(ip -4 route list table main dev $DEVICE default)" ] && ACTION=ifup INTERFACE=$1 DEVICE=$DEVICE /sbin/hotplug-call iface
+	DEVICE=$(uci get -p /var/state network.$1.ifname) &> /dev/null
+	
+	if [ -n "$DEVICE" ] ; then
+		[ "$ENABLED" = "1" ] && [ "$(ip -4 route list table main dev $DEVICE default)" ] && ACTION=ifup INTERFACE=$1 DEVICE=$DEVICE /sbin/hotplug-call iface
+	fi
 }
 
 mwan_unload()
