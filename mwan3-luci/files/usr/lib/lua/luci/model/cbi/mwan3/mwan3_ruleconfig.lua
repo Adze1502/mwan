@@ -51,7 +51,7 @@ proto = mwan_rule:option(ListValue, "proto", translate("Protocol"))
 	proto:value("esp")
 
 use_policy = mwan_rule:option(Value, "use_policy", translate("Policy assigned"))
-	use_policy:value("default", translate("default route"))
+	use_policy:value("default", translate("default routing table"))
 	cbi_add_mwan(use_policy)
 
 equalize = mwan_rule:option(ListValue, "equalize", translate("Equalize"),
