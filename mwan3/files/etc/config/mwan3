@@ -85,37 +85,37 @@ config 'policy' 'wan2_pri_wan1_sec'
 # If the option equalize is set, mwan3 will load-balance each new session to the same
 # host. If not set, it will load-balance based on destination.
 
-config 'rule'
+config 'rule' 'rule1'
 	option 'src_ip' '192.168.21.0/24'
 	option 'proto' 'tcp'
 	option 'dest_port' '563'
 	option 'use_policy' 'wan2_only'
 
-config 'rule'
+config 'rule' 'rule2'
 	option 'src_ip' '192.168.21.0/24'
 	option 'proto' 'tcp'
 	option 'dest_port' '995'
 	option 'use_policy' 'wan1_only'
 
-config 'rule'
+config 'rule' 'rule3'
 	option 'dest_ip' '88.154.0.0/16'
 	option 'proto' 'tcp'
 	option 'dest_port' '1024:65535'
 	option 'equalize' '1'
 	option 'use_policy' 'wan1_wan2_loadbalanced'
 
-config 'rule'
+config 'rule' 'rule4'
 	option 'dest_ip' '77.11.41.0/24'
 	option 'proto' 'tcp'
 	option 'dest_port' '1024:65535'
 	option 'use_policy' 'wan1_pri_wan2_sec'
 
-config 'rule'
+config 'rule' 'rule5'
 	option 'dest_ip' '112.136.0.0/16'
 	option 'proto' 'udp'
 	option 'dest_port' '5352'
 	option 'use_policy' 'wan2_pri_wan1_sec'
 
-config 'rule'
+config 'rule' 'rule6'
 	option 'dest_ip' '0.0.0.0/0'
 	option 'use_policy' 'wan1_wan2_loadbalanced'

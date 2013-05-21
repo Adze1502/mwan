@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mwan3
-PKG_VERSION:=1.1
-PKG_RELEASE:=10
+PKG_VERSION:=1.2
+PKG_RELEASE:=1
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -18,7 +18,6 @@ define Package/mwan3
   CATEGORY:=Network
   DEPENDS:=+ip +iptables +iptables-mod-conntrack-extra +iptables-mod-ipopt
   TITLE:=A multiwan hotplug script with connection tracking support
-  URL:=http://213.136.13.52/mwan3_$(PKG_VERSION)-$(PKG_RELEASE).ipk
   MAINTAINER:=Jeroen Louwes <jeroen.louwes@gmail.com>
 endef
 

@@ -4,68 +4,48 @@
 
 EXTRA_COMMANDS="mwan_apply mwan_unload"
 
-mwan_ifup() {
+mwan_ifup()
+{
+	local DEVICE
+	local ENABLED
+	
+	config_get ENABLED "$1" enabled 0
+	DEVICE=$(uci get -p /var/state network.$1.ifname)
 
-	local INTERFACE="$1"
-	local ENABLED DEVICE
-
-	config_get ENABLED "$INTERFACE" enabled
-
-	# send hotplug ifup event if tunnel is enabled
-	[ "$ENABLED" = "1" ] && {
-		DEVICE=$(uci get -p /var/state network.$INTERFACE.ifname)
-		[ "$DEVICE" ] && [ "$(ifconfig $DEVICE 2>&1 >/dev/null; echo $?)" = "0" ] && {
-			ACTION=ifup INTERFACE=$INTERFACE DEVICE=$DEVICE /sbin/hotplug-call iface
-		}
-	}
-
+	[ "$ENABLED" = "1" ] && [ "$(ip -4 route list table main dev $DEVICE default)" ] && ACTION=ifup INTERFACE=$1 DEVICE=$DEVICE /sbin/hotplug-call iface
 }
 
-mwan_ifdown() {
-
-	local INTERFACE="$1"
-	local ENABLED DEVICE
-
-	config_get ENABLED "$INTERFACE" enabled
-
-	# send hotplug ifdown event if tunnel is enabled
-	[ "$ENABLED" = "1" ] && {
-		DEVICE=$(uci get -p /var/state network.$INTERFACE.ifname)
-		[ "$DEVICE" ] && [ "$(ifconfig $DEVICE 2>&1 >/dev/null; echo $?)" = "0" ] && {
-			ACTION=ifdown INTERFACE=$INTERFACE DEVICE=$DEVICE /sbin/hotplug-call iface
-		}
-
-		iptables -D PREROUTING -t mangle -j mwan3_pre &> /dev/null
-		iptables -D INPUT -t mangle -j mwan3_post &> /dev/null
-		iptables -D OUTPUT -t mangle -j mwan3_pre &> /dev/null
-		iptables -D POSTROUTING -t mangle -j mwan3_post &> /dev/null
-
-		for table_name in $(iptables -S -t mangle | awk '{print $2}' | grep mwan3 | sort -u); do
-			iptables -F $table_name -t mangle &> /dev/null
-		done
-
-		for table_name in $(iptables -S -t mangle | awk '{print $2}' | grep mwan3 | sort -u); do
-			iptables -X $table_name -t mangle &> /dev/null
-		done
-
-	}
-
-}
-
-
-mwan_unload() {
+mwan_unload()
+{
+	local rule
+	local table
 
 	killall mwan3track &> /dev/null
-	config_load mwan3
-	config_foreach mwan_ifdown interface
+	rm /var/run/mwan3track-* &> /dev/null
+
+	for rule in $(ip -4 rule list | egrep '^10[0-9]{2}\:' | cut -d ':' -f 1); do
+		ip -4 rule del pref $rule &> /dev/null
+		ip -4 route flush table $rule &> /dev/null
+	done
+
+	iptables -D PREROUTING -t mangle -j mwan3_pre &> /dev/null
+	iptables -D INPUT -t mangle -j mwan3_post &> /dev/null
+	iptables -D OUTPUT -t mangle -j mwan3_pre &> /dev/null
+	iptables -D POSTROUTING -t mangle -j mwan3_post &> /dev/null
+
+	for table in $(iptables -S -t mangle | awk '{print $2}' | grep mwan3 | sort -u); do
+		iptables -F $table -t mangle &> /dev/null
+	done
+
+	for table in $(iptables -S -t mangle | awk '{print $2}' | grep mwan3 | sort -u); do
+		iptables -X $table -t mangle &> /dev/null
+	done
 
 }
 
-mwan_apply() {
-
-	# load /etc/config/mwan3 and run wan_ifup function on each configured and enabled mwan3 interface
+mwan_apply()
+{
 	config_load mwan3
 	config_foreach mwan_ifup interface
 
 }
-
