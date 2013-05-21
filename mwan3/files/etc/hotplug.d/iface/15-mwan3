@@ -99,7 +99,6 @@ mwan3_policy_routes_and_rules()
 	local policy_number
 	local probability
 	local proto
-	local route_args
 	local rulenumber
 	local src_ip
 	local src_port
@@ -131,7 +130,7 @@ mwan3_policy_rules()
 	eval mwp$1=$(($policy_number-1000))
 	current_policy=$1
 
-	if [ $total_policies -lt 85 ] ; then
+	if [ "$total_policies" -lt 85 ] ; then
 
 		config_list_foreach $1 use_member mwan3_policy_routes
 
@@ -156,7 +155,7 @@ mwan3_policy_routes()
 		route_args=$(eval echo $(ip -4 route list table main dev $DEVICE default | awk '{print "nexthop",$2,$3,"dev",("'$DEVICE'")}'))
 
 		if [ -z "$other_route_args" ]; then
-			other_route_args=$(eval echo $(ip -4 route list table $policy_number | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u))
+			other_route_args=$(eval echo $(ip -4 route list table $policy_number default | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u))
 		fi
 
 		if [ -z "$other_route_args" ]; then
@@ -207,7 +206,7 @@ mwan3_rules_iptables()
 		esac
 	}
 
-	if [ $use_policy = default ] ; then
+	if [ "$use_policy" = default ] ; then
 		nf_mark=128
 	else
 		eval nf_mark=$(echo '$'mwp$use_policy)
@@ -228,7 +227,7 @@ mwan3_rules_iptables()
 					eval nf_mark=$(echo '$'mwif$other_iface)
 					probability=$(($other_weight*1000/$iftotalweight))
 
-					if [ $probability -lt 10 ]; then
+					if [ "$probability" -lt 10 ]; then
 						probability="0.00${probability}"
 						elif [ $probability -lt 100 ]; then
 						probability="0.0${probability}"
