@@ -66,10 +66,6 @@ mwan3_connected_iptables()
 
 mwan3_interface_routes_and_rules()
 {
-	local route_args
-
-	route_args=$(eval echo $(ip -4 route list table main dev $DEVICE default | awk '{print "nexthop",$2,$3,"dev","$DEVICE"}'))
-
 	ip -4 route flush table $(($interface_number+1000))
 	[ $ACTION = "ifup" ] && ip -4 route add table $(($interface_number+1000)) default $route_args
 
@@ -108,7 +104,7 @@ mwan3_policy_routes_and_rules()
 
 	mwan3_get_weight_for_device()
 	{
-		other_iface=$(uci show -P /var/state network | awk -F'=' ' $2 == ("'$other_device'") ' | grep ifname | awk -F'.' ' { print $2 } ' | grep -v '@')
+		other_iface=$(uci show -P /var/state network | awk -F'=' ' $2 == ("'$2'") ' | grep ifname | awk -F'.' ' { print $2 } ' | grep -v '@')
 
 		for member in $(uci get mwan3.$1.use_member); do
 			if [ $(uci get -P /var/state mwan3.$member.interface) = "$other_iface" ]; then
@@ -149,21 +145,19 @@ mwan3_policy_rules()
 mwan3_policy_routes()
 {
 	if [ $(uci get -P /var/state mwan3.$1.interface) = "$INTERFACE" ]; then
-		metric=$(uci get -P /var/state mwan3.$1.metric)
-		weight=$(uci get -P /var/state mwan3.$1.weight)
-
-		route_args=$(eval echo $(ip -4 route list table main dev $DEVICE default | awk '{print "nexthop",$2,$3,"dev",("'$DEVICE'")}'))
+		config_get metric $1 metric 1
+		config_get weight $1 weight 1
 
 		if [ -z "$other_route_args" ]; then
-			other_route_args=$(eval echo $(ip -4 route list table $policy_number default | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u))
+			other_route_args=$(ip -4 route list table $policy_number default | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u)
 		fi
 
 		if [ -z "$other_route_args" ]; then
-			other_device=$(eval echo $(ip -4 route list table $policy_number default | grep "^default via" | awk '$5 != ("'$DEVICE'")' | awk '$7 == ("'$metric'")' | sed 's/.*dev \([^ ]*\) .*/\1/'))
+			other_device=$(ip -4 route list table $policy_number default | grep "^default via" | awk '$5 != ("'$DEVICE'")' | awk '$7 == ("'$metric'")' | sed 's/.*dev \([^ ]*\) .*/\1/')
 
 			if [ -n "$other_device" ]; then
-				mwan3_get_weight_for_device $current_policy
-				other_route_args=$(eval echo $(ip -4 route list table $policy_number default | grep "^default via" | awk '$5 != ("'$DEVICE'")' | awk '$7 == ("'$metric'")' | awk '{print "nexthop",$2,$3,"dev","$other_device","weight","$other_weight"}'))
+				mwan3_get_weight_for_device $current_policy $other_device
+				other_route_args=$(ip -4 route list table $policy_number default | grep "^default via" | awk '$5 != ("'$DEVICE'")' | awk '$7 == ("'$metric'")' | awk '{print "nexthop",$2,$3,"dev",("'$other_device'"),"weight",("'$other_weight'")}')
 			fi
 		fi
 
@@ -172,12 +166,7 @@ mwan3_policy_routes()
 		[ $ACTION = "ifdown" ] && ip -4 route add table $policy_number metric $metric default $other_route_args &> /dev/null
 		[ $ACTION = "ifup" ] && ip -4 route add table $policy_number metric $metric default $route_args weight $weight $other_route_args &> /dev/null
 
-		unset metric
-		unset weight
 		unset other_route_args
-		unset other_device
-		unset other_iface
-		unset other_weight
 	fi
 }
 
@@ -209,7 +198,7 @@ mwan3_rules_iptables()
 	if [ "$use_policy" = default ] ; then
 		nf_mark=128
 	else
-		eval nf_mark=$(echo '$'mwp$use_policy)
+		eval nf_mark='$'mwp"$use_policy"
 	fi
 
 	if [ -n "$nf_mark" ] ; then
@@ -222,9 +211,9 @@ mwan3_rules_iptables()
 
 			if [ -n "$equalize_ifaces" ]; then
 				for other_device in $equalize_ifaces; do
-					mwan3_get_weight_for_device $use_policy
+					mwan3_get_weight_for_device $use_policy $other_device
 					iftotalweight=$(($other_weight+$iftotalweight))
-					eval nf_mark=$(echo '$'mwif$other_iface)
+					eval nf_mark='$'mwif"$other_iface"
 					probability=$(($other_weight*1000/$iftotalweight))
 
 					if [ "$probability" -lt 10 ]; then
@@ -291,6 +280,7 @@ mwan3_ifupdown()
 	local total_interfaces
 	local interface_number
 	local check_iface
+	local route_args
 
 	mwan3_get_interfaces()
 	{
@@ -308,6 +298,8 @@ mwan3_ifupdown()
 	[ "$total_interfaces" -le "15" ] || exit 0
 
 	logger -t mwan3 "$ACTION interface $INTERFACE ($DEVICE)"
+
+	route_args=$(ip -4 route list table main dev $DEVICE default | awk '{print "nexthop",$2,$3,"dev",("'$DEVICE'")}')
 
 	mwan3_basic_iptables
 	mwan3_interface_iptables
