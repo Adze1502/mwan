@@ -235,6 +235,8 @@ mwan3_rules_iptables()
 					mwan3_add_rule_iptables
 					unset probability
 				done
+			else
+				mwan3_add_rule_iptables
 			fi
 		else
 			mwan3_add_rule_iptables
