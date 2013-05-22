@@ -6,7 +6,8 @@ m30 = Map("mwan3", translate("MWAN3 Multi-WAN interface configuration"))
 
 
 mwan_interface = m30:section(TypedSection, "interface", translate("Interfaces"),
-	translate("Name must match the interface name found on the Network->Interfaces tab") .. "<br />" ..
+	translate("MWAN3 supports up to 15 physical and/or logical interfaces") .. "<br />" ..
+	translate("Name must match the interface name found in /etc/config/network (see troubleshooting tab)") .. "<br />" ..
 	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces") .. "<br />" ..
 	translate("Interfaces may not share the same name as configured members, policies or rules"))
 	mwan_interface.addremove = true
