@@ -30,7 +30,12 @@ mwan_interface = m30:section(TypedSection, "interface", translate("Interfaces"),
 
 enabled = mwan_interface:option(DummyValue, "enabled", translate("Enabled"))
 	function enabled.cfgvalue(self, s)
-		return self.map:get(s, "enabled") or "-"
+		enbld = self.map:get(s, "enabled")
+		if enbld == "1" then
+			return "Yes"
+		else
+			return "No"
+		end
 	end
 
 track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Test IP"))
