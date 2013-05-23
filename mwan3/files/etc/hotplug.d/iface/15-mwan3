@@ -45,7 +45,7 @@ mwan3_interface_iptables()
 	iptables -D mwan3_pre -t mangle -i $DEVICE -j MARK --set-xmark $((($interface_number*256)+32768))/65280 &> /dev/null
 	iptables -D mwan3_post -t mangle -o $DEVICE -m mark ! --mark 32768/32768 -j MARK --set-xmark $(($interface_number*256))/65280 &> /dev/null
 
-	if [ $ACTION = "ifup" ] ; then
+	if [ $ACTION == "ifup" ]; then
 		iptables -I mwan3_pre 2 -t mangle -i $DEVICE -j MARK --set-xmark $((($interface_number*256)+32768))/65280 &> /dev/null
 		iptables -I mwan3_post 1 -t mangle -o $DEVICE -m mark ! --mark 32768/32768 -j MARK --set-xmark $(($interface_number*256))/65280 &> /dev/null
 	fi
@@ -67,13 +67,13 @@ mwan3_connected_iptables()
 mwan3_interface_routes_and_rules()
 {
 	ip -4 route flush table $(($interface_number+1000))
-	[ $ACTION = "ifup" ] && ip -4 route add table $(($interface_number+1000)) default $route_args
+	[ $ACTION == "ifup" ] && ip -4 route add table $(($interface_number+1000)) default $route_args
 
-	for each in $(ip -4 rule list | awk '$1 ==  ("'$(($interface_number+1000)):'")' | awk '{print $1}'); do
+	for each in $(ip -4 rule list | awk '$1 == ("'$(($interface_number+1000)):'")' | awk '{print $1}'); do
 		ip -4 rule del pref $(($interface_number+1000))
 	done
 
-	[ $ACTION = "ifup" ] && ip -4 rule add pref $(($interface_number+1000)) fwmark $(($interface_number*256))/65280 table $(($interface_number+1000))
+	[ $ACTION == "ifup" ] && ip -4 rule add pref $(($interface_number+1000)) fwmark $(($interface_number*256))/65280 table $(($interface_number+1000))
 }
 
 mwan3_policy_routes_and_rules()
@@ -85,7 +85,7 @@ mwan3_policy_routes_and_rules()
 
 	mwan3_get_weight_member_device()
 	{
-		other_iface=$(uci show -P /var/state network | awk -F'=' ' $2 == ("'$2'") ' | grep ifname | awk -F'.' ' { print $2 } ' | grep -v '@')
+		other_iface=$(uci show -P /var/state network | awk -F'=' '$2 == ("'$2'")' | grep ifname | awk -F'.' '{ print $2 }' | grep -v '@')
 
 		for member in $(uci get mwan3.$1.use_member); do
 			if [ $(uci get -P /var/state mwan3.$member.interface) = "$other_iface" ]; then
@@ -108,7 +108,7 @@ mwan3_policy_rules()
 	eval mwp$1=$(($policy_counter+15))
 	current_policy=$1
 
-	if [ "$policy_counter" -lt 85 ] ; then
+	if [ "$policy_counter" -lt 85 ]; then
 
 		config_list_foreach $1 use_member mwan3_policy_routes
 
@@ -131,7 +131,7 @@ mwan3_policy_routes()
 	local other_device
 	local weight
 
-	if [ $(uci get -P /var/state mwan3.$1.interface) = "$INTERFACE" ]; then
+	if [ $(uci get -P /var/state mwan3.$1.interface) == "$INTERFACE" ]; then
 		config_get metric $1 metric 1
 		config_get weight $1 weight 1
 
@@ -140,13 +140,13 @@ mwan3_policy_routes()
 		fi
 
 		if [ -z "$other_route_args" ]; then
-			other_device=$(ip -4 route list table $(($policy_counter+1015)) default | grep -v  "dev $DEVICE " | grep "metric $metric " | sed 's/.*dev \([^ ]*\) .*/\1/')
+			other_device=$(ip -4 route list table $(($policy_counter+1015)) default | grep -v "dev $DEVICE " | grep "metric $metric " | sed 's/.*dev \([^ ]*\) .*/\1/')
 
 			if [ -n "$other_device" ]; then
 				mwan3_get_weight_member_device $current_policy $other_device
 				other_route_args=$(ip -4 route list table $(($policy_counter+1015)) dev $other_device default | sed 's/.*via \([^ ]*\) .*/\1/')
 
-				if [ -n "$other_route_args" ] ; then
+				if [ -n "$other_route_args" ]; then
 					other_route_args="nexthop via $other_route_args dev $other_device weight $other_weight"
 				else
 					other_route_args="nexthop dev $other_device weight $other_weight"
@@ -156,8 +156,8 @@ mwan3_policy_routes()
 
 		ip -4 route del table $(($policy_counter+1015)) metric $metric default &> /dev/null
 
-		[ $ACTION = "ifdown" ] && ip -4 route add table $(($policy_counter+1015)) metric $metric default $other_route_args &> /dev/null
-		[ $ACTION = "ifup" ] && ip -4 route add table $(($policy_counter+1015)) metric $metric default $route_args weight $weight $other_route_args &> /dev/null
+		[ $ACTION == "ifdown" ] && ip -4 route add table $(($policy_counter+1015)) metric $metric default $other_route_args &> /dev/null
+		[ $ACTION == "ifup" ] && ip -4 route add table $(($policy_counter+1015)) metric $metric default $route_args weight $weight $other_route_args &> /dev/null
 	fi
 }
 
@@ -200,13 +200,13 @@ mwan3_rules_iptables()
 		esac
 	}
 
-	if [ "$use_policy" = default ] ; then
+	if [ "$use_policy" == "default" ]; then
 		nf_mark=128
 	else
 		eval nf_mark='$'mwp"$use_policy"
 	fi
 
-	if [ -n "$nf_mark" ] ; then
+	if [ -n "$nf_mark" ]; then
 		rulenumber=$(($(iptables -L mwan3_rules -t mangle -n | wc -l)-1))
 		lowest_metric=$(ip -4 route list table $(($nf_mark+1000)) | grep -m 1 default | egrep -o 'metric [0-9]{1,4}' | awk '{print $2}')
 		equalize_devices=$(ip -4 route list table $(($nf_mark+1000)) | awk '/default  metric ('$lowest_metric')/ {flag=1;next} /default/{flag=0} flag { print }' | sed 's/.*dev \([^ ]*\) .*/\1/')
@@ -274,7 +274,7 @@ mwan3_ifupdown()
 	[ -n "$INTERFACE" ] || exit 0
 	[ "$(ip -4 route list table main dev $DEVICE default)" ] || exit 0
 
-	while [ $(pgrep -f -o hotplug-call) -ne $$ ]; do
+	while [ "$(pgrep -f -o hotplug-call)" -ne $$ ]; do
 		sleep 1
 	done
 
@@ -289,22 +289,22 @@ mwan3_ifupdown()
 	{
 		interface_counter=$(($interface_counter+1))
 		config_get_bool enabled $1 enabled
-		[ "$enabled" = "1" ] || return 0
+		[ "$enabled" -eq "1" ] || return 0
 		eval mwif$1=$interface_counter
-		[ "$1" = "$INTERFACE" ] || return 0
+		[ "$1" == "$INTERFACE" ] || return 0
 		interface_number=$interface_counter
 		check_iface=1
 	}
 	config_foreach mwan3_get_interfaces interface
 
-	[ "$check_iface" = "1" ] || exit 0
+	[ "$check_iface" -eq "1" ] || exit 0
 	[ "$interface_counter" -le "15" ] || exit 0
 
 	logger -t mwan3 "$ACTION interface $INTERFACE ($DEVICE)"
 
 	route_args=$(ip -4 route list table main dev $DEVICE default | sed 's/.*via \([^ ]*\) .*/\1/')
 	
-	if [ -n "$route_args" ] ; then
+	if [ -n "$route_args" ]; then
 		route_args="nexthop via $route_args dev $DEVICE"
 	else
 		route_args="nexthop dev $DEVICE"
@@ -316,7 +316,7 @@ mwan3_ifupdown()
 	mwan3_interface_routes_and_rules
 	mwan3_policy_routes_and_rules
 
-	[ $ACTION = "ifup" ] && mwan3_track
+	[ $ACTION == "ifup" ] && mwan3_track
 }
 
 case "$ACTION" in
