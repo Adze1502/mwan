@@ -78,10 +78,7 @@ mwan3_interface_routes_and_rules()
 
 mwan3_policy_routes_and_rules()
 {
-	local member
-	local other_iface
-	local other_weight
-	local policy_counter
+	local member other_iface other_weight policy_counter
 
 	mwan3_get_weight_member_device()
 	{
@@ -126,10 +123,7 @@ mwan3_policy_rules()
 
 mwan3_policy_routes()
 {
-	local other_route_args
-	local metric
-	local other_device
-	local weight
+	local other_route_args metric other_device weight
 
 	if [ $(uci get -P /var/state mwan3.$1.interface) == "$INTERFACE" ]; then
 		config_get metric $1 metric 1
@@ -163,19 +157,7 @@ mwan3_policy_routes()
 
 mwan3_rules_iptables()
 {
-	local probability
-	local proto
-	local src_ip
-	local src_port
-	local dest_ip
-	local dest_port
-	local use_policy
-	local equalize
-	local equalize_devices
-	local rulenumber
-	local nf_mark
-	local iftotalweight
-	local lowest_metric
+	local probability other_device src_ip src_port dest_ip dest_port use_policy equalize equalize_devices rulenumber nf_mark iftotalweight lowest_metric
 
 	config_get proto $1 proto
 	config_get src_ip $1 src_ip 0.0.0.0/0
@@ -242,13 +224,7 @@ mwan3_rules_iptables()
 
 mwan3_track()
 {
-	local track_ips
-	local reliability
-	local count
-	local timeout
-	local interval
-	local down
-	local up
+	local track_ips reliability count timeout interval down up
 
 	mwan3_list_track_ips()
 	{
@@ -280,10 +256,7 @@ mwan3_ifupdown()
 
 	config_load mwan3
 
-	local interface_counter
-	local interface_number
-	local check_iface
-	local route_args
+	local interface_counter interface_number check_iface route_args
 
 	mwan3_get_interfaces()
 	{
