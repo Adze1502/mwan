@@ -208,36 +208,32 @@ mwan3_rules_iptables()
 
 	if [ -n "$nf_mark" ] ; then
 		rulenumber=$(($(iptables -L mwan3_rules -t mangle -n | wc -l)-1))
+		lowest_metric=$(ip -4 route list table $(($nf_mark+1000)) | grep -m 1 default | egrep -o 'metric [0-9]{1,4}' | awk '{print $2}')
+		equalize_devices=$(ip -4 route list table $(($nf_mark+1000)) | awk '/default  metric ('$lowest_metric')/ {flag=1;next} /default/{flag=0} flag { print }' | sed 's/.*dev \([^ ]*\) .*/\1/')
 
-		if [ "$equalize" -eq 1 ] ; then
-			lowest_metric=$(ip -4 route list table $(($nf_mark+1000)) | grep -m 1 default | egrep -o 'metric [0-9]{1,4}' | awk '{print $2}')
-			equalize_devices=$(ip -4 route list table $(($nf_mark+1000)) | awk '/default  metric ('$lowest_metric')/ {flag=1;next} /default/{flag=0} flag { print }' | sed 's/.*dev \([^ ]*\) .*/\1/')
+		if [ -n "$equalize_devices" -a "$equalize" -eq 1 ]; then
 			iftotalweight=0
 
-			if [ -n "$equalize_devices" ]; then
-				for device in $equalize_devices; do
-					mwan3_get_weight_member_device $use_policy $device
-					iftotalweight=$(($other_weight+$iftotalweight))
-					eval nf_mark='$'mwif"$other_iface"
-					probability=$(($other_weight*1000/$iftotalweight))
+			for device in $equalize_devices; do
+				mwan3_get_weight_member_device $use_policy $device
+				iftotalweight=$(($other_weight+$iftotalweight))
+				eval nf_mark='$'mwif"$other_iface"
+				probability=$(($other_weight*1000/$iftotalweight))
 
-					if [ "$probability" -lt 10 ]; then
-						probability="0.00${probability}"
-						elif [ $probability -lt 100 ]; then
-						probability="0.0${probability}"
-						elif [ $probability -lt 1000 ]; then
-						probability="0.${probability}"
-					else
-						probability="1"
-					fi
+				if [ "$probability" -lt 10 ]; then
+					probability="0.00${probability}"
+					elif [ $probability -lt 100 ]; then
+					probability="0.0${probability}"
+					elif [ $probability -lt 1000 ]; then
+					probability="0.${probability}"
+				else
+					probability="1"
+				fi
 
-					probability="-m statistic --mode random --probability ${probability}"
-					mwan3_add_rule_iptables
-					unset probability
-				done
-			else
+				probability="-m statistic --mode random --probability ${probability}"
 				mwan3_add_rule_iptables
-			fi
+				unset probability
+			done
 		else
 			mwan3_add_rule_iptables
 		fi
@@ -274,8 +270,8 @@ mwan3_track()
 
 mwan3_ifupdown()
 {
-	[ -n $DEVICE ] || exit 0
-	[ -n $INTERFACE ] || exit 0
+	[ -n "$DEVICE" ] || exit 0
+	[ -n "$INTERFACE" ] || exit 0
 	[ "$(ip -4 route list table main dev $DEVICE default)" ] || exit 0
 
 	while [ $(pgrep -f -o hotplug-call) -ne $$ ]; do
