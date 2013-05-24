@@ -111,7 +111,7 @@ mwan3_policy_rules()
 
 		ip -4 rule del pref $(($policy_counter+1015)) &> /dev/null
 
-		if [ -n "$(ip -4 route list table $(($policy_counter+1015)) default)" ]; then
+		if [ -n "$(ip -4 route list table $(($policy_counter+1015)))" ]; then
 			ip -4 rule add pref $(($policy_counter+1015)) fwmark $((($policy_counter+15)*256))/65280 table $(($policy_counter+1015)) &> /dev/null
 		else
 			ip -4 route flush table $(($policy_counter+1015))
@@ -130,15 +130,15 @@ mwan3_policy_routes()
 		config_get weight $1 weight 1
 
 		if [ -z "$other_route_args" ]; then
-			other_route_args=$(ip -4 route list table $(($policy_counter+1015)) default | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u)
+			other_route_args=$(ip -4 route list table $(($policy_counter+1015)) | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u)
 		fi
 
 		if [ -z "$other_route_args" ]; then
-			other_device=$(ip -4 route list table $(($policy_counter+1015)) default | grep -v "dev $DEVICE " | grep "metric $metric " | sed 's/.*dev \([^ ]*\) .*/\1/')
+			other_device=$(ip -4 route list table $(($policy_counter+1015)) | grep -v "dev $DEVICE " | grep "metric $metric " | sed 's/.*dev \([^ ]*\) .*/\1/')
 
 			if [ -n "$other_device" ]; then
 				mwan3_get_weight_member_device $current_policy $other_device
-				other_route_args=$(ip -4 route list table $(($policy_counter+1015)) dev $other_device default | sed 's/.*via \([^ ]*\) .*/\1/')
+				other_route_args=$(ip -4 route list table $(($policy_counter+1015)) dev $other_device | sed 's/.*via \([^ ]*\) .*/\1/')
 
 				if [ -n "$other_route_args" ]; then
 					other_route_args="nexthop via $other_route_args dev $other_device weight $other_weight"
@@ -171,13 +171,13 @@ mwan3_rules_iptables()
 	{
 		case $proto in
 			icmp)
-			iptables -I mwan3_rules $rulenumber -t mangle -p "$proto" -s "$src_ip" -d "$dest_ip" -m mark --mark 0/65280 $probability -j MARK --set-xmark $(($nf_mark*256))/65280 &> /dev/null
+			iptables -I mwan3_rules $rulenumber -t mangle -p $proto -s $src_ip -d $dest_ip -m mark --mark 0/65280 $probability -j MARK --set-xmark $(($nf_mark*256))/65280 &> /dev/null
 			;;
 			tcp|udp)
-			iptables -I mwan3_rules $rulenumber -t mangle -p "$proto" -s "$src_ip" -d "$dest_ip" -m multiport --sports "$src_port" -m multiport --dports "$dest_port" -m mark --mark 0/65280 $probability -j MARK --set-xmark $(($nf_mark*256))/65280 &> /dev/null
+			iptables -I mwan3_rules $rulenumber -t mangle -p $proto -s $src_ip -d $dest_ip -m multiport --sports $src_port -m multiport --dports $dest_port -m mark --mark 0/65280 $probability -j MARK --set-xmark $(($nf_mark*256))/65280 &> /dev/null
 			;;
 			*)
-			iptables -I mwan3_rules $rulenumber -t mangle -s "$src_ip" -d "$dest_ip" -m mark --mark 0/65280 $probability -j MARK --set-xmark $(($nf_mark*256))/65280 &> /dev/null
+			iptables -I mwan3_rules $rulenumber -t mangle -s $src_ip -d $dest_ip -m mark --mark 0/65280 $probability -j MARK --set-xmark $(($nf_mark*256))/65280 &> /dev/null
 			;;
 		esac
 	}
@@ -189,8 +189,8 @@ mwan3_rules_iptables()
 	fi
 
 	if [ -n "$nf_mark" ]; then
-		rulenumber=$(($(iptables -L mwan3_rules -t mangle -n | wc -l)-1))
-		lowest_metric=$(ip -4 route list table $(($nf_mark+1000)) | grep -m 1 default | egrep -o 'metric [0-9]{1,4}' | awk '{print $2}')
+		rulenumber=$(($(iptables -S mwan3_rules -t mangle | wc -l)))
+		lowest_metric=$(ip -4 route list table $(($nf_mark+1000)) | grep -m 1 default | egrep -o 'metric [0-9]{1,9}' | awk '{print $2}')
 		equalize_devices=$(ip -4 route list table $(($nf_mark+1000)) | awk '/default  metric ('$lowest_metric')/ {flag=1;next} /default/{flag=0} flag { print }' | sed 's/.*dev \([^ ]*\) .*/\1/')
 
 		if [ -n "$equalize_devices" -a "$equalize" -eq 1 ]; then
@@ -214,7 +214,6 @@ mwan3_rules_iptables()
 
 				probability="-m statistic --mode random --probability ${probability}"
 				mwan3_add_rule_iptables
-				unset probability
 			done
 		else
 			mwan3_add_rule_iptables
