@@ -114,6 +114,17 @@ end
 function mwan3_tshoot()
 	local rv = {	}
 
+	-- mwan3 and mwan3-luci version
+	local mwan3version = luci.sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'")
+		mwan3version = "<br />mwan3 - " .. string.gsub(mwan3version, "\n", "<br />")
+	local mwan3lversion = luci.sys.exec("opkg info luci-app-mwan3 | grep Version | awk -F' ' '{ print $2 }'")
+		mwan3lversion = "luci-app-mwan3 - " .. string.gsub(mwan3lversion, "\n", "<br /><br />")
+	local mwan3apps = mwan3version .. mwan3lversion
+	rv.mw3ver = { }
+	mwv = {}
+	mwv[mwan3apps] = #rv.mw3ver + 1
+	rv.mw3ver[mwv[mwan3apps]] = { mwan3v = mwan3apps }
+
 	-- default firewall output policy
 	local defout = luci.sys.exec("uci get -p /var/state firewall.@defaults[0].output")
 		defout = "<br />" .. string.gsub(defout, "\n", "<br /><br />")
@@ -139,7 +150,7 @@ function mwan3_tshoot()
 	rv.iprule[ipruleid[ipr]] = { rule = ipr }
 
 	-- ip route list table
-	local routelisting = luci.sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1027'")
+	local routelisting = luci.sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1099'")
 	local rlstr = ""
 		for line in routelisting:gmatch("[^\r\n]+") do
 			local rlstr1 = luci.sys.exec("ip route list table " .. line)

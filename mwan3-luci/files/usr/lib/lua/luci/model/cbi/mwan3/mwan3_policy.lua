@@ -1,11 +1,31 @@
 local ds = require "luci.dispatcher"
 
+function policynum()
+	local polnum = 0
+	uci.cursor():foreach("mwan3", "policy",
+		function (section)
+			polnum = polnum+1
+		end
+	)
+	if polnum == 0 then
+		return "<em>There are no policies configured!</em>"
+	elseif polnum == 1 then
+		return "<em>There is currently " .. polnum .. " of 84 supported interfaces configured!</em>"
+	elseif polnum <= 84 then
+		return "<em>There are currently " .. polnum .. " of 84 supported interfaces configured!</em>"
+	else
+		return "<em>WARNING: " .. polnum .. " interfaces are configured exceeding the maximum of 84!</em>"
+	end
+end
+
 -- ------ policy configuration ------ --
 
-m10 = Map("mwan3", translate("MWAN3 Multi-WAN policy configuration"))
+m10 = Map("mwan3", translate("MWAN3 Multi-WAN policy configuration"),
+	translate(policynum()))
 
 
 mwan_policy = m10:section(TypedSection, "policy", translate("Policies"),
+	translate("MWAN3 supports up to 84 policies") .. "<br />" ..
 	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces") .. "<br />" ..
 	translate("Policies may not share the same name as configured interfaces, members or rules"))
 	mwan_policy.addremove = true
@@ -15,14 +35,9 @@ mwan_policy = m10:section(TypedSection, "policy", translate("Policies"),
 	mwan_policy.extedit = ds.build_url("admin", "network", "mwan3", "policy", "%s")
 
 	function mwan_policy.create(self, section)
-		if TypedSection.create(self, section) then
-			m10.uci:save("mwan3")
-			luci.http.redirect(ds.build_url("admin", "network", "mwan3", "policy", section))
-			return true
-		else
-			m10.message = translatef("There is already an entry named %q", section)
-			return false
-		end
+		TypedSection.create(self, section)
+		m10.uci:save("mwan3")
+		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "policy", section))
 	end
 
 

@@ -17,14 +17,9 @@ mwan_rule = m5:section(TypedSection, "rule", translate("Traffic rules"),
 	mwan_rule.extedit = ds.build_url("admin", "network", "mwan3", "rule", "%s")
 
 	function mwan_rule.create(self, section)
-		if TypedSection.create(self, section) then
-			m5.uci:save("mwan3")
-			luci.http.redirect(ds.build_url("admin", "network", "mwan3", "rule", section))
-			return true
-		else
-			m5.message = translatef("There is already an entry named %q", section)
-			return false
-		end
+		TypedSection.create(self, section)
+		m5.uci:save("mwan3")
+		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "rule", section))
 	end
 
 

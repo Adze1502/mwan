@@ -15,14 +15,9 @@ mwan_member = m20:section(TypedSection, "member", translate("Members"),
 	mwan_member.extedit = ds.build_url("admin", "network", "mwan3", "member", "%s")
 
 	function mwan_member.create(self, section)
-		if TypedSection.create(self, section) then
-			m20.uci:save("mwan3")
-			luci.http.redirect(ds.build_url("admin", "network", "mwan3", "member", section))
-			return true
-		else
-			m20.message = translatef("There is already an entry named %q", section)
-			return false
-		end
+		TypedSection.create(self, section)
+		m20.uci:save("mwan3")
+		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "member", section))
 	end
 
 

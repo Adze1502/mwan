@@ -1,8 +1,27 @@
 local ds = require "luci.dispatcher"
 
+function ifacenum()
+	local ifnum = 0
+	uci.cursor():foreach("mwan3", "interface",
+		function (section)
+			ifnum = ifnum+1
+		end
+	)
+	if ifnum == 0 then
+		return "<em>There are no interfaces configured!</em>"
+	elseif ifnum == 1 then
+		return "<em>There is currently " .. ifnum .. " of 15 supported interfaces configured!</em>"
+	elseif ifnum <= 15 then
+		return "<em>There are currently " .. ifnum .. " of 15 supported interfaces configured!</em>"
+	else
+		return "<em>WARNING: " .. ifnum .. " interfaces are configured exceeding the maximum of 15!</em>"
+	end
+end
+
 -- ------ interface configuration ------ --
 
-m30 = Map("mwan3", translate("MWAN3 Multi-WAN interface configuration"))
+m30 = Map("mwan3", translate("MWAN3 Multi-WAN interface configuration"),
+	translate(ifacenum()))
 
 
 mwan_interface = m30:section(TypedSection, "interface", translate("Interfaces"),
@@ -17,14 +36,9 @@ mwan_interface = m30:section(TypedSection, "interface", translate("Interfaces"),
 	mwan_interface.extedit = ds.build_url("admin", "network", "mwan3", "interface", "%s")
 
 	function mwan_interface.create(self, section)
-		if TypedSection.create(self, section) then
-			m30.uci:save("mwan3")
-			luci.http.redirect(ds.build_url("admin", "network", "mwan3", "interface", section))
-			return true
-		else
-			m30.message = translatef("There is already an entry named %q", section)
-			return false
-		end
+		TypedSection.create(self, section)
+		m30.uci:save("mwan3")
+		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "interface", section))
 	end
 
 
