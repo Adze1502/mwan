@@ -25,9 +25,9 @@ m30 = Map("mwan3", translate("MWAN3 Multi-WAN interface configuration"),
 
 
 mwan_interface = m30:section(TypedSection, "interface", translate("Interfaces"),
-	translate("MWAN3 supports up to 15 physical and/or logical interfaces") .. "<br />" ..
-	translate("Name must match the interface name found in /etc/config/network (see troubleshooting tab)") .. "<br />" ..
-	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces") .. "<br />" ..
+	translate("MWAN3 supports up to 15 physical and/or logical interfaces<br />") ..
+	translate("Name must match the interface name found in /etc/config/network (see troubleshooting tab)<br />") ..
+	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
 	translate("Interfaces may not share the same name as configured members, policies or rules"))
 	mwan_interface.addremove = true
 	mwan_interface.dynamic = false
@@ -55,14 +55,14 @@ enabled = mwan_interface:option(DummyValue, "enabled", translate("Enabled"))
 track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Test IP"))
 	track_ip.rawhtml = true
 	function track_ip.cfgvalue(self, s)
-		local str = ""
+		local str = "<br />"
 		local tab = self.map:get(s, "track_ip")
 		if tab then
 			for k,v in pairs(tab) do
 				str = str .. v .. "<br />"
 			end
 		else
-			str = "none" .. "<br />"
+			str = "<br />none<br />"
 		end
 		str = str .. "<br />"
 		return str

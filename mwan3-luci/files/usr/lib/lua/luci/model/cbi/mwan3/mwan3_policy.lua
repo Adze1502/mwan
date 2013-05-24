@@ -25,8 +25,8 @@ m10 = Map("mwan3", translate("MWAN3 Multi-WAN policy configuration"),
 
 
 mwan_policy = m10:section(TypedSection, "policy", translate("Policies"),
-	translate("MWAN3 supports up to 84 policies") .. "<br />" ..
-	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces") .. "<br />" ..
+	translate("MWAN3 supports up to 84 policies<br />") ..
+	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
 	translate("Policies may not share the same name as configured interfaces, members or rules"))
 	mwan_policy.addremove = true
 	mwan_policy.dynamic = false
@@ -44,14 +44,14 @@ mwan_policy = m10:section(TypedSection, "policy", translate("Policies"),
 use_member = mwan_policy:option(DummyValue, "use_member", translate("Members assigned"))
 	use_member.rawhtml = true
 	function use_member.cfgvalue(self, s)
-		local str = ""
+		local str = "<br />"
 		local tab = self.map:get(s, "use_member")
 		if tab then
 			for k,v in pairs(tab) do
 				str = str .. v .. "<br />"
 			end
 		else
-			str = "none" .. "<br />"
+			str = "<br />none<br />"
 		end
 		str = str .. "<br />"
 		return str

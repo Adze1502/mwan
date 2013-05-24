@@ -6,7 +6,7 @@ m20 = Map("mwan3", translate("MWAN3 Multi-WAN member configuration"))
 
 
 mwan_member = m20:section(TypedSection, "member", translate("Members"),
-	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces") .. "<br />" ..
+	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
 	translate("Members may not share the same name as configured interfaces, policies or rules"))
 	mwan_member.addremove = true
 	mwan_member.dynamic = false
