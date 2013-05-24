@@ -10,11 +10,11 @@ function policynum()
 	if polnum == 0 then
 		return "<em>There are no policies configured!</em>"
 	elseif polnum == 1 then
-		return "<em>There is currently " .. polnum .. " of 84 supported interfaces configured!</em>"
+		return "<em>There is currently " .. polnum .. " of 84 supported policies configured!</em>"
 	elseif polnum <= 84 then
-		return "<em>There are currently " .. polnum .. " of 84 supported interfaces configured!</em>"
+		return "<em>There are currently " .. polnum .. " of 84 supported policies configured!</em>"
 	else
-		return "<em>WARNING: " .. polnum .. " interfaces are configured exceeding the maximum of 84!</em>"
+		return "<em>WARNING: " .. polnum .. " policies are configured exceeding the maximum of 84!</em>"
 	end
 end
 
