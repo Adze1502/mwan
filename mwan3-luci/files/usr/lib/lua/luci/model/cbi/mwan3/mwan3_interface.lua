@@ -62,7 +62,7 @@ track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Test IP"))
 				str = str .. v .. "<br />"
 			end
 		else
-			str = "<br />none<br />"
+			str = "<br />-<br />"
 		end
 		str = str .. "<br />"
 		return str

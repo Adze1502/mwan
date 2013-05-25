@@ -22,8 +22,10 @@ mwan_member = m20:section(TypedSection, "member", translate("Members"),
 
 
 interface = mwan_member:option(DummyValue, "interface", translate("Interface"))
+	interface.rawhtml = true
 	function interface.cfgvalue(self, s)
-		return self.map:get(s, "interface") or "-"
+		local interfc = self.map:get(s, "interface") or "-"
+		return "<br />" .. interfc .. "<br /><br />"
 	end
 
 metric = mwan_member:option(DummyValue, "metric", translate("Metric"))

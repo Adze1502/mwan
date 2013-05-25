@@ -24,8 +24,10 @@ mwan_rule = m5:section(TypedSection, "rule", translate("Traffic rules"),
 
 
 src_ip = mwan_rule:option(DummyValue, "src_ip", translate("Source address"))
+	src_ip.rawhtml = true
 	function src_ip.cfgvalue(self, s)
-		return self.map:get(s, "src_ip") or "-"
+		local sourceip = self.map:get(s, "src_ip") or "-"
+		return "<br />" .. sourceip .. "<br /><br />"
 	end
 
 src_port = mwan_rule:option(DummyValue, "src_port", translate("Source port"))
