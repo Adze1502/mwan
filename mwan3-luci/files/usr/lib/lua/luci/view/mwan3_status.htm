@@ -40,12 +40,19 @@
 							cssc, st.wans[i].name, st.wans[i].link, st.wans[i].ifname, stat
 					);
 				}
-				
+				var lbrk = '<br /><br />';
+				temp = temp.concat(lbrk);
 				tx.innerHTML = temp;
 			}
 			else
 			{
-				tx.innerHTML = '';
+				var temp = '';
+				var ncint = '<br />No MWAN3 interfaces found<br /><br />';
+				temp += String.format(
+					'<strong>%s</strong>',
+						ncint
+				);
+				tx.innerHTML = temp;
 			}
 		}
 	);

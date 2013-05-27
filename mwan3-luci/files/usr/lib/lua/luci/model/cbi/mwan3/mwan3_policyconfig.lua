@@ -13,17 +13,17 @@ end
 
 -- ------ policy configuration ------ --
 
-m10 = Map("mwan3", translate("MWAN3 Multi-WAN policy configuration - ") .. arg[1])
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration - ") .. arg[1])
 
-	m10.redirect = dsp.build_url("admin", "network", "mwan3", "policy")
+	m5.redirect = dsp.build_url("admin", "network", "mwan3", "policy")
 
-	if not m10.uci:get(arg[1]) == "policy" then
-		luci.http.redirect(m10.redirect)
+	if not m5.uci:get(arg[1]) == "policy" then
+		luci.http.redirect(m5.redirect)
 		return
 	end
 
 
-mwan_policy = m10:section(NamedSection, arg[1], "policy", "")
+mwan_policy = m5:section(NamedSection, arg[1], "policy", "")
 	mwan_policy.addremove = false
 	mwan_policy.dynamic = false
 
@@ -34,11 +34,11 @@ use_member = mwan_policy:option(DynamicList, "use_member", translate("Member use
 
 -- ------ currently configured members ------ --
 
-mwan_member = m10:section(TypedSection, "member", translate("Currently configured members"))
+mwan_member = m5:section(TypedSection, "member", translate("Currently Configured Members"))
 	mwan_member.addremove = false
 	mwan_member.dynamic = false
 	mwan_member.sortable = false
 	mwan_member.template = "cbi/tblsection"
 
 
-return m10
+return m5

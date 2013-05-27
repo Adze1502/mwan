@@ -4,17 +4,17 @@ arg[1] = arg[1] or ""
 
 -- ------ interface configuration ------ --
 
-m30 = Map("mwan3", translate("MWAN3 Multi-WAN interface configuration - ") .. arg[1])
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration - ") .. arg[1])
 
-	m30.redirect = dsp.build_url("admin", "network", "mwan3", "interface")
+	m5.redirect = dsp.build_url("admin", "network", "mwan3", "interface")
 
-	if not m30.uci:get(arg[1]) == "interface" then
-		luci.http.redirect(m30.redirect)
+	if not m5.uci:get(arg[1]) == "interface" then
+		luci.http.redirect(m5.redirect)
 		return
 	end
 
 
-mwan_interface = m30:section(NamedSection, arg[1], "interface", "")
+mwan_interface = m5:section(NamedSection, arg[1], "interface", "")
 	mwan_interface.addremove = false
 	mwan_interface.dynamic = false
 
@@ -89,4 +89,4 @@ up = mwan_interface:option(ListValue, "up", translate("Interface up"),
 	up:value("10")
 
 
-return m30
+return m5

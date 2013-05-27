@@ -2,10 +2,10 @@ local ds = require "luci.dispatcher"
 
 -- ------ member configuration ------ --
 
-m20 = Map("mwan3", translate("MWAN3 Multi-WAN member configuration"))
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN Member Configuration"))
 
 
-mwan_member = m20:section(TypedSection, "member", translate("Members"),
+mwan_member = m5:section(TypedSection, "member", translate("Members"),
 	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
 	translate("Members may not share the same name as configured interfaces, policies or rules"))
 	mwan_member.addremove = true
@@ -16,7 +16,7 @@ mwan_member = m20:section(TypedSection, "member", translate("Members"),
 
 	function mwan_member.create(self, section)
 		TypedSection.create(self, section)
-		m20.uci:save("mwan3")
+		m5.uci:save("mwan3")
 		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "member", section))
 	end
 
@@ -39,4 +39,4 @@ weight = mwan_member:option(DummyValue, "weight", translate("Weight"))
 	end
 
 
-return m20
+return m5

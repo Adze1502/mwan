@@ -80,32 +80,36 @@ function mwan3_status()
 	local rv = {	}
 
 	-- overview status
-	rv.wans = { }
-	wansid = {}
-
 	statstr = mwan_get_iface()
-	for wanname, ifstat in string.gfind(statstr, "([^%[]+)%[([^%]]+)%]") do
-		local wanifname = luci.sys.exec("uci get -p /var/state network." .. wanname .. ".ifname")
-			local wanifnamelen = string.len(wanifname)
-			if wanifnamelen == 0 then
-				wanifname = "x"
-			else
-				wanifname = string.gsub(wanifname, "\n", "")
-			end
-		local wanlink = ntm:get_interface(wanifname)
-			wanlink = wanlink and wanlink:get_network()
-			wanlink = wanlink and wanlink:adminlink() or "#"
-		wansid[wanname] = #rv.wans + 1
-		rv.wans[wansid[wanname]] = { name = wanname, link = wanlink, ifname = wanifname, status = ifstat }
+	if string.len(statstr) > 0 then
+		rv.wans = { }
+		wansid = {}
+
+		for wanname, ifstat in string.gfind(statstr, "([^%[]+)%[([^%]]+)%]") do
+			local wanifname = luci.sys.exec("uci get -p /var/state network." .. wanname .. ".ifname")
+				local wanifnamelen = string.len(wanifname)
+				if wanifnamelen == 0 then
+					wanifname = "x"
+				else
+					wanifname = string.gsub(wanifname, "\n", "")
+				end
+			local wanlink = ntm:get_interface(wanifname)
+				wanlink = wanlink and wanlink:get_network()
+				wanlink = wanlink and wanlink:adminlink() or "#"
+			wansid[wanname] = #rv.wans + 1
+			rv.wans[wansid[wanname]] = { name = wanname, link = wanlink, ifname = wanifname, status = ifstat }
+		end
 	end
 
 	-- overview status log
 	local mwlg = luci.sys.exec("logread | grep mwan3 | tail -n 50 | sed 'x;1!H;$!d;x'")
+	if string.len(mwlg) > 0 then
 		mwlg =  "<br />" .. string.gsub(mwlg, "\n", "<br />") .. "<br />"
-	rv.mwan3log = { }
-	mwlog = {}
-	mwlog[mwlg] = #rv.mwan3log + 1
-	rv.mwan3log[mwlog[mwlg]] = { mwanlog = mwlg }
+		rv.mwan3log = { }
+		mwlog = {}
+		mwlog[mwlg] = #rv.mwan3log + 1
+		rv.mwan3log[mwlog[mwlg]] = { mwanlog = mwlg }
+	end
 
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(rv)
@@ -116,9 +120,17 @@ function mwan3_tshoot()
 
 	-- mwan3 and mwan3-luci version
 	local mwan3version = luci.sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'")
-		mwan3version = "<br />mwan3 - " .. string.gsub(mwan3version, "\n", "<br />")
+		if string.len(mwan3version) > 0 then
+			mwan3version = "<br />mwan3 - " .. string.gsub(mwan3version, "\n", "<br />")
+		else
+			mwan3version = "<br />mwan3 - unknown<br />"
+		end
 	local mwan3lversion = luci.sys.exec("opkg info luci-app-mwan3 | grep Version | awk -F' ' '{ print $2 }'")
-		mwan3lversion = "luci-app-mwan3 - " .. string.gsub(mwan3lversion, "\n", "<br /><br />")
+		if string.len(mwan3lversion) > 0 then
+			mwan3lversion = "luci-app-mwan3 - " .. string.gsub(mwan3lversion, "\n", "<br /><br />")
+		else
+			mwan3lversion = "luci-app-mwan3 - unknown<br /><br />"
+		end
 	local mwan3apps = mwan3version .. mwan3lversion
 	rv.mw3ver = { }
 	mwv = {}

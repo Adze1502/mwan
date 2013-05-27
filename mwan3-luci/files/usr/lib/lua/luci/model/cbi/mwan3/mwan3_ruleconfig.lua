@@ -13,7 +13,7 @@ end
 
 -- ------ rule configuration ------ --
 
-m5 = Map("mwan3", translate("MWAN3 Multi-WAN rule configuration - ") .. arg[1])
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN Rule Configuration - ") .. arg[1])
 
 	m5.redirect = dsp.build_url("admin", "network", "mwan3", "rule")
 
@@ -63,7 +63,7 @@ equalize = mwan_rule:option(ListValue, "equalize", translate("Equalize"),
 
 -- ------ currently configured policies ------ --
 
-mwan_policy = m5:section(TypedSection, "policy", translate("Currently configured policies"))
+mwan_policy = m5:section(TypedSection, "policy", translate("Currently Configured Policies"))
 	mwan_policy.addremove = false
 	mwan_policy.dynamic = false
 	mwan_policy.sortable = false

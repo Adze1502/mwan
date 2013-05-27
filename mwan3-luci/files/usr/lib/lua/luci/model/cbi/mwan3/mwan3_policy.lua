@@ -20,11 +20,11 @@ end
 
 -- ------ policy configuration ------ --
 
-m10 = Map("mwan3", translate("MWAN3 Multi-WAN policy configuration"),
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration"),
 	translate(policynum()))
 
 
-mwan_policy = m10:section(TypedSection, "policy", translate("Policies"),
+mwan_policy = m5:section(TypedSection, "policy", translate("Policies"),
 	translate("MWAN3 supports up to 84 policies<br />") ..
 	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
 	translate("Policies may not share the same name as configured interfaces, members or rules"))
@@ -36,7 +36,7 @@ mwan_policy = m10:section(TypedSection, "policy", translate("Policies"),
 
 	function mwan_policy.create(self, section)
 		TypedSection.create(self, section)
-		m10.uci:save("mwan3")
+		m5.uci:save("mwan3")
 		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "policy", section))
 	end
 
@@ -58,4 +58,4 @@ use_member = mwan_policy:option(DummyValue, "use_member", translate("Members ass
 	end
 
 
-return m10
+return m5

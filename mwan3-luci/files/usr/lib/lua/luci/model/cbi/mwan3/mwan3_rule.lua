@@ -2,11 +2,11 @@ local ds = require "luci.dispatcher"
 
 -- ------ rule configuration ------ --
 
-m5 = Map("mwan3", translate("MWAN3 Multi-WAN traffic rule configuration"),
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN traffic Rule Configuration"),
 	translate("<em>Sorting of rules affects MWAN3! Rules are read from top to bottom</em>"))
 
 
-mwan_rule = m5:section(TypedSection, "rule", translate("Traffic rules"),
+mwan_rule = m5:section(TypedSection, "rule", translate("Traffic Rules"),
 	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
 	translate("Rules may not share the same name as configured interfaces, members or policies"))
 	mwan_rule.addremove = true

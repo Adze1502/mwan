@@ -13,17 +13,17 @@ end
 
 -- ------ member configuration ------ --
 
-m20 = Map("mwan3", translate("MWAN3 Multi-WAN member configuration - ") .. arg[1])
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN Member Configuration - ") .. arg[1])
 
-	m20.redirect = dsp.build_url("admin", "network", "mwan3", "member")
+	m5.redirect = dsp.build_url("admin", "network", "mwan3", "member")
 
-	if not m20.uci:get(arg[1]) == "member" then
-		luci.http.redirect(m20.redirect)
+	if not m5.uci:get(arg[1]) == "member" then
+		luci.http.redirect(m5.redirect)
 		return
 	end
 
 
-mwan_member = m20:section(NamedSection, arg[1], "member", "")
+mwan_member = m5:section(NamedSection, arg[1], "member", "")
 	mwan_member.addremove = false
 	mwan_member.dynamic = false
 
@@ -42,11 +42,11 @@ weight = mwan_member:option(Value, "weight", translate("Weight"),
 
 -- ------ currently configured interfaces ------ --
 
-mwan_interface = m20:section(TypedSection, "interface", translate("Currently configured interfaces"))
+mwan_interface = m5:section(TypedSection, "interface", translate("Currently Configured Interfaces"))
 	mwan_interface.addremove = false
 	mwan_interface.dynamic = false
 	mwan_interface.sortable = false
 	mwan_interface.template = "cbi/tblsection"
 
 
-return m20
+return m5
