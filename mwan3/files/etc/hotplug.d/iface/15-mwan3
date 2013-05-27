@@ -68,7 +68,7 @@ mwan3_interface_routes_and_rules()
 {
 	ip -4 route flush table $(($interface_number+1000))
 	[ $ACTION == "ifup" ] && ip -4 route add table $(($interface_number+1000)) default $route_args
-	logger -t mwan3debug "ip -4 route add table $(($interface_number+1000)) default $route_args"
+
 	for each in $(ip -4 rule list | awk '$1 == ("'$(($interface_number+1000)):'")' | awk '{print $1}'); do
 		ip -4 rule del pref $(($interface_number+1000))
 	done
