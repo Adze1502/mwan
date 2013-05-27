@@ -7,7 +7,6 @@ function ifacewarn()
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			ifnum = ifnum+1
-
 			local metcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
 			if string.len(metcheck) == 0 then
 				metfail = metfail+1

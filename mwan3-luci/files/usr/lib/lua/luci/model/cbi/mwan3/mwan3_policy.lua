@@ -1,7 +1,7 @@
 local ds = require "luci.dispatcher"
 
 function policywarn()
-	local warns
+	local warns = ""
 	local polnum = 0
 	uci.cursor():foreach("mwan3", "policy",
 		function ()
