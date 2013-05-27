@@ -1,6 +1,7 @@
 local ds = require "luci.dispatcher"
 
-function policynum()
+function policywarn()
+	local warns
 	local polnum = 0
 	uci.cursor():foreach("mwan3", "policy",
 		function ()
@@ -8,16 +9,17 @@ function policynum()
 		end
 	)
 	if polnum <= 84 then
-		return "<strong><em>There are currently " .. polnum .. " of 84 supported policies configured!</em></strong>"
+		warns = "<strong><em>There are currently " .. polnum .. " of 84 supported policies configured!</em></strong>"
 	else
-		return "<font color=\"ff0000\"><strong><em>WARNING: " .. polnum .. " policies are configured exceeding the maximum of 84!</em></strong></font>"
+		warns = "<font color=\"ff0000\"><strong><em>WARNING: " .. polnum .. " policies are configured exceeding the maximum of 84!</em></strong></font>"
 	end
+	return warns
 end
 
 -- ------ policy configuration ------ --
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration"),
-	translate(policynum()))
+	translate(policywarn()))
 
 
 mwan_policy = m5:section(TypedSection, "policy", translate("Policies"),

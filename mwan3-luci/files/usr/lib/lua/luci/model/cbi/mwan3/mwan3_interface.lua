@@ -1,40 +1,34 @@
 local ds = require "luci.dispatcher"
 
-function ifacenum()
+function ifacewarn()
+	local warns = ""
 	local ifnum = 0
+	local metfail = 0
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			ifnum = ifnum+1
-		end
-	)
-	if ifnum <= 15 then
-		return "<strong><em>There are currently " .. ifnum .. " of 15 supported interfaces configured!</em></strong>"
-	else
-		return "<font color=\"ff0000\"><strong><em>WARNING: " .. ifnum .. " interfaces are configured exceeding the maximum of 15!</em></strong></font>"
-	end
-end
 
-function ifacemetwarn()
-	local fail = 0
-	uci.cursor():foreach("mwan3", "interface",
-		function (section)
-			local failcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
-			if string.len(failcheck) == 0 then
-				fail = fail+1
+			local metcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
+			if string.len(metcheck) == 0 then
+				metfail = metfail+1
 			end
 		end
 	)
-	if fail == 0 then
-		return ""
+	if ifnum <= 15 then
+		warns = "<strong><em>There are currently " .. ifnum .. " of 15 supported interfaces configured!</em></strong>"
 	else
-		return "<br /><br /><font color=\"ff0000\"><strong><em>WARNING: some interfaces have no metric</em></strong></font>"
+		warns = "<font color=\"ff0000\"><strong><em>WARNING: " .. ifnum .. " interfaces are configured exceeding the maximum of 15!</em></strong></font>"
 	end
+	if metfail > 0 then
+		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong><em>WARNING: some interfaces have no metric</em></strong></font>"
+	end
+	return warns
 end
 
 -- ------ interface configuration ------ --
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration"),
-	translate(ifacenum() .. ifacemetwarn()))
+	translate(ifacewarn()))
 
 
 mwan_interface = m5:section(TypedSection, "interface", translate("Interfaces"),
