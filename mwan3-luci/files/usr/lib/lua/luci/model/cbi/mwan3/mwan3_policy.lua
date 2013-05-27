@@ -3,18 +3,14 @@ local ds = require "luci.dispatcher"
 function policynum()
 	local polnum = 0
 	uci.cursor():foreach("mwan3", "policy",
-		function (section)
+		function ()
 			polnum = polnum+1
 		end
 	)
-	if polnum == 0 then
-		return "<em>There are no policies configured!</em>"
-	elseif polnum == 1 then
-		return "<em>There is currently " .. polnum .. " of 84 supported policies configured!</em>"
-	elseif polnum <= 84 then
-		return "<em>There are currently " .. polnum .. " of 84 supported policies configured!</em>"
+	if polnum <= 84 then
+		return "<strong><em>There are currently " .. polnum .. " of 84 supported policies configured!</em></strong>"
 	else
-		return "<em>WARNING: " .. polnum .. " policies are configured exceeding the maximum of 84!</em>"
+		return "<font color=\"ff0000\"><strong><em>WARNING: " .. polnum .. " policies are configured exceeding the maximum of 84!</em></strong></font>"
 	end
 end
 

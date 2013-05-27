@@ -7,25 +7,39 @@ function ifacenum()
 			ifnum = ifnum+1
 		end
 	)
-	if ifnum == 0 then
-		return "<em>There are no interfaces configured!</em>"
-	elseif ifnum == 1 then
-		return "<em>There is currently 1 of 15 supported interfaces configured!</em>"
-	elseif ifnum <= 15 then
-		return "<em>There are currently " .. ifnum .. " of 15 supported interfaces configured!</em>"
+	if ifnum <= 15 then
+		return "<strong><em>There are currently " .. ifnum .. " of 15 supported interfaces configured!</em></strong>"
 	else
-		return "<em>WARNING: " .. ifnum .. " interfaces are configured exceeding the maximum of 15!</em>"
+		return "<font color=\"ff0000\"><strong><em>WARNING: " .. ifnum .. " interfaces are configured exceeding the maximum of 15!</em></strong></font>"
+	end
+end
+
+function ifacemetwarn()
+	local fail = 0
+	uci.cursor():foreach("mwan3", "interface",
+		function (section)
+			local failcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
+			if string.len(failcheck) == 0 then
+				fail = fail+1
+			end
+		end
+	)
+	if fail == 0 then
+		return ""
+	else
+		return "<br /><br /><font color=\"ff0000\"><strong><em>WARNING: some interfaces have no metric</em></strong></font>"
 	end
 end
 
 -- ------ interface configuration ------ --
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration"),
-	translate(ifacenum()))
+	translate(ifacenum() .. ifacemetwarn()))
 
 
 mwan_interface = m5:section(TypedSection, "interface", translate("Interfaces"),
 	translate("MWAN3 supports up to 15 physical and/or logical interfaces<br />") ..
+	translate("MWAN3 requires that all interfaces have a unique metric configured in /etc/config/network<br />") ..
 	translate("Name must match the interface name found in /etc/config/network (see troubleshooting tab)<br />") ..
 	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
 	translate("Interfaces may not share the same name as configured members, policies or rules"))
@@ -96,6 +110,15 @@ down = mwan_interface:option(DummyValue, "down", translate("Interface down"))
 up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 	function up.cfgvalue(self, s)
 		return self.map:get(s, "up") or "-"
+	end
+
+metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
+	function metric.cfgvalue(self, s)
+		str = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
+		if string.len(str) == 0 then
+			return "-"
+		end
+		return str
 	end
 
 

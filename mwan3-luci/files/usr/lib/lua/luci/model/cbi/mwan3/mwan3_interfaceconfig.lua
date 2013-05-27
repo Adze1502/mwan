@@ -59,6 +59,7 @@ interval = mwan_interface:option(ListValue, "interval", translate("Ping interval
 	interval:value("10", translate("10 seconds"))
 	interval:value("20", translate("20 seconds"))
 	interval:value("30", translate("30 seconds"))
+	interval:value("60", translate("60 seconds"))
 
 down = mwan_interface:option(ListValue, "down", translate("Interface down"),
 	translate("Interface will be deemed down after this many failed ping tests"))
@@ -87,6 +88,16 @@ up = mwan_interface:option(ListValue, "up", translate("Interface up"),
 	up:value("8")
 	up:value("9")
 	up:value("10")
+
+metric = mwan_interface:option(DummyValue, "metric", translate("Metric"),
+	translate("This displays the metric assigned to this interface in /etc/config/network<br />"))
+	function metric.cfgvalue(self, s)
+		str = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
+		if string.len(str) == 0 then
+			str = "-"
+		end
+		return str
+	end
 
 
 return m5
