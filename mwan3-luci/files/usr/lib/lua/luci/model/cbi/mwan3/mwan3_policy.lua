@@ -49,7 +49,7 @@ use_member = mwan_policy:option(DummyValue, "use_member", translate("Members ass
 				str = str .. v .. "<br />"
 			end
 		else
-			str = "<br />none<br />"
+			str = "<br /><font size=\"+4\">-</font>"
 		end
 		str = str .. "<br />"
 		return str

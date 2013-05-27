@@ -24,18 +24,34 @@ mwan_member = m5:section(TypedSection, "member", translate("Members"),
 interface = mwan_member:option(DummyValue, "interface", translate("Interface"))
 	interface.rawhtml = true
 	function interface.cfgvalue(self, s)
-		local interfc = self.map:get(s, "interface") or "-"
-		return "<br />" .. interfc .. "<br /><br />"
+		local interfc = self.map:get(s, "interface")
+		if interfc then
+			return "<br />" .. interfc .. "<br /><br />"
+		else
+			return "<br /><font size=\"+4\">-</font>"
+		end
 	end
 
 metric = mwan_member:option(DummyValue, "metric", translate("Metric"))
+	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		return self.map:get(s, "metric") or "-"
+		local mtc = self.map:get(s, "metric")
+		if mtc then
+			return mtc
+		else
+			return "<br /><font size=\"+4\">-</font>"
+		end
 	end
 
 weight = mwan_member:option(DummyValue, "weight", translate("Weight"))
+	weight.rawhtml = true
 	function weight.cfgvalue(self, s)
-		return self.map:get(s, "weight") or "-"
+		local wght = self.map:get(s, "weight")
+		if wght then
+			return wght
+		else
+			return "<br /><font size=\"+4\">-</font>"
+		end
 	end
 
 

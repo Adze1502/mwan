@@ -2,9 +2,40 @@ local dsp = require "luci.dispatcher"
 
 arg[1] = arg[1] or ""
 
+function ifacewarn()
+	local warns = ""
+	local metcheck = luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric")
+	if string.len(metcheck) == 0 then
+		warns = metcheck .. "<font color=\"ff0000\"><strong><em>WARNING: this interface has no metric configured in /etc/config/network!</em></strong></font><br /><br />"
+	end
+	if metrichighlight() == "dup" then
+		warns = warns .. "<font color=\"ff0000\"><strong><em>WARNING: this and other interfaces have duplicate metrics configured in /etc/config/network!</em></strong></font>"
+	end
+	return warns
+end
+
+function metrichighlight()
+	local dupmet = ""
+	local smet = luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric")
+		smet = string.gsub(smet, "\n", "")
+	uci.cursor():foreach("mwan3", "interface",
+		function (section)
+			local metcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
+			if string.len(metcheck) > 0 then
+				dupmet = dupmet .. " " .. metcheck
+			end
+		end
+	)
+	dupmet = luci.sys.exec("echo \"" .. dupmet .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \" \" \"\n\" | sort | grep \"" .. smet .. "\" | uniq -c | grep -v \" 1 \"")
+	if string.len(dupmet) > 0 then
+		return "dup"
+	end
+end
+
 -- ------ interface configuration ------ --
 
-m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration - ") .. arg[1])
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration - " .. arg[1]),
+	translate(ifacewarn()))
 
 	m5.redirect = dsp.build_url("admin", "network", "mwan3", "interface")
 
@@ -91,10 +122,15 @@ up = mwan_interface:option(ListValue, "up", translate("Interface up"),
 
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"),
 	translate("This displays the metric assigned to this interface in /etc/config/network<br />"))
+	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		str = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
-		if string.len(str) == 0 then
-			str = "-"
+		local str = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
+		if string.len(str) > 0 then
+			if metrichighlight(arg[1]) == "dup" then
+				str = "<font color=\"ff0000\"><strong>" .. str .. "</strong></font>"
+			end
+		else
+			str = "<font color=\"ff0000\"><font size=\"+4\">-</font></font>"
 		end
 		return str
 	end

@@ -26,33 +26,67 @@ mwan_rule = m5:section(TypedSection, "rule", translate("Traffic Rules"),
 src_ip = mwan_rule:option(DummyValue, "src_ip", translate("Source address"))
 	src_ip.rawhtml = true
 	function src_ip.cfgvalue(self, s)
-		local sourceip = self.map:get(s, "src_ip") or "-"
-		return "<br />" .. sourceip .. "<br /><br />"
+		local sip = self.map:get(s, "src_ip")
+		if sip then
+			return "<br />" .. sip .. "<br /><br />"
+		else
+			return "<br /><font size=\"+4\">-</font><br />"
+		end
 	end
 
 src_port = mwan_rule:option(DummyValue, "src_port", translate("Source port"))
+	src_port.rawhtml = true
 	function src_port.cfgvalue(self, s)
-		return self.map:get(s, "src_port") or "-"
+		local sprt = self.map:get(s, "src_port")
+		if sprt then
+			return sprt
+		else
+			return "<br /><font size=\"+4\">-</font>"
+		end
 	end
 
 dest_ip = mwan_rule:option(DummyValue, "dest_ip", translate("Destination address"))
+	dest_ip.rawhtml = true
 	function dest_ip.cfgvalue(self, s)
-		return self.map:get(s, "dest_ip") or "-"
+		local dip = self.map:get(s, "dest_ip")
+		if dip then
+			return dip
+		else
+			return "<br /><font size=\"+4\">-</font>"
+		end
 	end
 
 dest_port = mwan_rule:option(DummyValue, "dest_port", translate("Destination port"))
+	dest_port.rawhtml = true
 	function dest_port.cfgvalue(self, s)
-		return self.map:get(s, "dest_port") or "-"
+		local dprt self.map:get(s, "dest_port")
+		if dprt then
+			return dprt
+		else
+			return "<br /><font size=\"+4\">-</font>"
+		end
 	end
 
 proto = mwan_rule:option(DummyValue, "proto", translate("Protocol"))
+	proto.rawhtml = true
 	function proto.cfgvalue(self, s)
-		return self.map:get(s, "proto") or "-"
+		local prtcl = self.map:get(s, "proto")
+		if prtcl then
+			return prtcl
+		else
+			return "<br /><font size=\"+4\">-</font>"
+		end
 	end
 
 use_policy = mwan_rule:option(DummyValue, "use_policy", translate("Policy assigned"))
+	use_policy.rawhtml = true
 	function use_policy.cfgvalue(self, s)
-		return self.map:get(s, "use_policy") or "-"
+		local upcy = self.map:get(s, "use_policy")
+		if upcy then
+			return upcy
+		else
+			return "<br /><font size=\"+4\">-</font>"
+		end
 	end
 
 equalize = mwan_rule:option(DummyValue, "equalize", translate("Equalize"))
