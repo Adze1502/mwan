@@ -129,9 +129,7 @@ mwan3_policy_routes()
 		config_get metric $1 metric 1
 		config_get weight $1 weight 1
 
-		if [ -z "$other_route_args" ]; then
-			other_route_args=$(ip -4 route list table $(($policy_counter+1015)) | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u)
-		fi
+		other_route_args=$(ip -4 route list table $(($policy_counter+1015)) | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u)
 
 		if [ -z "$other_route_args" ]; then
 			other_device=$(ip -4 route list table $(($policy_counter+1015)) | grep -v "dev $DEVICE " | grep "metric $metric " | sed 's/.*dev \([^ ]*\) .*/\1/'| grep -v "^default")
