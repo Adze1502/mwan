@@ -1,55 +1,57 @@
 local ds = require "luci.dispatcher"
 
-function ifacewarn()
-	local warns = ""
-	local ifnum = 0
-	local metfail = 0
-	local metdupnum = 0
+function metriclist()
+	-- create list of interface metrics to compare against for duplicates and blanks
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			ifnum = ifnum+1
-			local metcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
-			if string.len(metcheck) > 0 then
-				metcheck = string.gsub(metcheck, "\n", "")
-				if metrichighlight(metcheck) == "dup" then
-					metdupnum = metdupnum+1
-				end
-			else
-				metfail = metfail+1
+			local metlkp = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
+			if string.len(metlkp) == 0 then
+				metlkp = "none"
 			end
+			metlst = metlst .. metlkp .. " "
 		end
 	)
+	metlst = luci.sys.exec("echo \"" .. metlst .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \' \' \'\n\' | sed '/^$/d'")
+	-- determine if blanks exist
+	metnone = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c none")
+		metnone = string.gsub(metnone, "\n", "")
+		if metnone ~= "0" then
+			metnone = 1
+		end
+	-- determine if duplicates exist
+	metdup = luci.sys.exec("echo \"" .. metlst .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \" \" \"\n\" | grep -v none | sed '/^$/d' | uniq -c | grep -v \" 1 \"")
+luci.sys.exec("echo \"" .. metdup .. "\" > /tmp/cock")
+		if string.len(metdup) > 0 then
+			metdup = 1
+		end
+end
+
+function ifacewarn()
+	-- display status and warning messages at the top of the page
+	local warns = ""
 	if ifnum <= 15 then
 		warns = "<strong><em>There are currently " .. ifnum .. " of 15 supported interfaces configured!</em></strong>"
 	else
 		warns = "<font color=\"ff0000\"><strong><em>WARNING: " .. ifnum .. " interfaces are configured exceeding the maximum of 15!</em></strong></font>"
 	end
-	if metfail > 0 then
+	if metnone == 1 then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong><em>WARNING: some interfaces have no metric configured in /etc/config/network!</em></strong></font>"
 	end
-	if metdupnum > 0 then
+	if metdup == 1 then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong><em>WARNING: some interfaces have duplicate metrics configured in /etc/config/network!</em></strong></font>"
 	end
 	return warns
 end
 
-function metrichighlight(sysmet)
-	local dupmet = ""
-	uci.cursor():foreach("mwan3", "interface",
-		function (section)
-			local metcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
-			if string.len(metcheck) > 0 then
-				dupmet = dupmet .. " " .. metcheck
-			end
-		end
-	)
-	dupmet = luci.sys.exec("echo \"" .. dupmet .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \" \" \"\n\" | grep \"" .. sysmet .. "\" | uniq -c | grep -v \" 1 \"")
-	if string.len(dupmet) > 0 then
-		return "dup"
-	end
-end
-
 -- ------ interface configuration ------ --
+
+ifnum = 0
+metlst = ""
+metnone = ""
+metdup = ""
+metriclist()
+
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration"),
 	translate(ifacewarn()))
@@ -155,7 +157,9 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 		local metcheck = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
 		if string.len(metcheck) > 0 then
 			metcheck = string.gsub(metcheck, "\n", "")
-			if metrichighlight(metcheck) == "dup" then
+			local dupcheck = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c \"" .. metcheck .. "\"")
+				dupcheck = string.gsub(dupcheck, "\n", "")
+			if dupcheck ~= "1" then
 				metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
 			end
 		else
