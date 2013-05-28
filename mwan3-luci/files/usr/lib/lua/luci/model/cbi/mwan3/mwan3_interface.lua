@@ -21,7 +21,6 @@ function metriclist()
 		end
 	-- determine if duplicates exist
 	metdup = luci.sys.exec("echo \"" .. metlst .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \" \" \"\n\" | grep -v none | sed '/^$/d' | uniq -c | grep -v \" 1 \"")
-luci.sys.exec("echo \"" .. metdup .. "\" > /tmp/cock")
 		if string.len(metdup) > 0 then
 			metdup = 1
 		end
