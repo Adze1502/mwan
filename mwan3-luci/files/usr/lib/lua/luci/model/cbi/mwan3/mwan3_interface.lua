@@ -10,7 +10,8 @@ function ifacewarn()
 			ifnum = ifnum+1
 			local metcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
 			if string.len(metcheck) > 0 then
-				if metrichighlight(section[".name"]) == "dup" then
+				metcheck = string.gsub(metcheck, "\n", "")
+				if metrichighlight(metcheck) == "dup" then
 					metdupnum = metdupnum+1
 				end
 			else
@@ -32,10 +33,8 @@ function ifacewarn()
 	return warns
 end
 
-function metrichighlight(s)
+function metrichighlight(sysmet)
 	local dupmet = ""
-	local smet = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
-		smet = string.gsub(smet, "\n", "")
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			local metcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
@@ -44,7 +43,7 @@ function metrichighlight(s)
 			end
 		end
 	)
-	dupmet = luci.sys.exec("echo \"" .. dupmet .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \" \" \"\n\" | sort | grep \"" .. smet .. "\" | uniq -c | grep -v \" 1 \"")
+	dupmet = luci.sys.exec("echo \"" .. dupmet .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \" \" \"\n\" | grep \"" .. sysmet .. "\" | uniq -c | grep -v \" 1 \"")
 	if string.len(dupmet) > 0 then
 		return "dup"
 	end
@@ -153,15 +152,16 @@ up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		local str = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
-		if string.len(str) > 0 then
-			if metrichighlight(s) == "dup" then
-				str = "<font color=\"ff0000\"><strong>" .. str .. "</strong></font>"
+		local metcheck = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
+		if string.len(metcheck) > 0 then
+			metcheck = string.gsub(metcheck, "\n", "")
+			if metrichighlight(metcheck) == "dup" then
+				metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
 			end
 		else
-			str = "<br /><font color=\"ff0000\"><font size=\"+4\">-</font></font>"
+			metcheck = "<br /><font color=\"ff0000\"><font size=\"+4\">-</font></font>"
 		end
-		return str
+		return metcheck
 	end
 
 

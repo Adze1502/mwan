@@ -6,18 +6,18 @@ function ifacewarn()
 	local warns = ""
 	local metcheck = luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric")
 	if string.len(metcheck) == 0 then
-		warns = metcheck .. "<font color=\"ff0000\"><strong><em>WARNING: this interface has no metric configured in /etc/config/network!</em></strong></font><br /><br />"
-	end
-	if metrichighlight() == "dup" then
-		warns = warns .. "<font color=\"ff0000\"><strong><em>WARNING: this and other interfaces have duplicate metrics configured in /etc/config/network!</em></strong></font>"
+		warns = "<font color=\"ff0000\"><strong><em>WARNING: this interface has no metric configured in /etc/config/network!</em></strong></font>"
+	else
+		metcheck = string.gsub(metcheck, "\n", "")
+		if metrichighlight(metcheck) == "dup" then
+			warns = "<font color=\"ff0000\"><strong><em>WARNING: this and other interfaces have duplicate metrics configured in /etc/config/network!</em></strong></font>"
+		end
 	end
 	return warns
 end
 
-function metrichighlight()
+function metrichighlight(sysmet)
 	local dupmet = ""
-	local smet = luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric")
-		smet = string.gsub(smet, "\n", "")
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			local metcheck = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
@@ -26,7 +26,7 @@ function metrichighlight()
 			end
 		end
 	)
-	dupmet = luci.sys.exec("echo \"" .. dupmet .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \" \" \"\n\" | sort | grep \"" .. smet .. "\" | uniq -c | grep -v \" 1 \"")
+	dupmet = luci.sys.exec("echo \"" .. dupmet .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \" \" \"\n\" | grep \"" .. sysmet .. "\" | uniq -c | grep -v \" 1 \"")
 	if string.len(dupmet) > 0 then
 		return "dup"
 	end
@@ -124,15 +124,16 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"),
 	translate("This displays the metric assigned to this interface in /etc/config/network<br />"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		local str = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
-		if string.len(str) > 0 then
-			if metrichighlight(arg[1]) == "dup" then
-				str = "<font color=\"ff0000\"><strong>" .. str .. "</strong></font>"
+		local metcheck = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric")
+		if string.len(metcheck) > 0 then
+			metcheck = string.gsub(metcheck, "\n", "")
+			if metrichighlight(metcheck) == "dup" then
+				metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
 			end
 		else
-			str = "<font color=\"ff0000\"><font size=\"+4\">-</font></font>"
+			metcheck = "<font color=\"ff0000\"><font size=\"+4\">-</font></font>"
 		end
-		return str
+		return metcheck
 	end
 
 
