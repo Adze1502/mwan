@@ -80,12 +80,12 @@ mwan3_policy_routes_and_rules()
 {
 	local member other_iface other_weight policy_counter
 
-	mwan3_get_weight_member_device()
+	mwan3_get_weight_member()
 	{
 		other_iface=$(uci show -P /var/state network | awk -F'=' '$2 == ("'$2'")' | grep ifname | awk -F'.' '{ print $2 }' | grep -v '@')
 
 		for member in $(uci get mwan3.$1.use_member); do
-			if [ $(uci get -P /var/state mwan3.$member.interface) = "$other_iface" ]; then
+			if [ $(uci get -P /var/state mwan3.$member.interface) == "$other_iface" ]; then
 				other_weight=$(uci get -P /var/state mwan3.$member.weight)
 			fi
 		done
@@ -102,10 +102,10 @@ mwan3_policy_rules()
 	local policy
 
 	policy_counter=$(($policy_counter+1))
-	eval mwp$1=$(($policy_counter+15))
 	policy=$1
 
 	if [ "$policy_counter" -lt 85 ]; then
+		eval mwp$1=$(($policy_counter+15))
 
 		config_list_foreach $1 use_member mwan3_policy_routes
 
@@ -135,11 +135,9 @@ mwan3_policy_routes()
 			other_device=$(ip -4 route list table $(($policy_counter+1015)) | grep -v "dev $DEVICE " | grep "metric $metric " | sed 's/.*dev \([^ ]*\) .*/\1/'| grep -v "^default")
 
 			if [ -n "$other_device" ]; then
-				mwan3_get_weight_member_device $policy $other_device
-
+				mwan3_get_weight_member $policy $other_device
 				other_route_args=$(ip -4 route list table $(($policy_counter+1015)) dev $other_device | grep "metric $metric " | sed 's/.*via \([^ ]*\) .*/\1/' | grep -v "^default")
 				[ -n "$other_route_args" ] && other_route_args="via $other_route_args"
-
 				other_route_args="nexthop $other_route_args dev $other_device weight $other_weight"
 			fi
 		fi
@@ -193,7 +191,7 @@ mwan3_rules_iptables()
 			iftotalweight=0
 
 			for device in $equalize_devices; do
-				mwan3_get_weight_member_device $use_policy $device
+				mwan3_get_weight_member $use_policy $device
 				iftotalweight=$(($other_weight+$iftotalweight))
 				eval nf_mark='$'mwif"$other_iface"
 				probability=$(($other_weight*1000/$iftotalweight))
@@ -243,36 +241,31 @@ mwan3_ifupdown()
 {
 	[ -n "$DEVICE" ] || exit 0
 	[ -n "$INTERFACE" ] || exit 0
+	[ $(uci get -P /var/state mwan3.$INTERFACE.enabled) == "1" ] || exit 0
 	[ "$(ip -4 route list dev $DEVICE default)" ] || exit 0
 
 	while [ "$(pgrep -f -o hotplug-call)" -ne $$ ]; do
 		sleep 1
 	done
 
-	config_load mwan3
+	local interface_counter interface_number route_args
 
-	local interface_counter interface_number check_iface route_args
+	config_load mwan3
 
 	mwan3_get_interfaces()
 	{
 		interface_counter=$(($interface_counter+1))
-		config_get_bool enabled $1 enabled
-		[ "$enabled" -eq "1" ] || return 0
 		eval mwif$1=$interface_counter
-		[ "$1" == "$INTERFACE" ] || return 0
-		interface_number=$interface_counter
-		check_iface=1
+		[ "$1" == "$INTERFACE" ] && interface_number=$interface_counter
 	}
 	config_foreach mwan3_get_interfaces interface
 
-	[ "$check_iface" -eq "1" ] || exit 0
 	[ "$interface_counter" -le "15" ] || exit 0
 
 	logger -t mwan3 "$ACTION interface $INTERFACE ($DEVICE)"
 
 	route_args=$(ip -4 route list dev $DEVICE default | sed 's/.*via \([^ ]*\) .*/\1/' | grep -v "^default" )
 	[ -n "$route_args" ] && route_args="via $route_args"
-
 	route_args="nexthop $route_args dev $DEVICE"
 
 	mwan3_basic_iptables
