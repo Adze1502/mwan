@@ -1,16 +1,10 @@
-local dsp = require "luci.dispatcher"
-
-arg[1] = arg[1] or ""
+-- ------ extra functions ------ --
 
 function metriclist()
-	-- check if metric exists
-	metcheck = luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric")
-	if string.len(metcheck) == 0 then
+	metcheck = string.gsub(luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric"), "\n", "")
+	if string.len(metcheck) == 0 then -- if metric does not exists set variables
 		metnone = 1
-		metdup = 0
-	else
-		-- if metric exists create list to compare against for duplicates
-		metcheck = string.gsub(metcheck, "\n", "")
+	else -- if metric exists create list of interface metrics to compare against for duplicates
 		uci.cursor():foreach("mwan3", "interface",
 			function (section)
 				local metlkp = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
@@ -20,17 +14,16 @@ function metriclist()
 				metlst = metlst .. metlkp .. " "
 			end
 		)
-		metlst = luci.sys.exec("echo \"" .. metlst .. "\" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr \' \' \'\n\' | sed '/^$/d'")
+		metlst = luci.sys.exec("echo \"" .. metlst .. "\" | sed \'s/ *$//\' | tr -d \'\n\' | tr \' \' \'\n\'")
 		-- compare metric against list
-		metdup = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c -w \"" .. metcheck .. "\"")
-			metdup = string.gsub(metdup, "\n", "")
+		metdup = string.gsub(luci.sys.exec("echo \"" .. metlst .. "\" | grep -c -w \"" .. metcheck .. "\""), "\n", "")
 			if metdup ~= "1" then
 				metdup = 1
 			end
 	end
 end
 
-function ifacewarn()
+function ifacewarn() -- display status and warning messages at the top of the page
 	local warns = ""
 	if metnone == 1 then
 		warns = "<font color=\"ff0000\"><strong><em>WARNING: this interface has no metric configured in /etc/config/network!</em></strong></font>"
@@ -43,18 +36,19 @@ end
 
 -- ------ interface configuration ------ --
 
+local dsp = require "luci.dispatcher"
+arg[1] = arg[1] or ""
+
 metlst = ""
 metcheck = ""
-metnone = ""
-metdup = ""
+metnone = 0
+metdup = 0
 metriclist()
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration - " .. arg[1]),
 	translate(ifacewarn()))
-
 	m5.redirect = dsp.build_url("admin", "network", "mwan3", "interface")
-
 	if not m5.uci:get(arg[1]) == "interface" then
 		luci.http.redirect(m5.redirect)
 		return
@@ -139,15 +133,14 @@ up = mwan_interface:option(ListValue, "up", translate("Interface up"),
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"),
 	translate("This displays the metric assigned to this interface in /etc/config/network<br />"))
 	metric.rawhtml = true
-	local methl = metcheck
 	function metric.cfgvalue(self, s)
-		if metnone == 1 then
-			methl = "<font color=\"ff0000\"><font size=\"+4\">-</font></font>"
+		if metnone == 1 then -- no metric
+			metcheck = "<font color=\"ff0000\"><font size=\"+4\">-</font></font>"
 		end
-		if metdup == 1 then
-			methl = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
+		if metdup == 1 then -- metric is a duplicate
+			metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
 		end
-		return methl
+		return metcheck
 	end
 
 

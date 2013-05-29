@@ -1,4 +1,4 @@
-local ds = require "luci.dispatcher"
+-- ------ extra functions ------ --
 
 function policywarn()
 	local warns = ""
@@ -18,6 +18,9 @@ end
 
 -- ------ policy configuration ------ --
 
+local ds = require "luci.dispatcher"
+
+
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration"),
 	translate(policywarn()))
 
@@ -31,7 +34,6 @@ mwan_policy = m5:section(TypedSection, "policy", translate("Policies"),
 	mwan_policy.sortable = false
 	mwan_policy.template = "cbi/tblsection"
 	mwan_policy.extedit = ds.build_url("admin", "network", "mwan3", "policy", "%s")
-
 	function mwan_policy.create(self, section)
 		TypedSection.create(self, section)
 		m5.uci:save("mwan3")

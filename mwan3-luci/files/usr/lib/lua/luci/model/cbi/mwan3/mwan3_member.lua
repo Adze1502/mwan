@@ -1,6 +1,7 @@
+-- ------ member configuration ------ --
+
 local ds = require "luci.dispatcher"
 
--- ------ member configuration ------ --
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Member Configuration"))
 
@@ -13,7 +14,6 @@ mwan_member = m5:section(TypedSection, "member", translate("Members"),
 	mwan_member.sortable = false
 	mwan_member.template = "cbi/tblsection"
 	mwan_member.extedit = ds.build_url("admin", "network", "mwan3", "member", "%s")
-
 	function mwan_member.create(self, section)
 		TypedSection.create(self, section)
 		m5.uci:save("mwan3")
@@ -35,23 +35,13 @@ interface = mwan_member:option(DummyValue, "interface", translate("Interface"))
 metric = mwan_member:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		local mtc = self.map:get(s, "metric")
-		if mtc then
-			return mtc
-		else
-			return "<br /><font size=\"+4\">-</font>"
-		end
+		return self.map:get(s, "metric") or "<br /><font size=\"+4\">-</font>"
 	end
 
 weight = mwan_member:option(DummyValue, "weight", translate("Weight"))
 	weight.rawhtml = true
 	function weight.cfgvalue(self, s)
-		local wght = self.map:get(s, "weight")
-		if wght then
-			return wght
-		else
-			return "<br /><font size=\"+4\">-</font>"
-		end
+		return self.map:get(s, "weight") or "<br /><font size=\"+4\">-</font>"
 	end
 
 

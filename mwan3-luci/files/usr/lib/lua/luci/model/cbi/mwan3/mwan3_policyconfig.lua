@@ -1,7 +1,4 @@
-local dsp = require "luci.dispatcher"
-local uci = require "luci.model.uci"
-
-arg[1] = arg[1] or ""
+-- ------ extra functions ------ --
 
 function cbi_add_mwan(field)
 	uci.cursor():foreach("mwan3", "member",
@@ -13,10 +10,12 @@ end
 
 -- ------ policy configuration ------ --
 
+local dsp = require "luci.dispatcher"
+arg[1] = arg[1] or ""
+
+
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration - ") .. arg[1])
-
 	m5.redirect = dsp.build_url("admin", "network", "mwan3", "policy")
-
 	if not m5.uci:get(arg[1]) == "policy" then
 		luci.http.redirect(m5.redirect)
 		return
