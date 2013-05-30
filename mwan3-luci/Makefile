@@ -17,7 +17,6 @@ define Package/luci-app-mwan3
   SECTION:=luci
   CATEGORY:=LuCI
   TITLE:=LuCI - Lua Configuration Interface
-  URL:=http://213.136.13.52/luci-app-mwan3_$(PKG_VERSION)-$(PKG_RELEASE).ipk
   SUBMENU:=3. Applications
   TITLE:=LuCI Support for mwan3 multiwan policy routing
   MAINTAINER:=Aedan Renner <chipdankly@gmail.com>
