@@ -16,12 +16,13 @@ include $(INCLUDE_DIR)/package.mk
 define Package/luci-app-mwan3
   SECTION:=luci
   CATEGORY:=LuCI
-  DEPENDS:=+mwan3
   TITLE:=LuCI - Lua Configuration Interface
   URL:=http://213.136.13.52/luci-app-mwan3_$(PKG_VERSION)-$(PKG_RELEASE).ipk
-  MAINTAINER:=Jeroen Louwes <jeroen.louwes@gmail.com>
   SUBMENU:=3. Applications
   TITLE:=LuCI Support for mwan3 multiwan policy routing
+  MAINTAINER:=Aedan Renner <chipdankly@gmail.com>
+  DEPENDS:=+mwan3
+  PKGARCH:=all
 endef
 
 define Package/luci-app-mwan3/description
