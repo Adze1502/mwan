@@ -152,10 +152,12 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
 		local metcheck = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric | tr -d \'\n\'")
-		if string.len(metcheck) > 0 then -- metric exists so check for duplicates
-			local dupcheck = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c \"" .. metcheck .. "\" | tr -d \'\n\'")
-			if dupcheck ~= "1" then
-				metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
+		if string.len(metcheck) > 0 then -- metric exists
+			if metdup == 1 then -- metric requires duplicate check
+				local dupcheck = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c \"" .. metcheck .. "\" | tr -d \'\n\'")
+				if dupcheck ~= "1" then
+					metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
+				end
 			end
 		else -- no metric
 			metcheck = "<br /><font color=\"ff0000\"><font size=\"+4\">-</font></font>"
