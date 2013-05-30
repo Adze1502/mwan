@@ -13,7 +13,7 @@ function metriclist() -- create list of interface metrics to compare against for
 	)
 	metlst = luci.sys.exec("echo \"" .. metlst .. "\" | sed \'s/ *$//\' | tr -d \'\n\' | tr \' \' \'\n\'")
 	-- determine if blanks exist
-	metnone = string.gsub(luci.sys.exec("echo \"" .. metlst .. "\" | grep -c none"), "\n", "")
+	metnone = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c none | tr -d \'\n\'")
 	if metnone ~= "0" then
 		metnone = 1
 	end
@@ -151,9 +151,9 @@ up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		local metcheck = string.gsub(luci.sys.exec("uci get -p /var/state network." .. s .. ".metric"), "\n", "")
+		local metcheck = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric | tr -d \'\n\'")
 		if string.len(metcheck) > 0 then -- metric exists so check for duplicates
-			local dupcheck = string.gsub(luci.sys.exec("echo \"" .. metlst .. "\" | grep -c \"" .. metcheck .. "\""), "\n", "")
+			local dupcheck = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c \"" .. metcheck .. "\" | tr -d \'\n\'")
 			if dupcheck ~= "1" then
 				metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
 			end

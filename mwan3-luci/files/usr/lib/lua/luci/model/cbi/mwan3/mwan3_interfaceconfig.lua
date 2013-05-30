@@ -1,8 +1,8 @@
 -- ------ extra functions ------ --
 
 function metriclist()
-	metcheck = string.gsub(luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric"), "\n", "")
-	if string.len(metcheck) == 0 then -- if metric does not exists set variables
+	metcheck = luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric | tr -d \'\n\'")
+	if string.len(metcheck) == 0 then -- no metric
 		metnone = 1
 	else -- if metric exists create list of interface metrics to compare against for duplicates
 		uci.cursor():foreach("mwan3", "interface",
@@ -16,7 +16,7 @@ function metriclist()
 		)
 		metlst = luci.sys.exec("echo \"" .. metlst .. "\" | sed \'s/ *$//\' | tr -d \'\n\' | tr \' \' \'\n\'")
 		-- compare metric against list
-		metdup = string.gsub(luci.sys.exec("echo \"" .. metlst .. "\" | grep -c -w \"" .. metcheck .. "\""), "\n", "")
+		metdup = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c -w \"" .. metcheck .. "\" | tr -d \'\n\'")
 			if metdup ~= "1" then
 				metdup = 1
 			end
