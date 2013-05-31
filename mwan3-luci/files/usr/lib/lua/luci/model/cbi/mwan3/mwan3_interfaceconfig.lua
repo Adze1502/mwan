@@ -89,6 +89,11 @@ timeout = mwan_interface:option(ListValue, "timeout", translate("Ping timeout"))
 	timeout:value("3", translate("3 seconds"))
 	timeout:value("4", translate("4 seconds"))
 	timeout:value("5", translate("5 seconds"))
+	timeout:value("6", translate("6 seconds"))
+	timeout:value("7", translate("7 seconds"))
+	timeout:value("8", translate("8 seconds"))
+	timeout:value("9", translate("9 seconds"))
+	timeout:value("10", translate("10 seconds"))
 
 interval = mwan_interface:option(ListValue, "interval", translate("Ping interval"))
 	interval.default = "5"
@@ -98,7 +103,8 @@ interval = mwan_interface:option(ListValue, "interval", translate("Ping interval
 	interval:value("10", translate("10 seconds"))
 	interval:value("20", translate("20 seconds"))
 	interval:value("30", translate("30 seconds"))
-	interval:value("60", translate("60 seconds"))
+	interval:value("60", translate("1 minute"))
+	interval:value("300", translate("5 minutes"))
 
 down = mwan_interface:option(ListValue, "down", translate("Interface down"),
 	translate("Interface will be deemed down after this many failed ping tests"))
