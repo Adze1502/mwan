@@ -38,6 +38,11 @@ function index()
 	entry({"admin", "network", "mwan3", "troubleshoot"},
 		template("mwan3_troubleshoot"),
 		_("Troubleshooting"), 60)
+
+	if nixio.fs.access("/etc/hotplug.d/iface/16-mwan3custom") then
+		entry({"admin", "network", "mwan3", "hotplug"},
+			cbi("mwan3/mwan3_hotplug"), _("Hotplug Script"), 100).leaf = true
+	end
 end
 
 function mwan_get_status(rulenum)
