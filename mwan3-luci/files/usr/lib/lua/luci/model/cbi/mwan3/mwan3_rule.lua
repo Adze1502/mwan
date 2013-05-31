@@ -1,6 +1,6 @@
 -- ------ rule configuration ------ --
 
-local ds = require "luci.dispatcher"
+ds = require "luci.dispatcher"
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN traffic Rule Configuration"),

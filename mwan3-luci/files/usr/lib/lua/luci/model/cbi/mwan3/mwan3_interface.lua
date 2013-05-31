@@ -40,7 +40,7 @@ end
 
 -- ------ interface configuration ------ --
 
-local ds = require "luci.dispatcher"
+ds = require "luci.dispatcher"
 
 ifnum = 0
 metlst = ""
@@ -114,11 +114,10 @@ timeout = mwan_interface:option(DummyValue, "timeout", translate("Ping timeout")
 	function timeout.cfgvalue(self, s)
 		local tcheck = self.map:get(s, "timeout")
 		if tcheck then
-			tcheck = tcheck .. "s"
+			return tcheck .. "s"
 		else
-			tcheck = "<br /><font size=\"+4\">-</font>"
+			return "<br /><font size=\"+4\">-</font>"
 		end
-		return tcheck
 	end
 
 interval = mwan_interface:option(DummyValue, "interval", translate("Ping interval"))
@@ -126,11 +125,10 @@ interval = mwan_interface:option(DummyValue, "interval", translate("Ping interva
 	function interval.cfgvalue(self, s)
 		local icheck = self.map:get(s, "interval")
 		if icheck then
-			icheck = icheck .. "s"
+			return icheck .. "s"
 		else
-			icheck = "<br /><font size=\"+4\">-</font>"
+			return "<br /><font size=\"+4\">-</font>"
 		end
-		return icheck
 	end
 
 down = mwan_interface:option(DummyValue, "down", translate("Interface down"))
@@ -150,13 +148,14 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 	function metric.cfgvalue(self, s)
 		local metcheck = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric | tr -d \'\n\'")
 		if metcheck == "" then -- no metric
-			metcheck = "<br /><font color=\"ff0000\"><font size=\"+4\">-</font></font>"
-		elseif metdup == 1 then-- metric needs to be checked for duplicates
+			return "<br /><font color=\"ff0000\"><font size=\"+4\">-</font></font>"
+		elseif metdup == 1 then -- metric needs to be checked for duplicates
 			if luci.sys.exec("echo \'" .. metlst .. "\' | grep -c \'" .. metcheck .. "\' | tr -d \'\n\'") ~= "1" then
-				metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
+				return "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
 			end
+		else
+			return metcheck
 		end
-		return metcheck
 	end
 
 

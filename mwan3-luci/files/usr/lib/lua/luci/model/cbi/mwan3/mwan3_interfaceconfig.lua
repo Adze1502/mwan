@@ -23,18 +23,18 @@ function metriclist()
 end
 
 function ifacewarn() -- display status and warning messages at the top of the page
-	local warns = ""
 	if metnone == 1 then
-		warns = "<font color=\"ff0000\"><strong><em>WARNING: this interface has no metric configured in /etc/config/network!</em></strong></font>"
+		return "<font color=\"ff0000\"><strong><em>WARNING: this interface has no metric configured in /etc/config/network!</em></strong></font>"
 	elseif metdup == 1 then
-		warns = "<font color=\"ff0000\"><strong><em>WARNING: this and other interfaces have duplicate metrics configured in /etc/config/network!</em></strong></font>"
+		return "<font color=\"ff0000\"><strong><em>WARNING: this and other interfaces have duplicate metrics configured in /etc/config/network!</em></strong></font>"
+	else
+		return ""
 	end
-	return warns
 end
 
 -- ------ interface configuration ------ --
 
-local dsp = require "luci.dispatcher"
+dsp = require "luci.dispatcher"
 arg[1] = arg[1] or ""
 
 metlst = ""
@@ -47,10 +47,6 @@ metriclist()
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration - " .. arg[1]),
 	translate(ifacewarn()))
 	m5.redirect = dsp.build_url("admin", "network", "mwan3", "interface")
-	if not m5.uci:get(arg[1]) == "interface" then
-		luci.http.redirect(m5.redirect)
-		return
-	end
 
 
 mwan_interface = m5:section(NamedSection, arg[1], "interface", "")
@@ -139,11 +135,12 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"),
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
 		if metnone == 1 then -- no metric
-			metcheck = "<font color=\"ff0000\"><font size=\"+4\">-</font></font>"
+			return "<font color=\"ff0000\"><font size=\"+4\">-</font></font>"
 		elseif metdup == 1 then -- metric is a duplicate
-			metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
+			return "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
+		else
+			return metcheck
 		end
-		return metcheck
 	end
 
 

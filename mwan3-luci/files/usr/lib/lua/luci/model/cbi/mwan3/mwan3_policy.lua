@@ -16,7 +16,7 @@ end
 
 -- ------ policy configuration ------ --
 
-local ds = require "luci.dispatcher"
+ds = require "luci.dispatcher"
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration"),

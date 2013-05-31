@@ -10,16 +10,12 @@ end
 
 -- ------ member configuration ------ --
 
-local dsp = require "luci.dispatcher"
+dsp = require "luci.dispatcher"
 arg[1] = arg[1] or ""
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Member Configuration - ") .. arg[1])
 	m5.redirect = dsp.build_url("admin", "network", "mwan3", "member")
-	if not m5.uci:get(arg[1]) == "member" then
-		luci.http.redirect(m5.redirect)
-		return
-	end
 
 
 mwan_member = m5:section(NamedSection, arg[1], "member", "")
