@@ -2,24 +2,23 @@
 
 function metriclist()
 	metcheck = luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric | tr -d \'\n\'")
-	if string.len(metcheck) == 0 then -- no metric
+	if metcheck == "" then -- no metric
 		metnone = 1
 	else -- if metric exists create list of interface metrics to compare against for duplicates
 		uci.cursor():foreach("mwan3", "interface",
 			function (section)
-				local metlkp = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
-				if string.len(metlkp) == 0 then
+				local metlkp = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric | tr -d \'\n\'")
+				if metlkp == "" then
 					metlkp = "none"
 				end
 				metlst = metlst .. metlkp .. " "
 			end
 		)
-		metlst = luci.sys.exec("echo \"" .. metlst .. "\" | sed \'s/ *$//\' | tr -d \'\n\' | tr \' \' \'\n\'")
+		metlst = luci.sys.exec("echo \'" .. metlst .. "\' | sed \'s/ *$//\' | tr -d \'\n\' | tr \' \' \'\n\'")
 		-- compare metric against list
-		metdup = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c -w \"" .. metcheck .. "\" | tr -d \'\n\'")
-			if metdup ~= "1" then
-				metdup = 1
-			end
+		if luci.sys.exec("echo \'" .. metlst .. "\' | grep -c -w \'" .. metcheck .. "\' | tr -d \'\n\'") ~= "1" then
+			metdup = 1
+		end
 	end
 end
 
@@ -27,8 +26,7 @@ function ifacewarn() -- display status and warning messages at the top of the pa
 	local warns = ""
 	if metnone == 1 then
 		warns = "<font color=\"ff0000\"><strong><em>WARNING: this interface has no metric configured in /etc/config/network!</em></strong></font>"
-	end
-	if metdup == 1 then
+	elseif metdup == 1 then
 		warns = "<font color=\"ff0000\"><strong><em>WARNING: this and other interfaces have duplicate metrics configured in /etc/config/network!</em></strong></font>"
 	end
 	return warns
@@ -136,8 +134,7 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"),
 	function metric.cfgvalue(self, s)
 		if metnone == 1 then -- no metric
 			metcheck = "<font color=\"ff0000\"><font size=\"+4\">-</font></font>"
-		end
-		if metdup == 1 then -- metric is a duplicate
+		elseif metdup == 1 then -- metric is a duplicate
 			metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
 		end
 		return metcheck

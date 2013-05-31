@@ -1,7 +1,6 @@
 -- ------ extra functions ------ --
 
 function policywarn()
-	local warns = ""
 	local polnum = 0
 	uci.cursor():foreach("mwan3", "policy",
 		function ()
@@ -9,11 +8,10 @@ function policywarn()
 		end
 	)
 	if polnum <= 84 then
-		warns = "<strong><em>There are currently " .. polnum .. " of 84 supported policies configured!</em></strong>"
+		return "<strong><em>There are currently " .. polnum .. " of 84 supported policies configured!</em></strong>"
 	else
-		warns = "<font color=\"ff0000\"><strong><em>WARNING: " .. polnum .. " policies are configured exceeding the maximum of 84!</em></strong></font>"
+		return "<font color=\"ff0000\"><strong><em>WARNING: " .. polnum .. " policies are configured exceeding the maximum of 84!</em></strong></font>"
 	end
-	return warns
 end
 
 -- ------ policy configuration ------ --

@@ -4,22 +4,20 @@ function metriclist() -- create list of interface metrics to compare against for
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			ifnum = ifnum+1 -- count number of mwan3 interfaces configured
-			local metlkp = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric")
-			if string.len(metlkp) == 0 then
+			local metlkp = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric | tr -d \'\n\'")
+			if metlkp == "" then
 				metlkp = "none"
 			end
 			metlst = metlst .. metlkp .. " "
 		end
 	)
-	metlst = luci.sys.exec("echo \"" .. metlst .. "\" | sed \'s/ *$//\' | tr -d \'\n\' | tr \' \' \'\n\'")
+	metlst = luci.sys.exec("echo \'" .. metlst .. "\' | sed \'s/ *$//\' | tr -d \'\n\' | tr \' \' \'\n\'")
 	-- determine if blanks exist
-	metnone = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c none | tr -d \'\n\'")
-	if metnone ~= "0" then
+	if luci.sys.exec("echo \'" .. metlst .. "\' | grep -c \'none\' | tr -d \'\n\'") ~= "0" then
 		metnone = 1
 	end
 	-- determine if duplicates exist
-	metdup = luci.sys.exec("echo \"" .. metlst .. "\" | grep -v none | uniq -c | grep -v \" 1 \"")
-	if string.len(metdup) > 0 then
+	if luci.sys.exec("echo \'" .. metlst .. "\' | grep -v \'none\' | uniq -c | grep -v \' 1 \' | tr -d \'\n\'") ~= "" then
 		metdup = 1
 	end
 end
@@ -76,8 +74,7 @@ mwan_interface = m5:section(TypedSection, "interface", translate("Interfaces"),
 enabled = mwan_interface:option(DummyValue, "enabled", translate("Enabled"))
 	enabled.rawhtml = true
 	function enabled.cfgvalue(self, s)
-		local enbld = self.map:get(s, "enabled")
-		if enbld == "1" then
+		if self.map:get(s, "enabled") == "1" then
 			return "<br />Yes<br /><br />"
 		else
 			return "<br />No<br /><br />"
@@ -152,15 +149,12 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
 		local metcheck = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric | tr -d \'\n\'")
-		if string.len(metcheck) > 0 then -- metric exists
-			if metdup == 1 then -- metric requires duplicate check
-				local dupcheck = luci.sys.exec("echo \"" .. metlst .. "\" | grep -c \"" .. metcheck .. "\" | tr -d \'\n\'")
-				if dupcheck ~= "1" then
-					metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
-				end
-			end
-		else -- no metric
+		if metcheck == "" then -- no metric
 			metcheck = "<br /><font color=\"ff0000\"><font size=\"+4\">-</font></font>"
+		elseif metdup == 1 then-- metric needs to be checked for duplicates
+			if luci.sys.exec("echo \'" .. metlst .. "\' | grep -c \'" .. metcheck .. "\' | tr -d \'\n\'") ~= "1" then
+				metcheck = "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
+			end
 		end
 		return metcheck
 	end

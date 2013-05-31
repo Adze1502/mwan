@@ -61,8 +61,7 @@ use_policy = mwan_rule:option(DummyValue, "use_policy", translate("Policy assign
 
 equalize = mwan_rule:option(DummyValue, "equalize", translate("Equalize"))
 	function equalize.cfgvalue(self, s)
-		eqz = self.map:get(s, "equalize")
-		if eqz == "1" then
+		if self.map:get(s, "equalize") == "1" then
 			return "Yes"
 		else
 			return "No"
