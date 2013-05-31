@@ -31,14 +31,20 @@ t = f:field(TextValue, "mwhp")
 t.rmempty = true
 t.rows = 20
 function t.cfgvalue()
-	return fs.readfile(hpscript) or ""
+	local hps = fs.readfile(hpscript)
+	if not hps or hps == "" then -- if script does not exist or is blank create default
+		fs.writefile(hpscript, defscript)
+		return fs.readfile(hpscript)
+	else
+		return hps
+	end
 end
 
 function f.handle(self, state, data)
 	if state == FORM_VALID then
-		if data.mwhp then
+		if data.mwhp then -- write existing or new contents to hpscript
 			fs.writefile(hpscript, trailtrim(data.mwhp:gsub("\r\n", "\n")) .. "\n")
-		else
+		else -- if user erases all contents restore default hotplug script
 			fs.writefile(hpscript, defscript)
 		end
 	end
