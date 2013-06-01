@@ -10,21 +10,25 @@ end
 
 fs = require "nixio.fs"
 hpscript = "/etc/hotplug.d/iface/16-mwan3custom"
-defscript = table.concat{"#!/bin/sh\n\n## example hotplug script\n## lines beginning with # are comments",
-" and are not executed\n## do not uncomment or remove the first line of this script\n\n##",
-" available variables:\n## $ACTION is the hotplug event (ifup, ifdown)\n## $INTERFACE is",
-" the interface name (wan1, wan2, etc.)\n## $DEVICE the device name attached to the interface",
-" (eth0.1, eth1, etc.)\n\n#case \"$ACTION\" in\n#	ifup)\n#		# run this",
-" code/script/function\n#		# if an interface comes online\n#\n#		#",
-" if you want to limit it to certain interfaces you can do\n#		if [ \"$INTERFACE\"",
-" == \"wan1\" ]; then\n#			# run this code\n#		fi\n#	;;\n#\n#",
-"	ifdown)\n#		# run this code/script/function\n#		# if an",
-" interface goes offline\n#	;;\n#esac\n"}
+defscript = table.concat{"#!/bin/sh\n\n## example hotplug script\n\n#case \"$ACTION\" in\n",
+"#	ifup)\n#		# run this code/script/function\n#		# if an ",
+"interface comes online\n#\n#		# if you want to limit it to certain interfaces you ",
+"can do\n#		if [ \"$INTERFACE\" == \"wan1\" ]; then\n#			# ",
+"run this code\n#		fi\n#	;;\n#\n#	ifdown)\n#		# run this ",
+"code/script/function\n#		# if an interface goes offline\n#	;;\n#esac\n"}
 
 
 f = SimpleForm("mwanhotplug", translate("Custom Hotplug Script Configuration"),
 	translate("This section allows you to modify the contents of /etc/hotplug.d/iface/16-mwan3custom<br />") ..
-	translate("This is useful for running system commands and/or scripts based on interface ifup or ifdown hotplug events"))
+	translate("This is useful for running system commands and/or scripts based on interface ifup or ifdown hotplug events<br /><br />") ..
+	translate("Notes:<br />") ..
+	translate("The first line of the script must be &#34;#!/bin/sh&#34; without quotes<br />") ..
+	translate("Lines beginning with # are comments and are not executed<br />") ..
+	translate("To restore the default script simply erase the contents of the box and click Submit<br /><br />") ..
+	translate("Available variables:<br />") ..
+	translate("$ACTION is the hotplug event (ifup, ifdown)<br />") ..
+	translate("$INTERFACE is the interface name (wan1, wan2, etc.)<br />") ..
+	translate("$DEVICE is the device name attached to the interface (eth0.1, eth1, etc.)"))
 
 
 t = f:field(TextValue, "mwhp")

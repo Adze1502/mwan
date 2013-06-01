@@ -1,13 +1,6 @@
 #!/bin/sh
 
 ## example hotplug script
-## lines beginning with # are comments and are not executed
-## do not uncomment or remove the first line of this script
-
-## available variables:
-## $ACTION is the hotplug event (ifup, ifdown)
-## $INTERFACE is the interface name (wan1, wan2, etc.)
-## $DEVICE the device name attached to the interface (eth0.1, eth1, etc.)
 
 #case "$ACTION" in
 #	ifup)
