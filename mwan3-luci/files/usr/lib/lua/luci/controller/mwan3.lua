@@ -44,9 +44,7 @@ function index()
 end
 
 function mwan_get_status(rulenum)
-	local status = luci.sys.exec("ip route list table " .. rulenum)
-		status = string.len(status)
-	if status > 0 then
+	if string.len(luci.sys.exec("ip route list table " .. rulenum)) > 0 then
 		return "on"
 	else
 		return "off"
@@ -59,13 +57,9 @@ function mwan_get_iface()
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			rulenum = rulenum+1
-			local enabled = luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".enabled")
-			if enabled == "1\n" then
-				local tracked = luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".track_ip")
-					tracked = string.len(tracked)
-				if tracked > 0 then
-					local status = mwan_get_status(rulenum)
-					str = str .. section[".name"] .. "[" .. status .. "]"
+			if luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".enabled") == "1\n" then
+				if string.len(luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".track_ip")) > 0 then
+					str = str .. section[".name"] .. "[" .. mwan_get_status(rulenum) .. "]"
 				else
 					str = str .. section[".name"] .. "[" .. "nm" .. "]"
 				end
@@ -89,12 +83,9 @@ function mwan3_status()
 		wansid = {}
 
 		for wanname, ifstat in string.gfind(statstr, "([^%[]+)%[([^%]]+)%]") do
-			local wanifname = luci.sys.exec("uci get -p /var/state network." .. wanname .. ".ifname")
-				local wanifnamelen = string.len(wanifname)
-				if wanifnamelen == 0 then
+			local wanifname = luci.sys.exec("uci get -p /var/state network." .. wanname .. ".ifname | tr -d '\n'")
+				if string.len(wanifname) == 0 then
 					wanifname = "x"
-				else
-					wanifname = string.gsub(wanifname, "\n", "")
 				end
 			local wanlink = ntm:get_interface(wanifname)
 				wanlink = wanlink and wanlink:get_network()
@@ -105,9 +96,9 @@ function mwan3_status()
 	end
 
 	-- overview status log
-	local mwlg = luci.sys.exec("logread | grep mwan3 | tail -n 50 | sed 'x;1!H;$!d;x'")
+	local mwlg = string.gsub(luci.sys.exec("logread | grep mwan3 | tail -n 50 | sed 'x;1!H;$!d;x'"), "\n", "<br />")
 	if string.len(mwlg) > 0 then
-		mwlg =  "<br />" .. string.gsub(mwlg, "\n", "<br />") .. "<br />"
+		mwlg = "<br />" .. mwlg .. "<br />"
 		rv.mwan3log = { }
 		mwlog = {}
 		mwlog[mwlg] = #rv.mwan3log + 1
@@ -122,15 +113,15 @@ function mwan3_tshoot()
 	local rv = {	}
 
 	-- mwan3 and mwan3-luci version
-	local mwan3version = luci.sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'")
+	local mwan3version = string.gsub(luci.sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'"), "\n", "<br />")
 		if string.len(mwan3version) > 0 then
-			mwan3version = "<br />mwan3 - " .. string.gsub(mwan3version, "\n", "<br />")
+			mwan3version = "<br />mwan3 - " .. mwan3version
 		else
 			mwan3version = "<br />mwan3 - unknown<br />"
 		end
-	local mwan3lversion = luci.sys.exec("opkg info luci-app-mwan3 | grep Version | awk -F' ' '{ print $2 }'")
+	local mwan3lversion = string.gsub(luci.sys.exec("opkg info luci-app-mwan3 | grep Version | awk -F' ' '{ print $2 }'"), "\n", "<br /><br />")
 		if string.len(mwan3lversion) > 0 then
-			mwan3lversion = "luci-app-mwan3 - " .. string.gsub(mwan3lversion, "\n", "<br /><br />")
+			mwan3lversion = "luci-app-mwan3 - " .. mwan3lversion
 		else
 			mwan3lversion = "luci-app-mwan3 - unknown<br /><br />"
 		end
@@ -141,24 +132,21 @@ function mwan3_tshoot()
 	rv.mw3ver[mwv[mwan3apps]] = { mwan3v = mwan3apps }
 
 	-- default firewall output policy
-	local defout = luci.sys.exec("uci get -p /var/state firewall.@defaults[0].output")
-		defout = "<br />" .. string.gsub(defout, "\n", "<br /><br />")
+	local defout = "<br />" .. string.gsub(luci.sys.exec("uci get -p /var/state firewall.@defaults[0].output"), "\n", "<br /><br />")
 	rv.fidef = { }
 	fwdf = {}
 	fwdf[defout] = #rv.fidef + 1
 	rv.fidef[fwdf[defout]] = { firedef = defout }
 
 	-- ip route show
-	local routeshow = luci.sys.exec("ip route show")
-		routeshow = "<br />" .. string.gsub(routeshow, "\n", "<br />") .. "<br />"
+	local routeshow = "<br />" .. string.gsub(luci.sys.exec("ip route show"), "\n", "<br />") .. "<br />"
 	rv.rtshow = { }
 	rshw = {}
 	rshw[routeshow] = #rv.rtshow + 1
 	rv.rtshow[rshw[routeshow]] = { iprtshow = routeshow }
 
 	-- ip rule show
-	local ipr = luci.sys.exec("ip rule show")
-		ipr = "<br />" .. string.gsub(ipr, "\n", "<br />") .. "<br />"
+	local ipr = "<br />" .. string.gsub(luci.sys.exec("ip rule show"), "\n", "<br />") .. "<br />"
 	rv.iprule = { }
 	ipruleid = {}
 	ipruleid[ipr] = #rv.iprule + 1
@@ -178,32 +166,28 @@ function mwan3_tshoot()
 	rv.routelist[rtlist[rlstr]] = { iprtlist = rlstr }
 
 	-- iptables
-	local iptbl = luci.sys.exec("iptables -L -t mangle -v -n | awk '/mwan3/' RS= | sed -e 's/.*Chain.*/\\n&/'")
-		iptbl = string.gsub(iptbl, "\n", "<br />") .. "<br />"
+	local iptbl = string.gsub(luci.sys.exec("iptables -L -t mangle -v -n | awk '/mwan3/' RS= | sed -e 's/.*Chain.*/\\n&/'"), "\n", "<br />") .. "<br />"
 	rv.iptables = { }
 	tables = {}
 	tables[iptbl] = #rv.iptables + 1
 	rv.iptables[tables[iptbl]] = { iptbls = iptbl }
 
 	-- ifconfig
-	local ifcg = luci.sys.exec("ifconfig")
-		ifcg = "<br />" .. string.gsub(ifcg, "\n", "<br />")
+	local ifcg = "<br />" .. string.gsub(luci.sys.exec("ifconfig"), "\n", "<br />")
 	rv.ifconfig = { }
 	icfg = {}
 	icfg[ifcg] = #rv.ifconfig + 1
 	rv.ifconfig[icfg[ifcg]] = { ifcfg = ifcg }
 
 	-- mwan3 config
-	local mwcg = luci.sys.exec("cat /etc/config/mwan3")
-		mwcg = string.gsub(mwcg, "\n", "<br />")
+	local mwcg = string.gsub(luci.sys.exec("cat /etc/config/mwan3"), "\n", "<br />")
 	rv.mwan3config = { }
 	mwan3cfg = {}
 	mwan3cfg[mwcg] = #rv.mwan3config + 1
 	rv.mwan3config[mwan3cfg[mwcg]] = { mwn3cfg = mwcg }
 
 	-- network config
-	local netcg = luci.sys.exec("cat /etc/config/network")
-		netcg = string.gsub(netcg, "\n", "<br />")
+	local netcg = string.gsub(luci.sys.exec("cat /etc/config/network"), "\n", "<br />")
 	rv.netconfig = { }
 	ncfg = {}
 	ncfg[netcg] = #rv.netconfig + 1

@@ -10,13 +10,7 @@ end
 
 fs = require "nixio.fs"
 hpscript = "/etc/hotplug.d/iface/16-mwan3custom"
-defscript = table.concat{"#!/bin/sh\n\n## example hotplug script\n\n#case \"$ACTION\" in\n",
-"#	ifup)\n#		# run this code/script/function\n#		# if an ",
-"interface comes online\n#\n#		# if you want to limit it to certain interfaces you ",
-"can do\n#		if [ \"$INTERFACE\" == \"wan1\" ]; then\n#			# ",
-"run this code\n#		fi\n#	;;\n#\n#	ifdown)\n#		# run this ",
-"code/script/function\n#		# if an interface goes offline\n#	;;\n#esac\n"}
-
+defscript = "/etc/hotplug.d/iface/16-mwan3custombak"
 
 f = SimpleForm("mwanhotplug", translate("Custom Hotplug Script Configuration"),
 	translate("This section allows you to modify the contents of /etc/hotplug.d/iface/16-mwan3custom<br />") ..
@@ -36,8 +30,8 @@ t.rmempty = true
 t.rows = 20
 function t.cfgvalue()
 	local hps = fs.readfile(hpscript)
-	if not hps or hps == "" then -- if script does not exist or is blank create default
-		fs.writefile(hpscript, defscript)
+	if not hps or hps == "" then -- if script does not exist or is blank restore default
+		luci.sys.exec("cp -f " .. defscript .. " " .. hpscript)
 		return fs.readfile(hpscript)
 	else
 		return hps
@@ -49,7 +43,7 @@ function f.handle(self, state, data)
 		if data.mwhp then -- write existing or new contents to hpscript
 			fs.writefile(hpscript, trailtrim(data.mwhp:gsub("\r\n", "\n")) .. "\n")
 		else -- if user erases all contents restore default hotplug script
-			fs.writefile(hpscript, defscript)
+			luci.sys.exec("cp -f " .. defscript .. " " .. hpscript)
 		end
 	end
 end
