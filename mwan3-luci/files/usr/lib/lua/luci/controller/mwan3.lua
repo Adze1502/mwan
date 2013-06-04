@@ -43,9 +43,13 @@ function index()
 		cbi("mwan3/mwan3_hotplug"), _("Hotplug Script"), 100)
 end
 
-function mwan_get_status(rulenum)
+function mwan_get_status(rulenum, ifname)
 	if string.len(luci.sys.exec("ip route list table " .. rulenum)) > 0 then
-		return "on"
+		if string.len(luci.sys.exec("uci get -p /var/state mwan3." .. ifname .. ".track_ip")) > 0 then
+			return "on"
+		else
+			return "nm"
+		end
 	else
 		return "off"
 	end
@@ -58,11 +62,7 @@ function mwan_get_iface()
 		function (section)
 			rulenum = rulenum+1
 			if luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".enabled") == "1\n" then
-				if string.len(luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".track_ip")) > 0 then
-					str = str .. section[".name"] .. "[" .. mwan_get_status(rulenum) .. "]"
-				else
-					str = str .. section[".name"] .. "[" .. "nm" .. "]"
-				end
+				str = str .. section[".name"] .. "[" .. mwan_get_status(rulenum, section[".name"]) .. "]"
 			else
 				str = str .. section[".name"] .. "[" .. "ne" .. "]"
 			end
@@ -133,6 +133,9 @@ function mwan3_tshoot()
 
 	-- default firewall output policy
 	local defout = "<br />" .. string.gsub(luci.sys.exec("uci get -p /var/state firewall.@defaults[0].output"), "\n", "<br /><br />")
+		if string.len(defout) == 0 then
+			defout = "<br />No data found<br /><br />"
+		end
 	rv.fidef = { }
 	fwdf = {}
 	fwdf[defout] = #rv.fidef + 1
@@ -155,18 +158,26 @@ function mwan3_tshoot()
 	-- ip route list table
 	local routelisting = luci.sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1099'")
 	local rlstr = ""
-		for line in routelisting:gmatch("[^\r\n]+") do
-			local rlstr1 = luci.sys.exec("ip route list table " .. line)
-			rlstr = rlstr .. line .. "<br />" .. rlstr1
+		if string.len(routelisting) > 0 then
+			for line in routelisting:gmatch("[^\r\n]+") do
+				rlstr = rlstr .. line .. "<br />" .. luci.sys.exec("ip route list table " .. line)
+			end
+			rlstr = "<br />" .. rlstr .. "<br />"
+		else
+			rlstr = "<br />No data found<br /><br />"
 		end
-		rlstr = "<br />" .. rlstr .. "<br />"
 	rv.routelist = { }
 	rtlist = {}
 	rtlist[rlstr] = #rv.routelist + 1
 	rv.routelist[rtlist[rlstr]] = { iprtlist = rlstr }
 
 	-- iptables
-	local iptbl = string.gsub(luci.sys.exec("iptables -L -t mangle -v -n | awk '/mwan3/' RS= | sed -e 's/.*Chain.*/\\n&/'"), "\n", "<br />") .. "<br />"
+	local iptbl = string.gsub(luci.sys.exec("iptables -L -t mangle -v -n | awk '/mwan3/' RS= | sed -e 's/.*Chain.*/\\n&/'"), "\n", "<br />")
+		if string.len(iptbl) ~= 0 then
+			iptbl = iptbl .. "<br />"
+		else
+			iptbl = "<br />No data found<br /><br />"
+		end
 	rv.iptables = { }
 	tables = {}
 	tables[iptbl] = #rv.iptables + 1
@@ -181,6 +192,9 @@ function mwan3_tshoot()
 
 	-- mwan3 config
 	local mwcg = string.gsub(luci.sys.exec("cat /etc/config/mwan3"), "\n", "<br />")
+		if string.len(mwcg) == 0 then
+			mwcg = "<br />No data found<br /><br />"
+		end
 	rv.mwan3config = { }
 	mwan3cfg = {}
 	mwan3cfg[mwcg] = #rv.mwan3config + 1

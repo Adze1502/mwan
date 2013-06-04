@@ -22,19 +22,19 @@
 							cssc = 'wanon';
 							break;
 
+						case 'nm':
+							stat = 'not monitored';
+							cssc = 'wanon';
+							break;
+
 						case 'off':
 							stat = 'OFFLINE';
 							cssc = 'wanoff';
 							break;
 
-						case 'nm':
-							stat = 'not monitored';
-							cssc = 'wannm';
-							break;
-
 						case 'ne':
 							stat = 'not enabled';
-							cssc = 'wanne';
+							cssc = 'wanoff';
 							break;
 					}
 
@@ -97,9 +97,7 @@
 <style type="text/css">
   .wanon { background-color: rgb(144, 240, 144); }
   .wanoff { background-color: rgb(240, 144, 144); }
-  .wannm { background-color: rgb(78, 186, 241); }
-  .wanne { background-color: rgb(255, 165, 0); }
-  .wanon, .wanoff, .wannm, .wanne {
+  .wanon, .wanoff {
 	padding: 0.4em;
 	margin: 0.4em;
 	line-height: 250%;

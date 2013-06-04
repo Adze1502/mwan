@@ -9,74 +9,82 @@ send_reportdata() {
 }
 
 search_rules() {
-	local AFFECTED
 	config_get SRC_IP "$1" src_ip
 	config_get SRC_PORT "$1" src_port
 	config_get DEST_IP "$1" dest_ip
 	config_get DEST_PORT "$1" dest_port
 	config_get PROTO "$1" proto
+	config_get USE_POLICY "$1" use_policy
 	config_get EQUALIZE "$1" equalize
-	[ "$EQUALIZE" == "1" ] && EQUALIZE="Yes" || EQUALIZE="No"
-	config_get RPOL "$1" use_policy
-	[ "$(echo "$POLICYLIST" | grep -c "$RPOL")" != "0" ] && AFFECTED="1"
-	[ "$AFFECTED" == "1" ] && RULELIST=""$RULELIST"++"$1":+source*address*-*"$SRC_IP"+source*port*-*"$SRC_PORT"+destination*address*-*"$DEST_IP"+destination*port*-*"$DEST_PORT"+protocol*-*"$PROTO"+policy*assigned*-*"$RPOL"+equalize*-*"$EQUALIZE""
+		[ "$EQUALIZE" == "1" ] && EQUALIZE="Yes" || EQUALIZE="No"
+	[ "$(echo "$POLICYLIST" | grep -c "$USE_POLICY")" != "0" ] && {
+		RULELIST=""$RULELIST"++"$1":+source*address*-*"$SRC_IP"+source*port*-*"$SRC_PORT"+destination*address*-*"$DEST_IP"+destination*port*-*"$DEST_PORT"+protocol*-*"$PROTO"+policy*assigned*-*"$USE_POLICY"+equalize*-*"$EQUALIZE""
+	}
 }
 
 search_policies() {
-	local AFFECTED
-	config_get PMEM "$1" use_member
-	[ "$PMEM" ] && PMEM="$(echo "$PMEM" | tr -d '\n' | sed 's/ /\n/g')" && echo "$PMEM" > /tmp/mw3hptmp
+	config_get USE_MEMBER "$1" use_member
+	[ "$USE_MEMBER" ] && USE_MEMBER="$(echo "$USE_MEMBER" | tr -d '\n' | sed 's/ /\n/g')" && echo "$USE_MEMBER" > /tmp/mw3hptmp
 	while read LINE; do
-		[ "$(echo "$MEMBERLIST" | grep -c "$LINE")" != "0" ] && AFFECTED="1"
+		[ "$(echo "$MEMBERLIST" | grep -c "$LINE")" != "0" ] && {
+			POLICYLIST=""$POLICYLIST"++"$1":+"$USE_MEMBER""
+			break
+		}
 	done < /tmp/mw3hptmp
-	[ "$AFFECTED" == "1" ] && POLICYLIST=""$POLICYLIST"++"$1":+"$PMEM""
 }
 
 search_members() {
 	config_get IFACE "$1" interface
-	if [ "$INTERFACE" == "$IFACE" ]; then
-		MEMBERLIST=""$MEMBERLIST"+"$1""
-	fi
+	[ "$INTERFACE" == "$IFACE" ] && MEMBERLIST=""$MEMBERLIST"+"$1""
 }
 
-search_interfaces() {
+find_status() {
 	RULENUM=$((RULENUM+1))
-	local RULE="$(ip route list table "$RULENUM")"
+	config_get ENABLED "$1" enabled
 	config_get TRACK_IP "$1" track_ip
-	[ "$TRACK_IP" ] && TRACK_IP="(monitored)" || TRACK_IP="(not monitored)"
+	local STATUS
+		if [ "$ENABLED" == "1" ]; then
+			[ "$TRACK_IP" ] && STATUS="(monitored)" || STATUS="(not monitored)"
+		else
+			STATUS="(not enabled)"
+		fi
+	local RULE="$(ip route list table "$RULENUM")"
 	if [ "$RULE" ]; then
-		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*"ONLINE*$TRACK_IP""
+		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*"ONLINE*$STATUS""
 	else
-		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*"OFFLINE*$TRACK_IP""
+		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*"OFFLINE*$STATUS""
 	fi
 }
 
 report_event() {
-	RULENUM=1000
-	CURRENTSTATUS="---------------+CURRENT*STATUS:+---------------+"
-	MEMBERLIST="-----------------+MEMBERS*AFFECTED:+-----------------+"
-	POLICYLIST="------------------+POLICIES*AFFECTED:+------------------"
-	RULELIST="---------------+RULES*AFFECTED:+---------------"
-	local EVENTINFO="["$ACTION"] event triggered on interface ["$INTERFACE"] on "$(date)""
-	local MWAN3LOG="$(echo "------------------------------------------------------------------+Last*50*MWAN3*systemlog*entries.*Newest*entries*sorted*at*the*top:+------------------------------------------------------------------++$(logread | grep mwan3 | tail -n 50 | sed 'x;1!H;$!d;x')" | sed -e 's/+/\n/g' -e 's/\*/ /g')"
-
 	config_load mwan3
 
+	# create event information message
+	local EVENTINFO="Interface [ "$INTERFACE" ($DEVICE) ] on router [ "$(uci get -p /var/state system.@system[0].hostname)" ] has triggered an [ "$ACTION" ] hotplug event on "$(date)""
+
 	# get current status of all configured MWAN3 interfaces
-	config_foreach search_interfaces interface
+	CURRENTSTATUS="---------------+CURRENT*STATUS:+---------------+"
+	RULENUM=1000
+	config_foreach find_status interface
 	CURRENTSTATUS="$(echo "$CURRENTSTATUS" | sed -e 's/+/\n/g' -e 's/\*/ /g')"
 
 	# create list of affected members
+	MEMBERLIST="-----------------+MEMBERS*AFFECTED:+-----------------+"
 	config_foreach search_members member
 	MEMBERLIST="$(echo "$MEMBERLIST" | sed -e 's/+/\n/g' -e 's/\*/ /g')"
 
 	# create list of affected policies
+	POLICYLIST="------------------+POLICIES*AFFECTED:+------------------"
 	config_foreach search_policies policy
 	POLICYLIST="$(echo "$POLICYLIST" | sed -e 's/+/\n/g' -e 's/\*/ /g')"
 
 	# create list of affected rules
+	RULELIST="---------------+RULES*AFFECTED:+---------------"
 	config_foreach search_rules rule
 	RULELIST="$(echo "$RULELIST" | sed -e 's/+/\n/g' -e 's/\*/ /g')"
+
+	# get last 50 mwan3 systemlog messages
+	local MWAN3LOG="$(echo "------------------------------------------------------------------+Last*50*MWAN3*systemlog*entries.*Newest*entries*sorted*at*the*top:+------------------------------------------------------------------++$(logread | grep mwan3 | tail -n 50 | sed 'x;1!H;$!d;x')" | sed -e 's/+/\n/g' -e 's/\*/ /g')"
 
 	# combine data into single variable for reporting
 	REPORTDATA="$(echo "$EVENTINFO,$CURRENTSTATUS,$MEMBERLIST,$POLICYLIST,$RULELIST,$MWAN3LOG" | sed 's/,/\n\n/g')"
@@ -92,7 +100,7 @@ report_event() {
 #	ifup)
 #		report_event
 #	;;
-
+#
 #	ifdown)
 #		report_event
 #	;;
