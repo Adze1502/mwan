@@ -69,7 +69,7 @@ mwan3_interface_routes_and_rules()
 	ip -4 route flush table $(($interface_number+1000))
 	[ $ACTION == "ifup" ] && ip -4 route add table $(($interface_number+1000)) default $route_args
 
-	for each in $(ip -4 rule list | awk '$1 == ("'$(($interface_number+1000)):'")' | awk '{print $1}'); do
+	while [ -n "$(ip -4 rule list | awk '$1 == ("'$(($interface_number+1000)):'")')" ]; do
 		ip -4 rule del pref $(($interface_number+1000))
 	done
 
@@ -109,12 +109,12 @@ mwan3_policy_rules()
 
 		config_list_foreach $1 use_member mwan3_policy_routes
 
-		ip -4 rule del pref $(($policy_counter+1015)) &> /dev/null
+		while [ -n "$(ip -4 rule list | awk '$1 == ("'$(($policy_counter+1015)):'")')" ]; do
+			ip -4 rule del pref $(($policy_counter+1015)) &> /dev/null
+		done
 
 		if [ -n "$(ip -4 route list table $(($policy_counter+1015)))" ]; then
 			ip -4 rule add pref $(($policy_counter+1015)) fwmark $((($policy_counter+15)*256))/65280 table $(($policy_counter+1015)) &> /dev/null
-		else
-			ip -4 route flush table $(($policy_counter+1015))
 		fi
 	else
 		logger -t mwan3 "Maximum number of 84 policies reached. Omitting policy $policy_counter $1"
@@ -142,8 +142,10 @@ mwan3_policy_routes()
 			fi
 		fi
 
-		[ $ACTION == "ifdown" ] && ip -4 route replace table $(($policy_counter+1015)) metric $metric default $other_route_args &> /dev/null
-		[ $ACTION == "ifup" ] && ip -4 route replace table $(($policy_counter+1015)) metric $metric default $route_args weight $weight $other_route_args &> /dev/null
+		ip -4 route del table $(($policy_counter+1015)) metric $metric &> /dev/null
+
+		[ $ACTION == "ifdown" ] && ip -4 route add table $(($policy_counter+1015)) metric $metric default $other_route_args &> /dev/null
+		[ $ACTION == "ifup" ] && ip -4 route add table $(($policy_counter+1015)) metric $metric default $route_args weight $weight $other_route_args &> /dev/null
 	fi
 }
 
