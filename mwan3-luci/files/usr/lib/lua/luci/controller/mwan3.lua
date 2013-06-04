@@ -132,8 +132,10 @@ function mwan3_tshoot()
 	rv.mw3ver[mwv[mwan3apps]] = { mwan3v = mwan3apps }
 
 	-- default firewall output policy
-	local defout = "<br />" .. string.gsub(luci.sys.exec("uci get -p /var/state firewall.@defaults[0].output"), "\n", "<br /><br />")
-		if string.len(defout) == 0 then
+	local defout = string.gsub(luci.sys.exec("uci get -p /var/state firewall.@defaults[0].output"), "\n", "<br /><br />")
+		if string.len(defout) ~= 0 then
+			defout = "<br />" .. defout
+		else
 			defout = "<br />No data found<br /><br />"
 		end
 	rv.fidef = { }
