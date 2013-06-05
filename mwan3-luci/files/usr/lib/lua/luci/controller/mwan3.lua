@@ -43,29 +43,29 @@ function index()
 		cbi("mwan3/mwan3_hotplug"), _("Hotplug Script"), 100)
 end
 
-function mwan_get_status(rulenum, ifname)
-	if string.len(luci.sys.exec("ip route list table " .. rulenum)) > 0 then
-		if string.len(luci.sys.exec("uci get -p /var/state mwan3." .. ifname .. ".track_ip")) > 0 then
-			return "on"
+function mwan3_get_status(rulenum, ifname)
+	if luci.sys.exec("uci get -p /var/state mwan3." .. ifname .. ".enabled") == "1\n" then
+		if string.len(luci.sys.exec("ip route list table " .. rulenum)) > 0 then
+			if string.len(luci.sys.exec("uci get -p /var/state mwan3." .. ifname .. ".track_ip")) > 0 then
+				return "on"
+			else
+				return "nm"
+			end
 		else
-			return "nm"
+			return "off"
 		end
 	else
-		return "off"
+		return "ne"
 	end
 end
 
-function mwan_get_iface()
+function mwan3_get_iface()
 	local str = ""
 	local rulenum = 1000
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			rulenum = rulenum+1
-			if luci.sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".enabled") == "1\n" then
-				str = str .. section[".name"] .. "[" .. mwan_get_status(rulenum, section[".name"]) .. "]"
-			else
-				str = str .. section[".name"] .. "[" .. "ne" .. "]"
-			end
+			str = str .. section[".name"] .. "[" .. mwan3_get_status(rulenum, section[".name"]) .. "]"
 		end
 	)
 	return str
@@ -77,7 +77,7 @@ function mwan3_status()
 	local rv = {	}
 
 	-- overview status
-	statstr = mwan_get_iface()
+	local statstr = mwan3_get_iface()
 	if string.len(statstr) > 0 then
 		rv.wans = { }
 		wansid = {}
