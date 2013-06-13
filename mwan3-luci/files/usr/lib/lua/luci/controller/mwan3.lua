@@ -203,7 +203,7 @@ function mwan3_tshoot()
 	rv.mwan3config[mwan3cfg[mwcg]] = { mwn3cfg = mwcg }
 
 	-- network config
-	local netcg = string.gsub(luci.sys.exec("cat /etc/config/network"), "\n", "<br />")
+	local netcg = string.gsub(luci.sys.exec("cat /etc/config/network | sed -e 's/.*username.*/	USERNAME HIDDEN/' -e 's/.*password.*/	PASSWORD HIDDEN/'"), "\n", "<br />")
 	rv.netconfig = { }
 	ncfg = {}
 	ncfg[netcg] = #rv.netconfig + 1
