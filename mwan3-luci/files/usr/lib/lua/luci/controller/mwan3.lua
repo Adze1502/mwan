@@ -45,7 +45,6 @@ function index()
 		form("mwan3/mwan3_adv_network"))
 	entry({"admin", "network", "mwan3", "advanced", "startup"},
 		form("mwan3/mwan3_adv_startup"))
-
 end
 
 function mwan3_get_status(rulenum, ifname)
