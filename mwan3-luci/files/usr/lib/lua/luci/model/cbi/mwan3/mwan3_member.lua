@@ -7,9 +7,9 @@ m5 = Map("mwan3", translate("MWAN3 Multi-WAN Member Configuration"))
 
 
 mwan_member = m5:section(TypedSection, "member", translate("Members"),
-	translate("MWAN3 supports an unlimited number of members<br />") ..
-	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
-	translate("Members may not share the same name as configured interfaces, policies or rules"))
+	translate("MWAN3 supports an unlimited number of members<br />" ..
+	"Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />" ..
+	"Members may not share the same name as configured interfaces, policies or rules"))
 	mwan_member.addremove = true
 	mwan_member.dynamic = false
 	mwan_member.sortable = false

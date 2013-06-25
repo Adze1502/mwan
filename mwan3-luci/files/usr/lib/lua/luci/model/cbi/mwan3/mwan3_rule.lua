@@ -8,9 +8,9 @@ m5 = Map("mwan3", translate("MWAN3 Multi-WAN traffic Rule Configuration"),
 
 
 mwan_rule = m5:section(TypedSection, "rule", translate("Traffic Rules"),
-	translate("MWAN3 supports an unlimited number of rules<br />") ..
-	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
-	translate("Rules may not share the same name as configured interfaces, members or policies"))
+	translate("MWAN3 supports an unlimited number of rules<br />" ..
+	"Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />" ..
+	"Rules may not share the same name as configured interfaces, members or policies"))
 	mwan_rule.addremove = true
 	mwan_rule.anonymous = false
 	mwan_rule.dynamic = false

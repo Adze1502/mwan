@@ -16,7 +16,7 @@ function index()
 		call("mwan3_tshoot"))
 
 	entry({"admin", "network", "mwan3", "overview"},
-		template("mwan3_overview"),
+		template("mwan3/mwan3_overview"),
 		_("Overview"), 10)
 
 	entry({"admin", "network", "mwan3", "interface"},
@@ -35,12 +35,17 @@ function index()
 		arcombine(cbi("mwan3/mwan3_rule"), cbi("mwan3/mwan3_ruleconfig")),
 		_("Rules"), 50).leaf = true
 
-	entry({"admin", "network", "mwan3", "troubleshoot"},
-		template("mwan3_troubleshoot"),
-		_("Troubleshooting"), 60)
+	entry({"admin", "network", "mwan3", "advanced"},
+		call("mwan3_advanced"), _("Advanced"), 100)
+	entry({"admin", "network", "mwan3", "advanced", "hotplug"},
+		form("mwan3/mwan3_adv_hotplug"))
+	entry({"admin", "network", "mwan3", "advanced", "mwan3"},
+		form("mwan3/mwan3_adv_mwan3"))
+	entry({"admin", "network", "mwan3", "advanced", "network"},
+		form("mwan3/mwan3_adv_network"))
+	entry({"admin", "network", "mwan3", "advanced", "startup"},
+		form("mwan3/mwan3_adv_startup"))
 
-	entry({"admin", "network", "mwan3", "hotplug"},
-		cbi("mwan3/mwan3_hotplug"), _("Hotplug Script"), 100)
 end
 
 function mwan3_get_status(rulenum, ifname)
@@ -211,4 +216,8 @@ function mwan3_tshoot()
 
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(rv)
+end
+
+function mwan3_advanced()
+	luci.template.render("mwan3/mwan3_adv_troubleshoot")
 end

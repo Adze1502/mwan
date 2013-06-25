@@ -1,5 +1,13 @@
 <%+header%>
 
+<ul class="cbi-tabmenu">
+	<li class="cbi-tab"><a href="#"><%:Troubleshooting%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=REQUEST_URI%>/hotplug"><%:Hotplug Script%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=REQUEST_URI%>/mwan3"><%:MWAN3 Config%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=REQUEST_URI%>/network"><%:Network Config%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=REQUEST_URI%>/startup"><%:Startup Commands%></a></li>
+</ul>
+
 <script type="text/javascript" src="<%=resource%>/cbi.js"></script>
 <script type="text/javascript">//<![CDATA[
 	XHR.poll(15, '<%=luci.dispatcher.build_url("admin", "network", "mwan3", "tshoot")%>', null,
@@ -38,7 +46,6 @@
 </style>
 
 <fieldset class="cbi-section">
-	<legend><%:MWAN3 Multi-WAN Troubleshooting%></legend>
 	<div id="mwan3_tshoot_text" style="text-align:left; white-space:pre-wrap;"><em><%:Collecting data...%></em></div>
 </fieldset>
 

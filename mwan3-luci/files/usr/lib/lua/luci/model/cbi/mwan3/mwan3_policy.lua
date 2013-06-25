@@ -24,9 +24,9 @@ m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration"),
 
 
 mwan_policy = m5:section(TypedSection, "policy", translate("Policies"),
-	translate("MWAN3 supports up to 84 policies<br />") ..
-	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
-	translate("Policies may not share the same name as configured interfaces, members or rules"))
+	translate("MWAN3 supports up to 84 policies<br />" ..
+	"Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />" ..
+	"Policies may not share the same name as configured interfaces, members or rules"))
 	mwan_policy.addremove = true
 	mwan_policy.dynamic = false
 	mwan_policy.sortable = false

@@ -54,11 +54,11 @@ m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration"),
 
 
 mwan_interface = m5:section(TypedSection, "interface", translate("Interfaces"),
-	translate("MWAN3 supports up to 15 physical and/or logical interfaces<br />") ..
-	translate("MWAN3 requires that all interfaces have a unique metric configured in /etc/config/network<br />") ..
-	translate("Name must match the interface name found in /etc/config/network (see troubleshooting tab)<br />") ..
-	translate("Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />") ..
-	translate("Interfaces may not share the same name as configured members, policies or rules"))
+	translate("MWAN3 supports up to 15 physical and/or logical interfaces<br />" ..
+	"MWAN3 requires that all interfaces have a unique metric configured in /etc/config/network<br />" ..
+	"Name must match the interface name found in /etc/config/network (see advanced tab)<br />" ..
+	"Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />" ..
+	"Interfaces may not share the same name as configured members, policies or rules"))
 	mwan_interface.addremove = true
 	mwan_interface.dynamic = false
 	mwan_interface.sortable = false

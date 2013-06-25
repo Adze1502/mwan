@@ -24,13 +24,13 @@ search_rules() {
 
 search_policies() {
 	config_get USE_MEMBER "$1" use_member
-	[ "$USE_MEMBER" ] && USE_MEMBER="$(echo "$USE_MEMBER" | tr -d '\n' | sed 's/ /\n/g')" && echo "$USE_MEMBER" > /tmp/mw3hptmp
-	while read LINE; do
+	[ "$USE_MEMBER" ] && USE_MEMBER="$(echo "$USE_MEMBER" | tr -d '\n' | sed 's/ /\n/g')"
+	for LINE in "$USE_MEMBER"; do
 		[ "$(echo "$MEMBERLIST" | grep -c "$LINE")" != "0" ] && {
 			POLICYLIST=""$POLICYLIST"++"$1":+"$USE_MEMBER""
 			break
 		}
-	done < /tmp/mw3hptmp
+	done
 }
 
 search_members() {
@@ -88,9 +88,6 @@ report_event() {
 
 	# combine data into single variable for reporting
 	REPORTDATA="$(echo "$EVENTINFO,$CURRENTSTATUS,$MEMBERLIST,$POLICYLIST,$RULELIST,$MWAN3LOG" | sed 's/,/\n\n/g')"
-
-	# cleanup temp files
-	[ -e /tmp/mw3hptmp ] && rm /tmp/mw3hptmp
 
 	# report value of variable $REPORTDATA
 	send_reportdata
