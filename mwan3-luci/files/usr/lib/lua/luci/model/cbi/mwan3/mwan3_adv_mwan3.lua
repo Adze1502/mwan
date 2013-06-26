@@ -1,9 +1,7 @@
 -- ------ extra functions ------ --
 
-function trailtrim(s)
-	local n = #s
-	while n > 0 and s:find("^%s", n) do n = n - 1 end
-	return s:sub(1, n)
+function leadtrailtrim(s)
+	return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
 -- ------ mwan3 configuration ------ --
@@ -26,7 +24,7 @@ t = f:option(TextValue, "lines")
 	end
 
 	function t.write(self, section, data)
-		return nixio.fs.writefile(mwan3file, "\n" .. trailtrim(data:gsub("\r\n", "\n")) .. "\n")
+		return nixio.fs.writefile(mwan3file, "\n" .. leadtrailtrim(data:gsub("\r\n", "\n")) .. "\n")
 	end
 
 	function f.handle(self, state, data)

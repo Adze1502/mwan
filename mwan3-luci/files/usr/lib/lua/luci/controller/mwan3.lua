@@ -36,7 +36,8 @@ function index()
 		_("Rules"), 50).leaf = true
 
 	entry({"admin", "network", "mwan3", "advanced"},
-		call("mwan3_advanced"), _("Advanced"), 100)
+		call("mwan3_advanced"),
+		_("Advanced"), 100)
 	entry({"admin", "network", "mwan3", "advanced", "hotplug"},
 		form("mwan3/mwan3_adv_hotplug"))
 	entry({"admin", "network", "mwan3", "advanced", "mwan3"},
@@ -45,6 +46,12 @@ function index()
 		form("mwan3/mwan3_adv_network"))
 	entry({"admin", "network", "mwan3", "advanced", "startup"},
 		form("mwan3/mwan3_adv_startup"))
+end
+
+function trailtrim(s)
+	local n = #s
+	while n > 0 and s:find("^%s", n) do n = n - 1 end
+	return s:sub(1, n)
 end
 
 function mwan3_get_status(rulenum, ifname)
@@ -116,24 +123,37 @@ end
 function mwan3_tshoot()
 	local rv = {	}
 
-	-- mwan3 and mwan3-luci version
-	local mwan3version = string.gsub(luci.sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'"), "\n", "<br />")
+	-- software versions
+	local wrtrelease = luci.version.distversion
+		local wrtrev = trailtrim(luci.sys.exec("cat /etc/openwrt_release | grep REVISION | awk -F'\"' '{print $2}'"))
+		if string.len(wrtrelease) > 0 then
+			if string.len(wrtrev) > 0 then
+				wrtrelease = "<br />OpenWrt - " .. wrtrelease .. " (" .. wrtrev .. ")"
+			else
+				wrtrelease = "<br />OpenWrt - " .. wrtrelease
+			end
+		elseif string.len(wrtrev) > 0 then
+			wrtrelease = "<br />OpenWrt - " .. wrtrev
+		else
+			wrtrelease = "<br />OpenWrt - unknown"
+		end
+	local mwan3version = trailtrim(luci.sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'"))
 		if string.len(mwan3version) > 0 then
 			mwan3version = "<br />mwan3 - " .. mwan3version
 		else
-			mwan3version = "<br />mwan3 - unknown<br />"
+			mwan3version = "<br />mwan3 - unknown"
 		end
 	local mwan3lversion = string.gsub(luci.sys.exec("opkg info luci-app-mwan3 | grep Version | awk -F' ' '{ print $2 }'"), "\n", "<br /><br />")
 		if string.len(mwan3lversion) > 0 then
-			mwan3lversion = "luci-app-mwan3 - " .. mwan3lversion
+			mwan3lversion = "<br />luci-app-mwan3 - " .. mwan3lversion
 		else
-			mwan3lversion = "luci-app-mwan3 - unknown<br /><br />"
+			mwan3lversion = "<br />luci-app-mwan3 - unknown<br /><br />"
 		end
-	local mwan3apps = mwan3version .. mwan3lversion
+	local softrev = wrtrelease .. mwan3version .. mwan3lversion
 	rv.mw3ver = { }
 	mwv = {}
-	mwv[mwan3apps] = #rv.mw3ver + 1
-	rv.mw3ver[mwv[mwan3apps]] = { mwan3v = mwan3apps }
+	mwv[softrev] = #rv.mw3ver + 1
+	rv.mw3ver[mwv[softrev]] = { mwan3v = softrev }
 
 	-- default firewall output policy
 	local defout = string.gsub(luci.sys.exec("uci get -p /var/state firewall.@defaults[0].output"), "\n", "<br /><br />")

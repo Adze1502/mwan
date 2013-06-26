@@ -1,9 +1,7 @@
 -- ------ extra functions ------ --
 
-function trailtrim(s)
-	local n = #s
-	while n > 0 and s:find("^%s", n) do n = n - 1 end
-	return s:sub(1, n)
+function leadtrailtrim(s)
+	return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
 -- ------ hotplug script configuration ------ --
@@ -52,7 +50,7 @@ t = f:option(TextValue, "lines")
 	end
 
 	function t.write(self, section, data)
-		return fs.writefile(script, trailtrim(data:gsub("\r\n", "\n")) .. "\n")
+		return fs.writefile(script, leadtrailtrim(data:gsub("\r\n", "\n")) .. "\n")
 	end
 
 
