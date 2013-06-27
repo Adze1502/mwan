@@ -1,19 +1,16 @@
--- ------ extra functions ------ --
-
-function leadtrailtrim(s)
-	return (s:gsub("^%s*(.-)%s*$", "%1"))
-end
-
 -- ------ hotplug script configuration ------ --
 
 fs = require "nixio.fs"
+sys = require "luci.sys"
+ut = require "luci.util"
+
 script = "/etc/hotplug.d/iface/16-mwan3custom"
 scriptbak = "/etc/hotplug.d/iface/16-mwan3custombak"
 
 if luci.http.formvalue("cbid.luci.1._restorebak") then
 	luci.http.redirect(luci.dispatcher.build_url("admin/network/mwan3/advanced/hotplug") .. "?restore=yes")
 elseif luci.http.formvalue("restore") == "yes" then
-	luci.sys.exec("cp -f " .. scriptbak .. " " .. script)
+	sys.exec("cp -f " .. scriptbak .. " " .. script)
 end
 
 m = SimpleForm("luci", nil)
@@ -42,7 +39,7 @@ t = f:option(TextValue, "lines")
 	function t.cfgvalue()
 		local hps = fs.readfile(script)
 		if not hps or hps == "" then -- if script does not exist or is blank restore default
-			luci.sys.exec("cp -f " .. scriptbak .. " " .. script)
+			sys.exec("cp -f " .. scriptbak .. " " .. script)
 			return fs.readfile(script)
 		else
 			return hps
@@ -50,7 +47,7 @@ t = f:option(TextValue, "lines")
 	end
 
 	function t.write(self, section, data)
-		return fs.writefile(script, leadtrailtrim(data:gsub("\r\n", "\n")) .. "\n")
+		return fs.writefile(script, ut.trim(data:gsub("\r\n", "\n")) .. "\n")
 	end
 
 

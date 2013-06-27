@@ -1,12 +1,8 @@
--- ------ extra functions ------ --
-
-function leadtrailtrim(s)
-	return (s:gsub("^%s*(.-)%s*$", "%1"))
-end
-
 -- ------ mwan3 configuration ------ --
 
-local mwan3file = "/etc/config/mwan3"
+ut = require "luci.util"
+
+mwan3file = "/etc/config/mwan3"
 
 m = SimpleForm("luci", nil)
 	m:append(Template("mwan3/mwan3_adv_mwan3"))
@@ -24,7 +20,7 @@ t = f:option(TextValue, "lines")
 	end
 
 	function t.write(self, section, data)
-		return nixio.fs.writefile(mwan3file, "\n" .. leadtrailtrim(data:gsub("\r\n", "\n")) .. "\n")
+		return nixio.fs.writefile(mwan3file, "\n" .. ut.trim(data:gsub("\r\n", "\n")) .. "\n")
 	end
 
 	function f.handle(self, state, data)

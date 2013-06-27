@@ -51,7 +51,7 @@
 			{
 				var temp = '';
 				var ncint = '<br />No MWAN3 interfaces found<br /><br />';
-				temp += String.format(
+				temp = String.format(
 					'<strong>%s</strong>',
 						ncint
 				);
@@ -62,19 +62,21 @@
 			if (st.mwan3log)
 			{
 				var temp = '';
-				var mwan3lg = '<br />Last 50 MWAN3 systemlog entries. Newest entries sorted at the top :<br />';
+				var mwan3lg = '<br />Last 50 MWAN3 systemlog entries. Newest entries sorted at the top :<br /><br />';
 
 				temp = String.format(
 					'%s%s',
 						mwan3lg, st.mwan3log[0].mwanlog
 				);
+				var lbrk = '<br />';
+				temp = temp.concat(lbrk);
 				tx.innerHTML = temp;
 			}
 			else
 			{
 				var temp = '';
 				var nslg = '<br />No MWAN3 systemlog history found<br /><br />';
-				temp += String.format(
+				temp = String.format(
 					'<strong>%s</strong>',
 						nslg
 				);

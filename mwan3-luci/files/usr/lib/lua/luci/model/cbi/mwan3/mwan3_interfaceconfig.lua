@@ -1,22 +1,22 @@
 -- ------ extra functions ------ --
 
 function metriclist()
-	metcheck = luci.sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric | tr -d \'\n\'")
+	metcheck = ut.trim(sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric"))
 	if metcheck == "" then -- no metric
 		metnone = 1
 	else -- if metric exists create list of interface metrics to compare against for duplicates
 		uci.cursor():foreach("mwan3", "interface",
 			function (section)
-				local metlkp = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric | tr -d \'\n\'")
+				local metlkp = ut.trim(sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric"))
 				if metlkp == "" then
 					metlkp = "none"
 				end
 				metlst = metlst .. metlkp .. " "
 			end
 		)
-		metlst = luci.sys.exec("echo \'" .. metlst .. "\' | sed \'s/ *$//\' | tr -d \'\n\' | tr \' \' \'\n\'")
+		metlst = ut.trim(sys.exec("echo '" .. metlst .. "' | sed 's/ *$//' | tr ' ' '\n'"))
 		-- compare metric against list
-		if luci.sys.exec("echo \'" .. metlst .. "\' | grep -c -w \'" .. metcheck .. "\' | tr -d \'\n\'") ~= "1" then
+		if ut.trim(sys.exec("echo '" .. metlst .. "' | grep -c -w '" .. metcheck .. "'")) ~= "1" then
 			metdup = 1
 		end
 	end
@@ -35,6 +35,8 @@ end
 -- ------ interface configuration ------ --
 
 dsp = require "luci.dispatcher"
+sys = require "luci.sys"
+ut = require "luci.util"
 arg[1] = arg[1] or ""
 
 metlst = ""

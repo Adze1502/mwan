@@ -1,12 +1,8 @@
--- ------ extra functions ------ --
-
-function leadtrailtrim(s)
-	return (s:gsub("^%s*(.-)%s*$", "%1"))
-end
-
 -- ------ rc.local configuration ------ --
 
-local rcfile = "/etc/rc.local"
+ut = require "luci.util"
+
+rcfile = "/etc/rc.local"
 
 m = SimpleForm("rclocal", nil)
 	m:append(Template("mwan3/mwan3_adv_startup"))
@@ -29,7 +25,7 @@ t = f:option(TextValue, "lines")
 	end
 
 	function t.write(self, section, data)
-		return nixio.fs.writefile(rcfile, leadtrailtrim(data:gsub("\r\n", "\n")) .. "\n")
+		return nixio.fs.writefile(rcfile, ut.trim(data:gsub("\r\n", "\n")) .. "\n")
 	end
 
 	function f.handle(self, state, data)

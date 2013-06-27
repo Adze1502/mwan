@@ -1,5 +1,9 @@
 module("luci.controller.mwan3", package.seeall)
 
+ntm = require "luci.model.network".init()
+sys = require "luci.sys"
+ut = require "luci.util"
+
 function index()
 	if not nixio.fs.access("/etc/config/mwan3") then
 		return
@@ -48,16 +52,10 @@ function index()
 		form("mwan3/mwan3_adv_startup"))
 end
 
-function trailtrim(s)
-	local n = #s
-	while n > 0 and s:find("^%s", n) do n = n - 1 end
-	return s:sub(1, n)
-end
-
 function mwan3_get_status(rulenum, ifname)
-	if luci.sys.exec("uci get -p /var/state mwan3." .. ifname .. ".enabled") == "1\n" then
-		if string.len(luci.sys.exec("ip route list table " .. rulenum)) > 0 then
-			if string.len(luci.sys.exec("uci get -p /var/state mwan3." .. ifname .. ".track_ip")) > 0 then
+	if ut.trim(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".enabled")) == "1" then
+		if string.len(sys.exec("ip route list table " .. rulenum)) > 0 then
+			if string.len(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".track_ip")) > 0 then
 				return "on"
 			else
 				return "nm"
@@ -83,8 +81,6 @@ function mwan3_get_iface()
 end
 
 function mwan3_status()
-	local ntm = require "luci.model.network".init()
-
 	local rv = {	}
 
 	-- overview status
@@ -94,7 +90,7 @@ function mwan3_status()
 		wansid = {}
 
 		for wanname, ifstat in string.gfind(statstr, "([^%[]+)%[([^%]]+)%]") do
-			local wanifname = luci.sys.exec("uci get -p /var/state network." .. wanname .. ".ifname | tr -d '\n'")
+			local wanifname = ut.trim(sys.exec("uci get -p /var/state network." .. wanname .. ".ifname"))
 				if string.len(wanifname) == 0 then
 					wanifname = "x"
 				end
@@ -107,9 +103,8 @@ function mwan3_status()
 	end
 
 	-- overview status log
-	local mwlg = string.gsub(luci.sys.exec("logread | grep mwan3 | tail -n 50 | sed 'x;1!H;$!d;x'"), "\n", "<br />")
+	local mwlg = string.gsub(sys.exec("logread | grep mwan3 | tail -n 50 | sed 'x;1!H;$!d;x'"), "\n", "<br />")
 	if string.len(mwlg) > 0 then
-		mwlg = "<br />" .. mwlg .. "<br />"
 		rv.mwan3log = { }
 		mwlog = {}
 		mwlog[mwlg] = #rv.mwan3log + 1
@@ -125,7 +120,7 @@ function mwan3_tshoot()
 
 	-- software versions
 	local wrtrelease = luci.version.distversion
-		local wrtrev = trailtrim(luci.sys.exec("cat /etc/openwrt_release | grep REVISION | awk -F'\"' '{print $2}'"))
+		local wrtrev = ut.trim(sys.exec("cat /etc/openwrt_release | grep REVISION | awk -F'\"' '{print $2}'"))
 		if string.len(wrtrelease) > 0 then
 			if string.len(wrtrev) > 0 then
 				wrtrelease = "<br />OpenWrt - " .. wrtrelease .. " (" .. wrtrev .. ")"
@@ -137,13 +132,13 @@ function mwan3_tshoot()
 		else
 			wrtrelease = "<br />OpenWrt - unknown"
 		end
-	local mwan3version = trailtrim(luci.sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'"))
+	local mwan3version = ut.trim(sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'"))
 		if string.len(mwan3version) > 0 then
 			mwan3version = "<br />mwan3 - " .. mwan3version
 		else
 			mwan3version = "<br />mwan3 - unknown"
 		end
-	local mwan3lversion = string.gsub(luci.sys.exec("opkg info luci-app-mwan3 | grep Version | awk -F' ' '{ print $2 }'"), "\n", "<br /><br />")
+	local mwan3lversion = string.gsub(sys.exec("opkg info luci-app-mwan3 | grep Version | awk -F' ' '{ print $2 }'"), "\n", "<br /><br />")
 		if string.len(mwan3lversion) > 0 then
 			mwan3lversion = "<br />luci-app-mwan3 - " .. mwan3lversion
 		else
@@ -156,11 +151,9 @@ function mwan3_tshoot()
 	rv.mw3ver[mwv[softrev]] = { mwan3v = softrev }
 
 	-- default firewall output policy
-	local defout = string.gsub(luci.sys.exec("uci get -p /var/state firewall.@defaults[0].output"), "\n", "<br /><br />")
-		if string.len(defout) ~= 0 then
-			defout = "<br />" .. defout
-		else
-			defout = "<br />No data found<br /><br />"
+	local defout = string.gsub(sys.exec("uci get -p /var/state firewall.@defaults[0].output"), "\n", "<br /><br />")
+		if string.len(defout) == 0 then
+			defout = "No data found<br /><br />"
 		end
 	rv.fidef = { }
 	fwdf = {}
@@ -168,29 +161,28 @@ function mwan3_tshoot()
 	rv.fidef[fwdf[defout]] = { firedef = defout }
 
 	-- ip route show
-	local routeshow = "<br />" .. string.gsub(luci.sys.exec("ip route show"), "\n", "<br />") .. "<br />"
+	local routeshow = string.gsub(sys.exec("ip route show"), "\n", "<br />")
 	rv.rtshow = { }
 	rshw = {}
 	rshw[routeshow] = #rv.rtshow + 1
 	rv.rtshow[rshw[routeshow]] = { iprtshow = routeshow }
 
 	-- ip rule show
-	local ipr = "<br />" .. string.gsub(luci.sys.exec("ip rule show"), "\n", "<br />") .. "<br />"
+	local ipr = string.gsub(sys.exec("ip rule show"), "\n", "<br />")
 	rv.iprule = { }
 	ipruleid = {}
 	ipruleid[ipr] = #rv.iprule + 1
 	rv.iprule[ipruleid[ipr]] = { rule = ipr }
 
 	-- ip route list table
-	local routelisting = luci.sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1099'")
+	local routelisting = sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1099'")
 	local rlstr = ""
 		if string.len(routelisting) > 0 then
 			for line in routelisting:gmatch("[^\r\n]+") do
-				rlstr = rlstr .. line .. "<br />" .. luci.sys.exec("ip route list table " .. line)
+				rlstr = rlstr .. line .. "<br />" .. sys.exec("ip route list table " .. line)
 			end
-			rlstr = "<br />" .. rlstr .. "<br />"
 		else
-			rlstr = "<br />No data found<br /><br />"
+			rlstr = "No data found<br />"
 		end
 	rv.routelist = { }
 	rtlist = {}
@@ -198,11 +190,9 @@ function mwan3_tshoot()
 	rv.routelist[rtlist[rlstr]] = { iprtlist = rlstr }
 
 	-- iptables
-	local iptbl = string.gsub(luci.sys.exec("iptables -L -t mangle -v -n | awk '/mwan3/' RS= | sed -e 's/.*Chain.*/\\n&/'"), "\n", "<br />")
-		if string.len(iptbl) ~= 0 then
-			iptbl = iptbl .. "<br />"
-		else
-			iptbl = "<br />No data found<br /><br />"
+	local iptbl = string.gsub(sys.exec("iptables -L -t mangle -v -n | awk '/mwan3/' RS= | sed -e 's/.*Chain.*/\\n&/'"), "\n", "<br />")
+		if string.len(iptbl) == 0 then
+			iptbl = "<br />No data found<br />"
 		end
 	rv.iptables = { }
 	tables = {}
@@ -210,16 +200,16 @@ function mwan3_tshoot()
 	rv.iptables[tables[iptbl]] = { iptbls = iptbl }
 
 	-- ifconfig
-	local ifcg = "<br />" .. string.gsub(luci.sys.exec("ifconfig"), "\n", "<br />")
+	local ifcg = string.gsub(sys.exec("ifconfig"), "\n", "<br />")
 	rv.ifconfig = { }
 	icfg = {}
 	icfg[ifcg] = #rv.ifconfig + 1
 	rv.ifconfig[icfg[ifcg]] = { ifcfg = ifcg }
 
 	-- mwan3 config
-	local mwcg = string.gsub(luci.sys.exec("cat /etc/config/mwan3"), "\n", "<br />")
-		if string.len(mwcg) == 0 then
-			mwcg = "<br />No data found<br /><br />"
+	local mwcg = string.gsub(sys.exec("cat /etc/config/mwan3"), "\n", "<br />")
+		if ut.trim(sys.exec("echo \"" .. mwcg .. "\" | sed 's/<br \\/>//g'")) == "" then
+			mwcg = "<br />No data found<br />"
 		end
 	rv.mwan3config = { }
 	mwan3cfg = {}
@@ -227,7 +217,7 @@ function mwan3_tshoot()
 	rv.mwan3config[mwan3cfg[mwcg]] = { mwn3cfg = mwcg }
 
 	-- network config
-	local netcg = string.gsub(luci.sys.exec("cat /etc/config/network | sed -e 's/.*username.*/	USERNAME HIDDEN/' -e 's/.*password.*/	PASSWORD HIDDEN/'"), "\n", "<br />")
+	local netcg = string.gsub(sys.exec("cat /etc/config/network | sed -e 's/.*username.*/	USERNAME HIDDEN/' -e 's/.*password.*/	PASSWORD HIDDEN/'"), "\n", "<br />")
 	rv.netconfig = { }
 	ncfg = {}
 	ncfg[netcg] = #rv.netconfig + 1

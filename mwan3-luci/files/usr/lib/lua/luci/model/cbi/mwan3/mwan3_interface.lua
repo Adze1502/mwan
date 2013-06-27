@@ -4,20 +4,20 @@ function metriclist() -- create list of interface metrics to compare against for
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			ifnum = ifnum+1 -- count number of mwan3 interfaces configured
-			local metlkp = luci.sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric | tr -d \'\n\'")
+			local metlkp = ut.trim(sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric"))
 			if metlkp == "" then
 				metlkp = "none"
 			end
 			metlst = metlst .. metlkp .. " "
 		end
 	)
-	metlst = luci.sys.exec("echo \'" .. metlst .. "\' | sed \'s/ *$//\' | tr -d \'\n\' | tr \' \' \'\n\'")
+	metlst = ut.trim(sys.exec("echo '" .. metlst .. "' | tr ' ' '\n' | sort"))
 	-- determine if blanks exist
-	if luci.sys.exec("echo \'" .. metlst .. "\' | grep -c \'none\' | tr -d \'\n\'") ~= "0" then
+	if ut.trim(sys.exec("echo '" .. metlst .. "' | grep -c 'none'")) ~= "0" then
 		metnone = 1
 	end
 	-- determine if duplicates exist
-	if luci.sys.exec("echo \'" .. metlst .. "\' | grep -v \'none\' | uniq -c | grep -v \' 1 \' | tr -d \'\n\'") ~= "" then
+	if ut.trim(sys.exec("echo '" .. metlst .. "' | grep -v 'none' | uniq -c | grep -v ' 1 '")) ~= "" then
 		metdup = 1
 	end
 end
@@ -40,7 +40,9 @@ end
 
 -- ------ interface configuration ------ --
 
-ds = require "luci.dispatcher"
+dsp = require "luci.dispatcher"
+sys = require "luci.sys"
+ut = require "luci.util"
 
 ifnum = 0
 metlst = ""
@@ -63,11 +65,11 @@ mwan_interface = m5:section(TypedSection, "interface", translate("Interfaces"),
 	mwan_interface.dynamic = false
 	mwan_interface.sortable = false
 	mwan_interface.template = "cbi/tblsection"
-	mwan_interface.extedit = ds.build_url("admin", "network", "mwan3", "interface", "%s")
+	mwan_interface.extedit = dsp.build_url("admin", "network", "mwan3", "interface", "%s")
 	function mwan_interface.create(self, section)
 		TypedSection.create(self, section)
 		m5.uci:save("mwan3")
-		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "interface", section))
+		luci.http.redirect(dsp.build_url("admin", "network", "mwan3", "interface", section))
 	end
 
 
@@ -146,13 +148,14 @@ up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		local metcheck = luci.sys.exec("uci get -p /var/state network." .. s .. ".metric | tr -d \'\n\'")
+		local metcheck = ut.trim(sys.exec("uci get -p /var/state network." .. s .. ".metric"))
 		if metcheck == "" then -- no metric
 			return "<br /><font color=\"ff0000\"><font size=\"+4\">-</font></font>"
 		elseif metdup == 1 then -- metric needs to be checked for duplicates
-			if luci.sys.exec("echo \'" .. metlst .. "\' | grep -c \'" .. metcheck .. "\' | tr -d \'\n\'") ~= "1" then
+			if ut.trim(sys.exec("echo '" .. metlst .. "' | grep -c '" .. metcheck .. "'")) ~= "1" then
 				return "<font color=\"ff0000\"><strong>" .. metcheck .. "</strong></font>"
 			end
+			return metcheck
 		else
 			return metcheck
 		end
