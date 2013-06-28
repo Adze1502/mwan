@@ -66,6 +66,8 @@ mwan3_connected_iptables()
 
 mwan3_interface_routes_and_rules()
 {
+	local link_address
+
 	ip -4 route flush table $(($interface_number+1000))
 	[ $ACTION == "ifup" ] && ip -4 route add table $(($interface_number+1000)) default $route_args
 
@@ -98,7 +100,7 @@ mwan3_policy_routes_and_rules()
 	}
 
 	iptables -F mwan3_rules -t mangle
-	
+
 	config_foreach mwan3_policy_rules policy
 	config_foreach mwan3_rules_iptables rule
 }
