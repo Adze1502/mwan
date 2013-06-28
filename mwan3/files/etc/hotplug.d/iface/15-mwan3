@@ -73,7 +73,13 @@ mwan3_interface_routes_and_rules()
 		ip -4 rule del pref $(($interface_number+1000))
 	done
 
-	[ $ACTION == "ifup" ] && ip -4 rule add pref $(($interface_number+1000)) fwmark $(($interface_number*256))/65280 table $(($interface_number+1000))
+	if [ $ACTION == "ifup" ]; then
+		ip -4 rule add pref $(($interface_number+1000)) fwmark $(($interface_number*256))/65280 table $(($interface_number+1000))
+
+		for link_address in $(ip -4 route list table local dev $DEVICE | grep ^local | sed 's/.*local \([^ ]*\) .*/\1/') ; do
+			ip -4 rule add pref $(($interface_number+1000)) from $link_address table $(($interface_number+1000))
+		done
+	fi
 }
 
 mwan3_policy_routes_and_rules()
