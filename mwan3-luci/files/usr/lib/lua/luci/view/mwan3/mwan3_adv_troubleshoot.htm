@@ -17,20 +17,23 @@
 			if (st.fidef)
 			{
 				var temp = '';
+				var lbrk = '<br />';
 				var mwanvers = '<br />Software versions : <br />';
-				var firewalldef = 'Firewall default output policy (must be ACCEPT) : <br /><br />';
-				var iproute = 'Output of &#34;ip route show&#34; : <br /><br />';
-				var iprulesh = '<br />Output of &#34;ip rule show&#34; : <br /><br />';
-				var routelisttbl = '<br />Output of &#34;ip route list table 1001-1099&#34; (1001-1015 = interface tables, 1016-1099 = policy tables) : <br /><br />';
-				var iptable = '<br />Output of &#34;iptables -L -t mangle -v -n | awk &#39;/mwan3/&#39; RS=&#34; : <br />';
-				var ifcnfg = '<br />Output of &#34;ifconfig&#34; : <br /><br />';
-				var mwan3cnfg = 'Output of &#34;cat /etc/config/mwan3&#34; : <br />';
-				var netcnfg = '<br />Output of &#34;cat /etc/config/network&#34; : <br />';
+				var firewalldef = '<br /><br />Firewall default output policy (must be ACCEPT) : <br /><br />';
+				var iproute = '<br /><br />Output of &#34;ip route show&#34; : <br /><br />';
+				var iprulesh = '<br /><br />Output of &#34;ip rule show&#34; : <br /><br />';
+				var routelisttbl = '<br /><br />Output of &#34;ip route list table 1001-1099&#34; (1001-1015 = interface tables, 1016-1099 = policy tables) : <br /><br />';
+				var iptable = '<br />Output of &#34;iptables -L -t mangle -v -n | awk &#39;/mwan3/&#39; RS=&#34; : <br /><br />';
+				var ifcnfg = '<br /><br />Output of &#34;ifconfig&#34; : <br /><br />';
+				var mwan3cnfg = '<br /><br />Output of &#34;cat /etc/config/mwan3&#34; : <br /><br />';
+				var netcnfg = '<br /><br />Output of &#34;cat /etc/config/network&#34; : <br /><br />';
 
 				temp = String.format(
-					'<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s',
-						mwanvers, st.mw3ver[0].mwan3v, firewalldef, st.fidef[0].firedef, iproute, st.rtshow[0].iprtshow, iprulesh, st.iprule[0].rule, routelisttbl, st.routelist[0].iprtlist, iptable, st.iptables[0].iptbls, ifcnfg, st.ifconfig[0].ifcfg, mwan3cnfg, st.mwan3config[0].mwn3cfg, netcnfg, st.netconfig[0].netcfg
+					'<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s%s',
+						mwanvers, st.mw3ver[0].mwan3v, firewalldef, st.fidef[0].firedef, iproute, st.rtshow[0].iprtshow, iprulesh, st.iprule[0].rule, routelisttbl, st.routelist[0].iprtlist, iptable, st.iptables[0].iptbls, ifcnfg, st.ifconfig[0].ifcfg, mwan3cnfg, st.mwan3config[0].mwn3cfg, netcnfg, st.netconfig[0].netcfg, lbrk
 				);
+				var lbrk = '<br />';
+				temp = temp.concat(lbrk);
 				tx.innerHTML = temp;
 			}
 			else

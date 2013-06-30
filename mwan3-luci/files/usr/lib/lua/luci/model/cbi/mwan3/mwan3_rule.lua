@@ -57,7 +57,16 @@ proto = mwan_rule:option(DummyValue, "proto", translate("Protocol"))
 use_policy = mwan_rule:option(DummyValue, "use_policy", translate("Policy assigned"))
 	use_policy.rawhtml = true
 	function use_policy.cfgvalue(self, s)
-		return self.map:get(s, "use_policy") or "<br /><font size=\"+4\">-</font>"
+		local upol = self.map:get(s, "use_policy")
+		if string.len(upol) > 0 then
+			if upol == "default" then
+				return "default routing table"
+			else
+				return upol
+			end
+		else
+			return "<br /><font size=\"+4\">-</font>"
+		end
 	end
 
 equalize = mwan_rule:option(DummyValue, "equalize", translate("Equalize"))
