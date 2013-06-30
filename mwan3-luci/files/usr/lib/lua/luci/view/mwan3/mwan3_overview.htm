@@ -65,11 +65,9 @@
 				var mwan3lg = '<br />Last 50 MWAN3 systemlog entries. Newest entries sorted at the top :<br /><br />';
 
 				temp = String.format(
-					'%s%s',
+					'%s%s<br /><br />',
 						mwan3lg, st.mwan3log[0].mwanlog
 				);
-				var lbrk = '<br /><br />';
-				temp = temp.concat(lbrk);
 				tx.innerHTML = temp;
 			}
 			else

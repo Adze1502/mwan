@@ -119,7 +119,7 @@ function mwan3_tshoot()
 	local rv = {	}
 
 	-- software versions
-	local wrtrelease = luci.version.distversion
+	local wrtrelease = ut.trim(luci.version.distversion)
 		local wrtrev = ut.trim(sys.exec("cat /etc/openwrt_release | grep REVISION | awk -F'\"' '{print $2}'"))
 		if string.len(wrtrelease) > 0 then
 			if string.len(wrtrev) > 0 then
