@@ -20,6 +20,7 @@ config 'interface' 'wan1'
 	option 'interval' '5'
 	option 'down' '3'
 	option 'up' '8'
+	option 'reroute' '0'
 
 config 'interface' 'wan2'
 	option 'enabled' '1'
@@ -31,6 +32,7 @@ config 'interface' 'wan2'
 	option 'interval' '5'
 	option 'down' '3'
 	option 'up' '8'
+	option 'reroute' '0'
 
 # Next define a member and configure metric and weight values for this member.
 # Each interface can have multiple member definitions. Give each member a correct

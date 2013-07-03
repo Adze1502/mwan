@@ -71,7 +71,9 @@ mwan3_connected_iptables()
 
 mwan3_interface_routes_and_rules()
 {
-	local link_address
+	local link_address reroute
+
+	config_get reroute $INTERFACE reroute 0
 
 	ip -4 route flush table $(($interface_number+1000))
 	[ $ACTION == "ifup" ] && ip -4 route add table $(($interface_number+1000)) default $route_args
@@ -82,16 +84,18 @@ mwan3_interface_routes_and_rules()
 
 	[ $ACTION == "ifup" ] && ip -4 rule add pref $(($interface_number+1000)) fwmark $(($interface_number*256))/65280 table $(($interface_number+1000))
 
-	iptables -N mwan3_$INTERFACE -t mangle &> /dev/null
-	iptables -D mwan3_wan -t mangle -j mwan3_$INTERFACE &> /dev/null
-	iptables -F mwan3_$INTERFACE -t mangle
+	if [ $reroute != "1" ]; then
+		iptables -N mwan3_$INTERFACE -t mangle &> /dev/null
+		iptables -D mwan3_wan -t mangle -j mwan3_$INTERFACE &> /dev/null
+		iptables -F mwan3_$INTERFACE -t mangle
 
-	if [ $ACTION == "ifup" ]; then
-		for link_address in $(ip -4 route list table local dev $DEVICE | grep ^local | sed 's/.*local \([^ ]*\) .*/\1/') ; do	
-			iptables -A mwan3_$INTERFACE -t mangle -s $link_address -j MARK --set-xmark $(($interface_number*256))/65280
-		done
+		if [ $ACTION == "ifup" ]; then
+			for link_address in $(ip -4 route list table local dev $DEVICE | grep ^local | sed 's/.*local \([^ ]*\) .*/\1/') ; do	
+				iptables -A mwan3_$INTERFACE -t mangle -s $link_address -j MARK --set-xmark $(($interface_number*256))/65280
+			done
 
-		iptables -A mwan3_wan -t mangle -j mwan3_$INTERFACE
+			iptables -A mwan3_wan -t mangle -j mwan3_$INTERFACE
+		fi
 	fi
 
 	[ $ACTION == "ifdown" ] && iptables -X mwan3_$INTERFACE -t mangle &> /dev/null
@@ -138,7 +142,7 @@ mwan3_policy_rules()
 			ip -4 rule add pref $(($policy_counter+1015)) fwmark $((($policy_counter+15)*256))/65280 table $(($policy_counter+1015)) &> /dev/null
 		fi
 	else
-		logger -t mwan3 "Maximum number of 84 policies reached. Omitting policy $policy_counter $1"
+		logger -t mwan3 -p info "Maximum number of 84 policies reached. Omitting policy $policy_counter $1"
 	fi
 }
 
@@ -283,7 +287,7 @@ mwan3_ifupdown()
 
 	[ "$interface_counter" -le "15" ] || exit 0
 
-	logger -t mwan3 "$ACTION interface $INTERFACE ($DEVICE)"
+	logger -t mwan3 -p info "$ACTION interface $INTERFACE ($DEVICE)"
 
 	route_args=$(ip -4 route list dev $DEVICE default | sed 's/.*via \([^ ]*\) .*/\1/' | grep -v "^default" )
 	[ -n "$route_args" ] && route_args="via $route_args"
