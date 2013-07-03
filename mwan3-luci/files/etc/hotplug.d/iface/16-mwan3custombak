@@ -1,14 +1,18 @@
 #!/bin/sh
 
 # to enable this script uncomment the case loop at the bottom
-# to report the contents of $REPORTDATA modify the lines in the send_reportdata function
+# to report the interface up/down events modify the lines in the send_reportdata function
 
-send_reportdata() {
-	# insert your code here to report the contents of $REPORTDATA
-	echo "$REPORTDATA"
+send_reportdata()
+{
+	# $1 stores the interface up/down event report data
+	# insert your code here to report the contents of $1
+	echo "$1"
 }
 
-search_rules() {
+search_rules()
+{
+	local SRC_IP SRC_PORT DEST_IP DEST_PORT PROTO USE_POLICY EQUALIZE
 	config_get SRC_IP "$1" src_ip
 	config_get SRC_PORT "$1" src_port
 	config_get DEST_IP "$1" dest_ip
@@ -22,7 +26,9 @@ search_rules() {
 	}
 }
 
-search_policies() {
+search_policies()
+{
+	local USE_MEMBER
 	config_get USE_MEMBER "$1" use_member
 	[ "$USE_MEMBER" ] && USE_MEMBER="$(echo "$USE_MEMBER" | tr -d '\n' | sed 's/ /\n/g')"
 	for LINE in "$USE_MEMBER"; do
@@ -33,13 +39,17 @@ search_policies() {
 	done
 }
 
-search_members() {
+search_members()
+{
+	local IFACE
 	config_get IFACE "$1" interface
 	[ "$INTERFACE" == "$IFACE" ] && MEMBERLIST=""$MEMBERLIST"+"$1""
 }
 
-find_status() {
+find_status()
+{
 	RULENUM=$((RULENUM+1))
+	local ENABLED TRACK_IP
 	config_get ENABLED "$1" enabled
 	config_get TRACK_IP "$1" track_ip
 	local STATUS
@@ -56,7 +66,8 @@ find_status() {
 	fi
 }
 
-report_event() {
+report_event()
+{
 	config_load mwan3
 
 	# create event information message
@@ -87,10 +98,10 @@ report_event() {
 	local MWAN3LOG="$(echo "------------------------------------------------------------------+Last*50*MWAN3*systemlog*entries.*Newest*entries*sorted*at*the*top:+------------------------------------------------------------------++$(logread | grep mwan3 | tail -n 50 | sed 'x;1!H;$!d;x')" | sed -e 's/+/\n/g' -e 's/\*/ /g')"
 
 	# combine data into single variable for reporting
-	REPORTDATA="$(echo "$EVENTINFO,$CURRENTSTATUS,$MEMBERLIST,$POLICYLIST,$RULELIST,$MWAN3LOG" | sed 's/,/\n\n/g')"
+	local REPORTDATA="$(echo "$EVENTINFO,$CURRENTSTATUS,$MEMBERLIST,$POLICYLIST,$RULELIST,$MWAN3LOG" | sed 's/,/\n\n/g')"
 
 	# report value of variable $REPORTDATA
-	send_reportdata
+	send_reportdata "$REPORTDATA"
 }
 
 #case "$ACTION" in

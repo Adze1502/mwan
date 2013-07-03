@@ -120,7 +120,7 @@ down = mwan_interface:option(ListValue, "down", translate("Interface down"),
 
 up = mwan_interface:option(ListValue, "up", translate("Interface up"),
 	translate("Downed interface will be deemed up after this many successful ping tests"))
-	up.default = "3"
+	up.default = "5"
 	up:value("1")
 	up:value("2")
 	up:value("3")
@@ -131,6 +131,14 @@ up = mwan_interface:option(ListValue, "up", translate("Interface up"),
 	up:value("8")
 	up:value("9")
 	up:value("10")
+
+reroute = mwan_interface:option(ListValue, "reroute", translate("Reroute"),
+	translate("Reroute allows MWAN3 to control router-generated traffic<br />" ..
+	"New sessions from the router with the source IP of this interface will be matched by MWAN3 rules<br />" ..
+	"If control of router-generated traffic is desired in all scenarios then enable on all interfaces"))
+	reroute.default = "0"
+	reroute:value("1", translate("Yes"))
+	reroute:value("0", translate("No"))
 
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"),
 	translate("This displays the metric assigned to this interface in /etc/config/network<br />"))

@@ -10,7 +10,7 @@ scriptbak = "/etc/hotplug.d/iface/16-mwan3custombak"
 if luci.http.formvalue("cbid.luci.1._restorebak") then
 	luci.http.redirect(luci.dispatcher.build_url("admin/network/mwan3/advanced/hotplug") .. "?restore=yes")
 elseif luci.http.formvalue("restore") == "yes" then
-	sys.exec("cp -f " .. scriptbak .. " " .. script)
+	os.execute("cp -f " .. scriptbak .. " " .. script)
 end
 
 m = SimpleForm("luci", nil)

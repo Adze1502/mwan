@@ -145,6 +145,16 @@ up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 		return self.map:get(s, "up") or "<br /><font size=\"+4\">-</font>"
 	end
 
+reroute = mwan_interface:option(DummyValue, "reroute", translate("Reroute"))
+	reroute.rawhtml = true
+	function reroute.cfgvalue(self, s)
+		if self.map:get(s, "reroute") == "1" then
+			return "<br />Yes<br /><br />"
+		else
+			return "<br />No<br /><br />"
+		end
+	end
+
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
