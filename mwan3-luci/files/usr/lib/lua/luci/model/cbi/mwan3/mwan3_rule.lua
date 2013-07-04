@@ -1,13 +1,13 @@
 -- ------ extra functions ------ --
 
-function rulelist()
+function rule_check() -- determine if rules needs a proper protocol configured
 	uci.cursor():foreach("mwan3", "rule",
 		function (section)
 			local sport = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".src_port"))
 			local dport = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".dest_port"))
-			if sport ~= "" or dport ~= "" then
-				local proto = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".proto"))
-				if proto == "all" or proto == "" then
+			local proto = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".proto"))
+			if sport ~= "" or dport ~= "" or proto == "" then
+				if proto == "" or proto == "all" then -- no or improper protocol
 					rulestr = rulestr .. section[".name"] .. " "
 					protofix = 1
 				end
@@ -16,10 +16,10 @@ function rulelist()
 	)
 end
 
-function rulewarn()
+function rule_warn() -- display warning message at the top of the page
 	warns = "<strong><em>Sorting of rules affects MWAN3! Rules are read from top to bottom</em></strong>"
 	if protofix == 1 then
-		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong><em>WARNING: some rules have port(s) configured and no protocol specified! Please configure a specific protocol!</em></strong></font>"
+		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong><em>WARNING: some rules are incorrectly configured with no or improper protocol specified! Please configure a specific protocol!</em></strong></font>"
 	end
 	return warns
 end
@@ -32,11 +32,11 @@ ut = require "luci.util"
 
 protofix = 0
 rulestr = ""
-rulelist()
+rule_check()
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN traffic Rule Configuration"),
-	translate(rulewarn()))
+	translate(rule_warn()))
 
 
 mwan_rule = m5:section(TypedSection, "rule", translate("Traffic Rules"),
@@ -84,14 +84,14 @@ proto = mwan_rule:option(DummyValue, "proto", translate("Protocol"))
 	proto.rawhtml = true
 	function proto.cfgvalue(self, s)
 		local protocol = self.map:get(s, "proto")
-		if protofix == 0 then
-			return protocol or "<br /><font size=\"+4\">-</font>"
-		else
+		if protofix == 0 then -- all rules have proper protocol configured
+			return protocol
+		else -- check for proper protocol
 			if ut.trim(sys.exec("echo '" .. rulestr .. "' | grep -c '" .. s .. "'")) == "0" then
-				return protocol or "<br /><font size=\"+4\">-</font>"
-			else
+				return protocol
+			else -- no or improper protocol
 				if protocol then
-					return "<br /><font color=\"ff0000\">" .. protocol .. "</font>"
+					return "<br /><font color=\"ff0000\"><strong>" .. protocol .. "</strong></font>"
 				else
 					return "<br /><font color=\"ff0000\"><font size=\"+4\">-</font></font>"
 				end

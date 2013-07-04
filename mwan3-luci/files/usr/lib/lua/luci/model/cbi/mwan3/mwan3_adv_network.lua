@@ -6,10 +6,10 @@ netfile = "/etc/config/network"
 
 
 m5 = SimpleForm("networkconf", nil)
-	m:append(Template("mwan3/mwan3_adv_network"))
+	m5:append(Template("mwan3/mwan3_adv_network")) -- highlight current tab
 
 
-f = m:section(SimpleSection, nil,
+f = m5:section(SimpleSection, nil,
 	translate("<br />This section allows you to modify the contents of /etc/config/network<br /><br />"))
 
 t = f:option(TextValue, "lines")
@@ -20,7 +20,7 @@ t = f:option(TextValue, "lines")
 		return nixio.fs.readfile(netfile) or ""
 	end
 
-	function t.write(self, section, data)
+	function t.write(self, section, data) -- format and write new data to script
 		return nixio.fs.writefile(netfile, "\n" .. ut.trim(data:gsub("\r\n", "\n")) .. "\n")
 	end
 

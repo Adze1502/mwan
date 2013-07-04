@@ -15,20 +15,20 @@ function cbi_add_protocol(field)
 	end
 end
 
-function rulelist()
+function rule_check() -- determine if rule needs a protocol specified
 	local sport = ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".src_port"))
 	local dport = ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".dest_port"))
-	if sport ~= "" or dport ~= "" then
+	if sport ~= "" or dport ~= "" then -- ports configured
 		local proto = ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".proto"))
-		if proto == "all" or proto == "" then
+		if proto == "" or proto == "all" then -- no or improper protocol
 			protofix = 1
 		end
 	end
 end
 
-function rulewarn()
+function rule_warn() -- display warning message at the top of the page
 	if protofix == 1 then
-		return "<font color=\"ff0000\"><strong><em>WARNING: this rule has port(s) configured and no protocol specified! Please configure a specific protocol!</em></strong></font>"
+		return "<font color=\"ff0000\"><strong><em>WARNING: this rule is incorrectly configured with no or improper protocol specified! Please configure a specific protocol!</em></strong></font>"
 	else
 		return ""
 	end
@@ -42,11 +42,11 @@ ut = require "luci.util"
 arg[1] = arg[1] or ""
 
 protofix = 0
-rulelist()
+rule_check()
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Rule Configuration - ") .. arg[1],
-	translate(rulewarn()))
+	translate(rule_warn()))
 	m5.redirect = dsp.build_url("admin", "network", "mwan3", "rule")
 
 
@@ -72,6 +72,7 @@ dest_port = mwan_rule:option(Value, "dest_port", translate("Destination port"),
 proto = mwan_rule:option(Value, "proto", translate("Protocol"),
 	translate("View the contents of /etc/protocols for protocol descriptions"))
 	proto.default = "all"
+	proto.rmempty = false
 	proto:value("all")
 	proto:value("ip")
 	proto:value("tcp")

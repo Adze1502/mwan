@@ -7,17 +7,17 @@ ut = require "luci.util"
 script = "/etc/hotplug.d/iface/16-mwan3custom"
 scriptbak = "/etc/hotplug.d/iface/16-mwan3custombak"
 
-if luci.http.formvalue("cbid.luci.1._restorebak") then
+if luci.http.formvalue("cbid.luci.1._restorebak") then -- restore button has been clicked
 	luci.http.redirect(luci.dispatcher.build_url("admin/network/mwan3/advanced/hotplug") .. "?restore=yes")
-elseif luci.http.formvalue("restore") == "yes" then
+elseif luci.http.formvalue("restore") == "yes" then -- restore script from backup
 	os.execute("cp -f " .. scriptbak .. " " .. script)
 end
 
 
 m5 = SimpleForm("luci", nil)
-	m:append(Template("mwan3/mwan3_adv_hotplug"))
+	m5:append(Template("mwan3/mwan3_adv_hotplug")) -- highlight current tab
 
-f = m:section(SimpleSection, nil,
+f = m5:section(SimpleSection, nil,
 	translate("<br />This section allows you to modify the contents of /etc/hotplug.d/iface/16-mwan3custom<br />" ..
 	"This is useful for running system commands and/or scripts based on interface ifup or ifdown hotplug events<br /><br />" ..
 	"Notes:<br />" ..
@@ -39,7 +39,7 @@ t = f:option(TextValue, "lines")
 
 	function t.cfgvalue()
 		local hps = fs.readfile(script)
-		if not hps or hps == "" then -- if script does not exist or is blank restore default
+		if not hps or hps == "" then -- if script does not exist or is blank restore from backup
 			sys.exec("cp -f " .. scriptbak .. " " .. script)
 			return fs.readfile(script)
 		else
@@ -47,7 +47,7 @@ t = f:option(TextValue, "lines")
 		end
 	end
 
-	function t.write(self, section, data)
+	function t.write(self, section, data) -- format and write new data to script
 		return fs.writefile(script, ut.trim(data:gsub("\r\n", "\n")) .. "\n")
 	end
 

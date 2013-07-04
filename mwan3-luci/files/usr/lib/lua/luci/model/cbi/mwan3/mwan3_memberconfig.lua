@@ -29,10 +29,12 @@ interface = mwan_member:option(Value, "interface", translate("Interface"))
 metric = mwan_member:option(Value, "metric", translate("Metric"),
 	translate("Acceptable values: 1-1000"))
 	metric.datatype = "range(1, 1000)"
+	metric.rmempty = false
 
 weight = mwan_member:option(Value, "weight", translate("Weight"),
 	translate("Acceptable values: 1-1000"))
 	weight.datatype = "range(1, 1000)"
+	weight.rmempty = false
 
 
 -- ------ currently configured interfaces ------ --

@@ -1,6 +1,6 @@
 -- ------ extra functions ------ --
 
-function metriclist() -- create list of interface metrics to compare against for duplicates and blanks
+function metric_list() -- create list of interface metrics to compare against for duplicates and blanks
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			ifnum = ifnum+1 -- count number of mwan3 interfaces configured
@@ -22,7 +22,7 @@ function metriclist() -- create list of interface metrics to compare against for
 	end
 end
 
-function ifacewarn() -- display status and warning messages at the top of the page
+function iface_warn() -- display status and warning messages at the top of the page
 	local warns = ""
 	if ifnum <= 15 then
 		warns = "<strong><em>There are currently " .. ifnum .. " of 15 supported interfaces configured!</em></strong>"
@@ -48,11 +48,11 @@ ifnum = 0
 metlst = ""
 metnone = 0
 metdup = 0
-metriclist()
+metric_list()
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration"),
-	translate(ifacewarn()))
+	translate(iface_warn()))
 
 
 mwan_interface = m5:section(TypedSection, "interface", translate("Interfaces"),

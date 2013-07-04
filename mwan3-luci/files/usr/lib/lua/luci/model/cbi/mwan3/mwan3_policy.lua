@@ -1,6 +1,6 @@
 -- ------ extra functions ------ --
 
-function policywarn()
+function policy_warn() -- display status and warning messages at the top of the page
 	local polnum = 0
 	uci.cursor():foreach("mwan3", "policy",
 		function ()
@@ -20,7 +20,7 @@ ds = require "luci.dispatcher"
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration"),
-	translate(policywarn()))
+	translate(policy_warn()))
 
 
 mwan_policy = m5:section(TypedSection, "policy", translate("Policies"),
@@ -51,8 +51,7 @@ use_member = mwan_policy:option(DummyValue, "use_member", translate("Members ass
 		else
 			str = "<br /><font size=\"+4\">-</font>"
 		end
-		str = str .. "<br />"
-		return str
+		return str .. "<br />"
 	end
 
 

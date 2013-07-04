@@ -1,6 +1,6 @@
 -- ------ extra functions ------ --
 
-function metriclist()
+function metric_list()
 	metcheck = ut.trim(sys.exec("uci get -p /var/state network." .. arg[1] .. ".metric"))
 	if metcheck == "" then -- no metric
 		metnone = 1
@@ -22,7 +22,7 @@ function metriclist()
 	end
 end
 
-function ifacewarn() -- display status and warning messages at the top of the page
+function iface_warn() -- display warning messages at the top of the page
 	if metnone == 1 then
 		return "<font color=\"ff0000\"><strong><em>WARNING: this interface has no metric configured in /etc/config/network!</em></strong></font>"
 	elseif metdup == 1 then
@@ -43,11 +43,11 @@ metlst = ""
 metcheck = ""
 metnone = 0
 metdup = 0
-metriclist()
+metric_list()
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration - " .. arg[1]),
-	translate(ifacewarn()))
+	translate(iface_warn()))
 	m5.redirect = dsp.build_url("admin", "network", "mwan3", "interface")
 
 
