@@ -1,10 +1,42 @@
+-- ------ extra functions ------ --
+
+function rulelist()
+	uci.cursor():foreach("mwan3", "rule",
+		function (section)
+			local sport = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".src_port"))
+			local dport = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".dest_port"))
+			if sport ~= "" or dport ~= "" then
+				local proto = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".proto"))
+				if proto == "all" or proto == "" then
+					rulestr = rulestr .. section[".name"] .. " "
+					protofix = 1
+				end
+			end
+		end
+	)
+end
+
+function rulewarn()
+	warns = "<strong><em>Sorting of rules affects MWAN3! Rules are read from top to bottom</em></strong>"
+	if protofix == 1 then
+		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong><em>WARNING: some rules have port(s) configured and no protocol specified! Please configure a specific protocol!</em></strong></font>"
+	end
+	return warns
+end
+
 -- ------ rule configuration ------ --
 
-ds = require "luci.dispatcher"
+dsp = require "luci.dispatcher"
+sys = require "luci.sys"
+ut = require "luci.util"
+
+protofix = 0
+rulestr = ""
+rulelist()
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN traffic Rule Configuration"),
-	translate("<strong><em>Sorting of rules affects MWAN3! Rules are read from top to bottom</em></strong>"))
+	translate(rulewarn()))
 
 
 mwan_rule = m5:section(TypedSection, "rule", translate("Traffic Rules"),
@@ -16,11 +48,11 @@ mwan_rule = m5:section(TypedSection, "rule", translate("Traffic Rules"),
 	mwan_rule.dynamic = false
 	mwan_rule.sortable = true
 	mwan_rule.template = "cbi/tblsection"
-	mwan_rule.extedit = ds.build_url("admin", "network", "mwan3", "rule", "%s")
+	mwan_rule.extedit = dsp.build_url("admin", "network", "mwan3", "rule", "%s")
 	function mwan_rule.create(self, section)
 		TypedSection.create(self, section)
 		m5.uci:save("mwan3")
-		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "rule", section))
+		luci.http.redirect(dsp.build_url("admin", "network", "mwan3", "rule", section))
 	end
 
 
@@ -51,14 +83,27 @@ dest_port = mwan_rule:option(DummyValue, "dest_port", translate("Destination por
 proto = mwan_rule:option(DummyValue, "proto", translate("Protocol"))
 	proto.rawhtml = true
 	function proto.cfgvalue(self, s)
-		return self.map:get(s, "proto") or "<br /><font size=\"+4\">-</font>"
+		local protocol = self.map:get(s, "proto")
+		if protofix == 0 then
+			return protocol or "<br /><font size=\"+4\">-</font>"
+		else
+			if ut.trim(sys.exec("echo '" .. rulestr .. "' | grep -c '" .. s .. "'")) == "0" then
+				return protocol or "<br /><font size=\"+4\">-</font>"
+			else
+				if protocol then
+					return "<br /><font color=\"ff0000\">" .. protocol .. "</font>"
+				else
+					return "<br /><font color=\"ff0000\"><font size=\"+4\">-</font></font>"
+				end
+			end
+		end
 	end
 
 use_policy = mwan_rule:option(DummyValue, "use_policy", translate("Policy assigned"))
 	use_policy.rawhtml = true
 	function use_policy.cfgvalue(self, s)
 		local upol = self.map:get(s, "use_policy")
-		if string.len(upol) > 0 then
+		if upol then
 			if upol == "default" then
 				return "default routing table"
 			else

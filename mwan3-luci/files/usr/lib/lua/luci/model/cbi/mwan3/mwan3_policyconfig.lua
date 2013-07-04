@@ -1,6 +1,6 @@
 -- ------ extra functions ------ --
 
-function cbi_add_mwan(field)
+function cbi_add_member(field)
 	uci.cursor():foreach("mwan3", "member",
 		function (section)
 			field:value(section[".name"])
@@ -24,7 +24,7 @@ mwan_policy = m5:section(NamedSection, arg[1], "policy", "")
 
 
 use_member = mwan_policy:option(DynamicList, "use_member", translate("Member used"))
-	cbi_add_mwan(use_member)
+	cbi_add_member(use_member)
 
 
 -- ------ currently configured members ------ --

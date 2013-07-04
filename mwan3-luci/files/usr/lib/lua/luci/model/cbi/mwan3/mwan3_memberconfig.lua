@@ -1,6 +1,6 @@
 -- ------ extra functions ------ --
 
-function cbi_add_mwan(field)
+function cbi_add_interface(field)
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			field:value(section[".name"])
@@ -24,7 +24,7 @@ mwan_member = m5:section(NamedSection, arg[1], "member", "")
 
 
 interface = mwan_member:option(Value, "interface", translate("Interface"))
-	cbi_add_mwan(interface)
+	cbi_add_interface(interface)
 
 metric = mwan_member:option(Value, "metric", translate("Metric"),
 	translate("Acceptable values: 1-1000"))

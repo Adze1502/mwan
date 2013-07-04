@@ -4,7 +4,8 @@ ut = require "luci.util"
 
 mwan3file = "/etc/config/mwan3"
 
-m = SimpleForm("luci", nil)
+
+m5 = SimpleForm("luci", nil)
 	m:append(Template("mwan3/mwan3_adv_mwan3"))
 
 
@@ -28,4 +29,4 @@ t = f:option(TextValue, "lines")
 	end
 
 
-return m
+return m5

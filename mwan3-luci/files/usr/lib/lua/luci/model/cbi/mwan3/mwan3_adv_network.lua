@@ -4,7 +4,8 @@ ut = require "luci.util"
 
 netfile = "/etc/config/network"
 
-m = SimpleForm("networkconf", nil)
+
+m5 = SimpleForm("networkconf", nil)
 	m:append(Template("mwan3/mwan3_adv_network"))
 
 
@@ -28,4 +29,4 @@ t = f:option(TextValue, "lines")
 	end
 
 
-return m
+return m5

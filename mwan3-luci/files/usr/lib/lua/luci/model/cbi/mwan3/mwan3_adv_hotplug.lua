@@ -13,7 +13,8 @@ elseif luci.http.formvalue("restore") == "yes" then
 	os.execute("cp -f " .. scriptbak .. " " .. script)
 end
 
-m = SimpleForm("luci", nil)
+
+m5 = SimpleForm("luci", nil)
 	m:append(Template("mwan3/mwan3_adv_hotplug"))
 
 f = m:section(SimpleSection, nil,
@@ -51,4 +52,4 @@ t = f:option(TextValue, "lines")
 	end
 
 
-return m
+return m5

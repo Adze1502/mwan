@@ -4,7 +4,8 @@ ut = require "luci.util"
 
 rcfile = "/etc/rc.local"
 
-m = SimpleForm("rclocal", nil)
+
+m5 = SimpleForm("rclocal", nil)
 	m:append(Template("mwan3/mwan3_adv_startup"))
 
 
@@ -33,4 +34,4 @@ t = f:option(TextValue, "lines")
 	end
 
 
-return m
+return m5

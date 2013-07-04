@@ -87,71 +87,94 @@ track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Test IP"))
 	track_ip.rawhtml = true
 	function track_ip.cfgvalue(self, s)
 		local str = "<br />"
-		local tab = self.map:get(s, "track_ip")
-		if tab then
-			for k,v in pairs(tab) do
+		tracked = self.map:get(s, "track_ip")
+		if tracked then
+			for k,v in pairs(tracked) do
 				str = str .. v .. "<br />"
 			end
 		else
 			str = "<br /><font size=\"+4\">-</font>"
 		end
-		str = str .. "<br />"
-		return str
+		return str .. "<br />"
 	end
 
 reliability = mwan_interface:option(DummyValue, "reliability", translate("Test IP reliability"))
 	reliability.rawhtml = true
 	function reliability.cfgvalue(self, s)
-		return self.map:get(s, "reliability") or "<br /><font size=\"+4\">-</font>"
+		if tracked then
+			return self.map:get(s, "reliability") or "<br /><font size=\"+4\">-</font>"
+		else
+			return "n/a"
+		end
 	end
 
 count = mwan_interface:option(DummyValue, "count", translate("Ping count"))
 	count.rawhtml = true
 	function count.cfgvalue(self, s)
-		return self.map:get(s, "count") or "<br /><font size=\"+4\">-</font>"
+		if tracked then
+			return self.map:get(s, "count") or "<br /><font size=\"+4\">-</font>"
+		else
+			return "n/a"
+		end
 	end
 
 timeout = mwan_interface:option(DummyValue, "timeout", translate("Ping timeout"))
 	timeout.rawhtml = true
 	function timeout.cfgvalue(self, s)
-		local tcheck = self.map:get(s, "timeout")
-		if tcheck then
-			return tcheck .. "s"
+		if tracked then
+			local tcheck = self.map:get(s, "timeout")
+			if tcheck then
+				return tcheck .. "s"
+			else
+				return "<br /><font size=\"+4\">-</font>"
+			end
 		else
-			return "<br /><font size=\"+4\">-</font>"
+			return "n/a"
 		end
 	end
 
 interval = mwan_interface:option(DummyValue, "interval", translate("Ping interval"))
 	interval.rawhtml = true
 	function interval.cfgvalue(self, s)
-		local icheck = self.map:get(s, "interval")
-		if icheck then
-			return icheck .. "s"
+		if tracked then
+			local icheck = self.map:get(s, "interval")
+			if icheck then
+				return icheck .. "s"
+			else
+				return "<br /><font size=\"+4\">-</font>"
+			end
 		else
-			return "<br /><font size=\"+4\">-</font>"
+			return "n/a"
 		end
 	end
 
 down = mwan_interface:option(DummyValue, "down", translate("Interface down"))
 	down.rawhtml = true
 	function down.cfgvalue(self, s)
-		return self.map:get(s, "down") or "<br /><font size=\"+4\">-</font>"
+		if tracked then
+			return self.map:get(s, "down") or "<br /><font size=\"+4\">-</font>"
+		else
+			return "n/a"
+		end
 	end
 
 up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 	up.rawhtml = true
 	function up.cfgvalue(self, s)
-		return self.map:get(s, "up") or "<br /><font size=\"+4\">-</font>"
+		if tracked then
+			return self.map:get(s, "up") or "<br /><font size=\"+4\">-</font>"
+		else
+			return "n/a"
+		end
 	end
 
 reroute = mwan_interface:option(DummyValue, "reroute", translate("Reroute"))
 	reroute.rawhtml = true
 	function reroute.cfgvalue(self, s)
 		if self.map:get(s, "reroute") == "1" then
-			return "<br />Yes<br /><br />"
+			return "Yes"
 		else
-			return "<br />No<br /><br />"
+			return "No"
 		end
 	end
 

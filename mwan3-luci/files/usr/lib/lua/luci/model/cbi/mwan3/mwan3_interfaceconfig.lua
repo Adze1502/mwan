@@ -134,6 +134,7 @@ up = mwan_interface:option(ListValue, "up", translate("Interface up"),
 
 reroute = mwan_interface:option(ListValue, "reroute", translate("Reroute"),
 	translate("Reroute allows MWAN3 to control router-generated traffic<br />" ..
+	"This works by ignoring the source IP in packets from the router<br />" ..
 	"New sessions from the router with the source IP of this interface will be matched by MWAN3 rules<br />" ..
 	"If control of router-generated traffic is desired in all scenarios then enable on all interfaces"))
 	reroute.default = "0"
