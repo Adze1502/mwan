@@ -1,6 +1,5 @@
 module("luci.controller.mwan3", package.seeall)
 
-ntm = require "luci.model.network".init()
 sys = require "luci.sys"
 ut = require "luci.util"
 
@@ -54,8 +53,8 @@ end
 
 function mwan3_get_status(rulenum, ifname)
 	if ut.trim(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".enabled")) == "1" then
-		if string.len(sys.exec("ip route list table " .. rulenum)) > 0 then
-			if string.len(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".track_ip")) > 0 then
+		if ut.trim(sys.exec("ip route list table " .. rulenum)) ~= "" then
+			if ut.trim(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".track_ip")) ~= "" then
 				return "on"
 			else
 				return "nm"
@@ -81,17 +80,19 @@ function mwan3_get_iface()
 end
 
 function mwan3_status()
+	local ntm = require "luci.model.network".init()
+
 	local rv = {	}
 
 	-- overview status
 	local statstr = mwan3_get_iface()
-	if string.len(statstr) > 0 then
+	if statstr ~= "" then
 		rv.wans = { }
 		wansid = {}
 
 		for wanname, ifstat in string.gfind(statstr, "([^%[]+)%[([^%]]+)%]") do
 			local wanifname = ut.trim(sys.exec("uci get -p /var/state network." .. wanname .. ".ifname"))
-				if string.len(wanifname) == 0 then
+				if wanifname == "" then
 					wanifname = "x"
 				end
 			local wanlink = ntm:get_interface(wanifname)
@@ -104,7 +105,7 @@ function mwan3_status()
 
 	-- overview status log
 	local mwlg = ut.trim(sys.exec("logread | grep mwan3 | tail -n 50 | sed 'x;1!H;$!d;x'"))
-	if string.len(mwlg) > 0 then
+	if mwlg ~= "" then
 		rv.mwan3log = { }
 		mwlog = {}
 		mwlog[mwlg] = #rv.mwan3log + 1
@@ -121,30 +122,30 @@ function mwan3_tshoot()
 	-- software versions
 	local wrtrelease = ut.trim(luci.version.distversion)
 		local wrtrev = ut.trim(sys.exec("cat /etc/openwrt_release | grep REVISION | awk -F'\"' '{print $2}'"))
-		if string.len(wrtrelease) > 0 then
-			if string.len(wrtrev) > 0 then
-				wrtrelease = "<br />OpenWrt - " .. wrtrelease .. " (" .. wrtrev .. ")"
+		if wrtrelease ~= "" then
+			if wrtrev ~= "" then
+				wrtrelease = "OpenWrt - " .. wrtrelease .. " (" .. wrtrev .. ")"
 			else
-				wrtrelease = "<br />OpenWrt - " .. wrtrelease
+				wrtrelease = "OpenWrt - " .. wrtrelease
 			end
-		elseif string.len(wrtrev) > 0 then
-			wrtrelease = "<br />OpenWrt - " .. wrtrev
+		elseif wrtrev ~= "" then
+			wrtrelease = "OpenWrt - " .. wrtrev
 		else
-			wrtrelease = "<br />OpenWrt - unknown"
+			wrtrelease = "OpenWrt - unknown"
 		end
 	local mwan3version = ut.trim(sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'"))
-		if string.len(mwan3version) > 0 then
-			mwan3version = "<br />mwan3 - " .. mwan3version
+		if mwan3version ~= "" then
+			mwan3version = "\nmwan3 - " .. mwan3version
 		else
-			mwan3version = "<br />mwan3 - unknown"
+			mwan3version = "\nmwan3 - unknown"
 		end
 	local mwan3lversion = ut.trim(sys.exec("opkg info luci-app-mwan3 | grep Version | awk -F' ' '{ print $2 }'"))
-		if string.len(mwan3lversion) > 0 then
-			mwan3lversion = "<br />luci-app-mwan3 - " .. mwan3lversion
+		if mwan3lversion ~= "" then
+			mwan3lversion = "\nluci-app-mwan3 - " .. mwan3lversion
 		else
-			mwan3lversion = "<br />luci-app-mwan3 - unknown<br /><br />"
+			mwan3lversion = "\nluci-app-mwan3 - unknown"
 		end
-	local softrev = ut.trim(wrtrelease .. mwan3version .. mwan3lversion)
+	local softrev = wrtrelease .. mwan3version .. mwan3lversion
 	rv.mw3ver = { }
 	mwv = {}
 	mwv[softrev] = #rv.mw3ver + 1
@@ -152,7 +153,7 @@ function mwan3_tshoot()
 
 	-- default firewall output policy
 	local defout = ut.trim(sys.exec("uci get -p /var/state firewall.@defaults[0].output"))
-		if string.len(defout) == 0 then
+		if defout == "" then
 			defout = "No data found"
 		end
 	rv.fidef = { }
@@ -175,14 +176,15 @@ function mwan3_tshoot()
 	rv.iprule[ipruleid[ipr]] = { rule = ipr }
 
 	-- ip route list table
-	local routelisting = sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1099'")
+	local routelisting = ut.trim(sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1099'"))
 	local rlstr = ""
-		if string.len(routelisting) > 0 then
+		if routelisting ~= "" then
 			for line in routelisting:gmatch("[^\r\n]+") do
-				rlstr = rlstr .. line .. "<br />" .. sys.exec("ip route list table " .. line)
+				rlstr = rlstr .. line .. "\n" .. sys.exec("ip route list table " .. line)
 			end
+			rlstr = ut.trim(rlstr)
 		else
-			rlstr = "No data found<br />"
+			rlstr = "No data found"
 		end
 	rv.routelist = { }
 	rtlist = {}
@@ -191,7 +193,7 @@ function mwan3_tshoot()
 
 	-- iptables
 	local iptbl = ut.trim(sys.exec("iptables -L -t mangle -v -n | awk '/mwan3/' RS= | sed -e 's/.*Chain.*/\\n&/'"))
-		if string.len(iptbl) == 0 then
+		if iptbl == "" then
 			iptbl = "No data found"
 		end
 	rv.iptables = { }
@@ -208,7 +210,7 @@ function mwan3_tshoot()
 
 	-- mwan3 config
 	local mwcg = ut.trim(sys.exec("cat /etc/config/mwan3"))
-		if ut.trim(sys.exec("echo \"" .. mwcg .. "\" | sed 's/<br \\/>//g'")) == "" then
+		if mwcg == "" then
 			mwcg = "No data found"
 		end
 	rv.mwan3config = { }
