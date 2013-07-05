@@ -28,7 +28,7 @@
 				var netcnfg = '<br /><br />Output of &#34;cat /etc/config/network&#34; : <br /><br />';
 
 				temp = String.format(
-					'<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s%s<br /><br />',
+					'<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<br /><br />',
 						mwanvers, st.mw3ver[0].mwan3v, firewalldef, st.fidef[0].firedef, iproute, st.rtshow[0].iprtshow, iprulesh, st.iprule[0].rule, routelisttbl, st.routelist[0].iprtlist, iptable, st.iptables[0].iptbls, ifcnfg, st.ifconfig[0].ifcfg, mwan3cnfg, st.mwan3config[0].mwn3cfg, netcnfg, st.netconfig[0].netcfg
 				);
 				tx.innerHTML = temp;
