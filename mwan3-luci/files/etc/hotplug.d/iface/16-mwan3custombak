@@ -113,3 +113,5 @@ report_event()
 #		report_event
 #	;;
 #esac
+
+exit 0
