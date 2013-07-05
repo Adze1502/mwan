@@ -1,12 +1,11 @@
 #!/bin/sh
 
-# prevent duplicate ucitrack entry
-dupcheck="$(uci get -p /var/state ucitrack.@mwan3[0])"
-[ "$dupcheck" == "mwan3" ] || {
-	# add mwan3 ucitrack entry
-	uci batch <<-EOF
+uci -q uci batch <<-EOF >/dev/null
+		delete ucitrack.@mwan3[-1]
 		add ucitrack mwan3
-		set ucitrack.@mwan3[-1].exec="/etc/init.d/mwan3 restart"
+		set ucitrack.@mwan3[-1].init=mwan3
 		commit ucitrack
-	EOF
-}
+EOF
+
+rm -f /tmp/luci-indexcache
+exit 0
