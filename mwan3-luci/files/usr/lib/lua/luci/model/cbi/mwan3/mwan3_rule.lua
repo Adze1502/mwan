@@ -5,8 +5,8 @@ function rule_check() -- determine if rules needs a proper protocol configured
 		function (section)
 			local sport = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".src_port"))
 			local dport = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".dest_port"))
-			local proto = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".proto"))
-			if sport ~= "" or dport ~= "" or proto == "" then
+			if sport ~= "" or dport ~= "" then -- ports configured
+				local proto = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".proto"))
 				if proto == "" or proto == "all" then -- no or improper protocol
 					rulestr = rulestr .. section[".name"] .. " "
 					protofix = 1
@@ -16,7 +16,7 @@ function rule_check() -- determine if rules needs a proper protocol configured
 	)
 end
 
-function rule_warn() -- display warning message at the top of the page
+function rule_warn() -- display warning messages at the top of the page
 	warns = "<strong><em>Sorting of rules affects MWAN3! Rules are read from top to bottom</em></strong>"
 	if protofix == 1 then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong><em>WARNING: some rules are incorrectly configured with no or improper protocol specified! Please configure a specific protocol!</em></strong></font>"
@@ -85,11 +85,11 @@ proto = mwan_rule:option(DummyValue, "proto", translate("Protocol"))
 	function proto.cfgvalue(self, s)
 		local protocol = self.map:get(s, "proto")
 		if protofix == 0 then -- all rules have proper protocol configured
-			return protocol
+			return protocol or "all"
 		else -- check for proper protocol
 			if ut.trim(sys.exec("echo '" .. rulestr .. "' | grep -c '" .. s .. "'")) == "0" then
-				return protocol
-			else -- no or improper protocol
+				return protocol or "all"
+			else -- ports configured and no or improper protocol
 				if protocol then
 					return "<br /><font color=\"ff0000\"><strong>" .. protocol .. "</strong></font>"
 				else

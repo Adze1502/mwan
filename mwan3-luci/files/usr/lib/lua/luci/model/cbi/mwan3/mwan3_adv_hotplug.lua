@@ -40,7 +40,7 @@ t = f:option(TextValue, "lines")
 	function t.cfgvalue()
 		local hps = fs.readfile(script)
 		if not hps or hps == "" then -- if script does not exist or is blank restore from backup
-			sys.exec("cp -f " .. scriptbak .. " " .. script)
+			sys.call("cp -f " .. scriptbak .. " " .. script)
 			return fs.readfile(script)
 		else
 			return hps
