@@ -105,7 +105,7 @@ mwan3_policy_routes_and_rules()
 
 	mwan3_get_weight_member()
 	{
-		iface=$(uci show -P /var/state network | awk -F'=' '$2 == ("'$2'")' | grep ifname | awk -F'.' '{ print $2 }' | grep -v '@')
+		iface=$(uci show -P /var/state network | awk -F'=' '$2 == ("'$2'")' | grep ifname | awk -F'.' '{ print $2 }' | grep -v '@' | sort -u)
 
 		for member in $(uci get mwan3.$1.use_member); do
 			if [ $(uci get -P /var/state mwan3.$member.interface) == "$iface" ]; then
@@ -287,7 +287,7 @@ mwan3_ifupdown()
 
 	logger -t mwan3 -p info "$ACTION interface $INTERFACE ($DEVICE)"
 
-	route_args=$(ip -4 route list dev $DEVICE default | sed 's/.*via \([^ ]*\) .*/\1/' | grep -v "^default" )
+	route_args=$(ip -4 route list dev $DEVICE default | sed 's/.*via \([^ ]*\) .*/\1/' | grep -v "^default")
 	[ -n "$route_args" ] && route_args="via $route_args"
 	route_args="nexthop $route_args dev $DEVICE"
 
