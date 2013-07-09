@@ -105,7 +105,7 @@ mwan3_policy_routes_and_rules()
 
 	mwan3_get_weight_member()
 	{
-		iface=$(uci show -P /var/state network | awk -F'=' '$2 == ("'$2'")' | grep ifname | awk -F'.' '{ print $2 }' | grep -v '@' | sort -u)
+		iface=$(uci show -P /var/state network | awk -F'=' '$2 == ("'$2'")' | grep ifname | grep -v orig_ifname | awk -F'.' '{ print $2 }' | grep -v '@')
 
 		for member in $(uci get mwan3.$1.use_member); do
 			if [ $(uci get -P /var/state mwan3.$member.interface) == "$iface" ]; then
