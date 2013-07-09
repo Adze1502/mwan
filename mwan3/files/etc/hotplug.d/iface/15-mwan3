@@ -10,6 +10,10 @@ mwan3_basic_iptables()
 		iptables -N mwan3_wan -t mangle
 	fi
 
+	if ! iptables -S mwan3_default -t mangle &> /dev/null; then
+		iptables -N mwan3_default -t mangle
+	fi
+
 	if ! iptables -S mwan3_pre -t mangle &> /dev/null; then
 		iptables -N mwan3_pre -t mangle
 		iptables -A mwan3_pre -t mangle -j CONNMARK --restore-mark --nfmask 65280 --ctmask 65280
@@ -54,19 +58,17 @@ mwan3_interface_iptables()
 
 mwan3_connected_iptables()
 {
-	if ! iptables -S mwan3_default -t mangle &> /dev/null; then
-		iptables -N mwan3_default -t mangle
+	if iptables -S mwan3_default -t mangle &> /dev/null; then
+		local connected_networks
+
+		iptables -F mwan3_default -t mangle
+		iptables -A mwan3_default -t mangle -d 224.0.0.0/3 -m mark --mark 0/65280 -j MARK --set-xmark 32512/65280
+		iptables -A mwan3_default -t mangle -d 127.0.0.0/8 -m mark --mark 0/65280 -j MARK --set-xmark 32512/65280
+
+		for connected_networks in $(ip -4 route | awk '{print $1}' | egrep '[0-9]{1,3}(\.[0-9]{1,3}){3}'); do
+			iptables -A mwan3_default -t mangle -d $connected_networks -m mark --mark 0/65280 -j MARK --set-xmark 32512/65280 &> /dev/null
+		done
 	fi
-
-	local connected_networks
-
-	iptables -F mwan3_default -t mangle
-	iptables -A mwan3_default -t mangle -d 224.0.0.0/3 -m mark --mark 0/65280 -j MARK --set-xmark 32512/65280
-	iptables -A mwan3_default -t mangle -d 127.0.0.0/8 -m mark --mark 0/65280 -j MARK --set-xmark 32512/65280
-
-	for connected_networks in $(ip -4 route | awk '{print $1}' | egrep '[0-9]{1,3}(\.[0-9]{1,3}){3}'); do
-		iptables -A mwan3_default -t mangle -d $connected_networks -m mark --mark 0/65280 -j MARK --set-xmark 32512/65280 &> /dev/null
-	done
 }
 
 mwan3_interface_routes_and_rules()
@@ -264,8 +266,8 @@ mwan3_ifupdown()
 {
 	[ -n "$DEVICE" ] || exit 0
 	[ -n "$INTERFACE" ] || exit 0
-	[ $(uci get -P /var/state mwan3.$INTERFACE.enabled) == "1" ] || exit 0
-	[ "$(ip -4 route list dev $DEVICE default)" ] || exit 0
+	[ $(uci get -P /var/state mwan3.$INTERFACE.enabled) == "1" ] || return 0
+	[ "$(ip -4 route list dev $DEVICE default)" ] || return 0
 
 	while [ "$(pgrep -f -o hotplug-call)" -ne $$ ]; do
 		sleep 1
@@ -301,7 +303,7 @@ mwan3_ifupdown()
 
 case "$ACTION" in
 	ifup|ifdown)
-		mwan3_connected_iptables
 		mwan3_ifupdown
+		mwan3_connected_iptables
 	;;
 esac
