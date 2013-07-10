@@ -148,7 +148,7 @@ mwan3_policy_rules()
 
 mwan3_policy_routes()
 {
-	local other_route_args metric other_device weight other_iface
+	local other_route_args metric other_device weight other_iface other_device_route
 
 	if [ $(uci get -P /var/state mwan3.$1.interface) == "$INTERFACE" ]; then
 		config_get metric $1 metric 1
@@ -158,9 +158,10 @@ mwan3_policy_routes()
 
 		if [ -z "$other_route_args" ]; then
 			other_device=$(ip -4 route list table $(($policy_counter+1015)) | grep -v "dev $DEVICE " | grep "metric $metric " | sed 's/.*dev \([^ ]*\) .*/\1/'| grep -v "^default")
+			other_device_route=$(ip -4 route list table $(($policy_counter+1015)) | grep -v "dev $DEVICE " | grep "metric $metric " | awk -F' ' '{print $3}')
 
 			if [ -n "$other_device" ]; then
-				other_iface=$(grep "$other_device" /tmp/mwan3iface.tmp | awk -F' ' '{print $1}')
+				other_iface=$(grep $other_device /tmp/mwan3iface.tmp | grep $other_device_route | awk -F' ' '{print $1}')
 				mwan3_get_weight_member $policy $other_iface
 				other_route_args=$(ip -4 route list table $(($policy_counter+1015)) dev $other_device | grep "metric $metric " | sed 's/.*via \([^ ]*\) .*/\1/' | grep -v "^default")
 				[ -n "$other_route_args" ] && other_route_args="via $other_route_args"
