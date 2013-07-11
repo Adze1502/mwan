@@ -178,7 +178,7 @@ mwan3_policy_routes()
 
 mwan3_rules_iptables()
 {
-	local probability src_ip src_port dest_ip dest_port use_policy equalize equalize_devices rulenumber nf_mark iftotalweight lowest_metric other_iface
+	local probability src_ip src_port dest_ip dest_port use_policy equalize equalize_devices rulenumber nf_mark iftotalweight lowest_metric other_iface equalize_devices_route
 
 	config_get proto $1 proto
 	config_get src_ip $1 src_ip 0.0.0.0/0
@@ -218,7 +218,9 @@ mwan3_rules_iptables()
 			iftotalweight=0
 
 			for device in $equalize_devices; do
-				other_iface=$(grep "$device" /tmp/mwan3iface.tmp | awk -F' ' '{print $1}')
+				equalize_device_route=$(ip -4 route list table $(($nf_mark+1000)) | awk '/default  metric ('$lowest_metric')/ {flag=1;next} /de
+fault/{flag=0} flag { print }' | grep $device | sed 's/.*via \([^ ]*\) .*/\1/')
+				other_iface=$(grep $device /tmp/mwan3iface.tmp | grep $equalize_device_route | awk -F' ' '{print $1}')
 				mwan3_get_weight_member $use_policy $other_iface
 				iftotalweight=$(($member_weight+$iftotalweight))
 				eval nf_mark='$'mwif"$iface"
