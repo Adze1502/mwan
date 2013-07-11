@@ -109,7 +109,7 @@ mwan3_policy_routes_and_rules()
 	{
 		iface=$(uci show -P /var/state network | awk -F'=' '$2 == ("'$2'")' | grep ifname | grep -v orig_ifname | awk -F'.' '{ print $2 }')
 		for iface_test in $iface; do
-			[ $(cat /etc/config/network | awk '/$iface_test/' RS= | grep -q "@$iface_test"; echo $?) == "1" ] && {
+			[ $(cat /etc/config/network | awk '/config interface \x27$iface_test\x27/' RS= | grep -q "@$iface_test"; echo $?) == "1" ] && {
 				iface=$iface_test
 				break
 			}
