@@ -103,11 +103,17 @@ mwan3_interface_routes_and_rules()
 
 mwan3_policy_routes_and_rules()
 {
-	local member iface member_weight policy_counter
+	local member iface iface_test member_weight policy_counter
 
 	mwan3_get_weight_member()
 	{
-		iface=$2
+		iface=$(uci show -P /var/state network | awk -F'=' '$2 == ("'$2'")' | grep ifname | grep -v orig_ifname | awk -F'.' '{ print $2 }')
+		for iface_test in $iface; do
+			[ $(cat /etc/config/network | awk '/$iface_test/' RS= | grep -q "@$iface_test"; echo $?) == "1" ] && {
+				iface=$iface_test
+				break
+			}
+		done
 
 		for member in $(uci get mwan3.$1.use_member); do
 			if [ $(uci get -P /var/state mwan3.$member.interface) == "$iface" ]; then
@@ -148,7 +154,7 @@ mwan3_policy_rules()
 
 mwan3_policy_routes()
 {
-	local other_route_args metric other_device weight other_iface other_device_route
+	local other_route_args metric other_device other_device_gateway other_iface weight
 
 	if [ $(uci get -P /var/state mwan3.$1.interface) == "$INTERFACE" ]; then
 		config_get metric $1 metric 1
@@ -157,12 +163,10 @@ mwan3_policy_routes()
 		other_route_args=$(ip -4 route list table $(($policy_counter+1015)) | awk '/default  metric ('$metric')/ {flag=1;next} /default/{flag=0} flag { print }' | awk '$1 == "nexthop"' | grep -v "dev $DEVICE " | sort -u)
 
 		if [ -z "$other_route_args" ]; then
-			other_device=$(ip -4 route list table $(($policy_counter+1015)) | grep -v "dev $DEVICE " | grep "metric $metric " | sed 's/.*dev \([^ ]*\) .*/\1/'| grep -v "^default")
-			other_device_route=$(ip -4 route list table $(($policy_counter+1015)) | grep "$other_device" | grep "metric $metric " | awk -F' ' '{print $3}')
+			other_device=$(ip -4 route list table $(($policy_counter+1015)) | grep -v "dev $DEVICE " | grep "metric $metric " | sed 's/.*dev \([^ ]*\) .*/\1/' | grep -v "^default")
 
 			if [ -n "$other_device" ]; then
-				other_iface=$(grep "$other_device" /tmp/mwan3iface.tmp | grep "$other_device_route" | awk -F' ' '{print $1}')
-				mwan3_get_weight_member $policy $other_iface
+				mwan3_get_weight_member $policy $other_device
 				other_route_args=$(ip -4 route list table $(($policy_counter+1015)) dev $other_device | grep "metric $metric " | sed 's/.*via \([^ ]*\) .*/\1/' | grep -v "^default")
 				[ -n "$other_route_args" ] && other_route_args="via $other_route_args"
 				other_route_args="nexthop $other_route_args dev $other_device weight $member_weight"
@@ -178,7 +182,7 @@ mwan3_policy_routes()
 
 mwan3_rules_iptables()
 {
-	local probability src_ip src_port dest_ip dest_port use_policy equalize equalize_devices rulenumber nf_mark iftotalweight lowest_metric other_iface equalize_device_route
+	local probability src_ip src_port dest_ip dest_port use_policy equalize equalize_devices rulenumber nf_mark iftotalweight lowest_metric
 
 	config_get proto $1 proto
 	config_get src_ip $1 src_ip 0.0.0.0/0
@@ -218,9 +222,7 @@ mwan3_rules_iptables()
 			iftotalweight=0
 
 			for device in $equalize_devices; do
-				equalize_device_route=$(ip -4 route list table $(($nf_mark+1000)) | awk '/default  metric ('$lowest_metric')/ {flag=1;next} /default/{flag=0} flag { print }' | grep "$device" | sed 's/.*via \([^ ]*\) .*/\1/')
-				other_iface=$(grep "$device" /tmp/mwan3iface.tmp | grep "$equalize_device_route" | awk -F' ' '{print $1}')
-				mwan3_get_weight_member $use_policy $other_iface
+				mwan3_get_weight_member $use_policy $device
 				iftotalweight=$(($member_weight+$iftotalweight))
 				eval nf_mark='$'mwif"$iface"
 				probability=$(($member_weight*1000/$iftotalweight))
@@ -296,11 +298,6 @@ mwan3_ifupdown()
 	route_args=$(ip -4 route list dev $DEVICE default | sed 's/.*via \([^ ]*\) .*/\1/' | grep -v "^default")
 	[ -n "$route_args" ] && route_args="via $route_args"
 	route_args="nexthop $route_args dev $DEVICE"
-
-	eval sed -i '/$DEVICE/d' /tmp/mwan3iface.tmp >/dev/null 2>&1
-	if [ "$ACTION" == "ifup" ]; then
-		echo "$INTERFACE $route_args" >> /tmp/mwan3iface.tmp
-	fi
 
 	mwan3_basic_iptables
 	mwan3_interface_iptables
