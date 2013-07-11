@@ -154,7 +154,7 @@ mwan3_policy_rules()
 
 mwan3_policy_routes()
 {
-	local other_route_args metric other_device other_device_gateway other_iface weight
+	local other_route_args metric other_device weight
 
 	if [ $(uci get -P /var/state mwan3.$1.interface) == "$INTERFACE" ]; then
 		config_get metric $1 metric 1
