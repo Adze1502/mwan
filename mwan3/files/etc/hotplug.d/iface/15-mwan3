@@ -6,8 +6,8 @@ mwan3_basic_iptables()
 		iptables -N mwan3_rules -t mangle
 	fi
 
-	if ! iptables -S mwan3_wan -t mangle &> /dev/null; then
-		iptables -N mwan3_wan -t mangle
+	if ! iptables -S mwan3_interfaces -t mangle &> /dev/null; then
+		iptables -N mwan3_interfaces -t mangle
 	fi
 
 	if ! iptables -S mwan3_default -t mangle &> /dev/null; then
@@ -18,7 +18,7 @@ mwan3_basic_iptables()
 		iptables -N mwan3_pre -t mangle
 		iptables -A mwan3_pre -t mangle -j CONNMARK --restore-mark --nfmask 65280 --ctmask 65280
 		iptables -A mwan3_pre -t mangle -m mark --mark 0/65280 -j mwan3_default
-		iptables -A mwan3_pre -t mangle -m mark --mark 0/65280 -j mwan3_wan
+		iptables -A mwan3_pre -t mangle -m mark --mark 0/65280 -j mwan3_interfaces
 		iptables -A mwan3_pre -t mangle -m mark --mark 0/65280 -j mwan3_rules
 	fi
 
@@ -88,14 +88,14 @@ mwan3_interface_routes_and_rules()
 
 	if [ $ACTION == "ifup" -a $reroute != "1" ]; then
 		iptables -N mwan3_$INTERFACE -t mangle &> /dev/null
-		iptables -D mwan3_wan -t mangle -j mwan3_$INTERFACE &> /dev/null
+		iptables -D mwan3_interfaces -t mangle -j mwan3_$INTERFACE &> /dev/null
 		iptables -F mwan3_$INTERFACE -t mangle
 
 		for link_address in $(ip -4 route list table local dev $DEVICE | grep ^local | sed 's/.*local \([^ ]*\) .*/\1/') ; do	
 			iptables -A mwan3_$INTERFACE -t mangle -s $link_address -j MARK --set-xmark $(($interface_number*256))/65280
 		done
 
-		iptables -A mwan3_wan -t mangle -j mwan3_$INTERFACE
+		iptables -A mwan3_interfaces -t mangle -j mwan3_$INTERFACE
 	fi
 
 	[ $ACTION == "ifdown" ] && iptables -X mwan3_$INTERFACE -t mangle &> /dev/null
