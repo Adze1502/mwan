@@ -47,12 +47,26 @@ mwan3_basic_iptables()
 
 mwan3_interface_iptables()
 {
-	iptables -D mwan3_pre -t mangle -i $DEVICE -j MARK --set-xmark $((($interface_number*256)+32768))/65280 &> /dev/null
-	iptables -D mwan3_post -t mangle -o $DEVICE -m mark ! --mark 32512/65280 -j MARK --set-xmark $(($interface_number*256))/65280 &> /dev/null
+	local connected
+	
+	connected=$(ip -4 route list dev $DEVICE | awk '{print $1}' | egrep -m 1 '[0-9]{1,3}(\.[0-9]{1,3}){3}')
 
-	if [ $ACTION == "ifup" ]; then
-		iptables -I mwan3_pre 2 -t mangle -i $DEVICE -j MARK --set-xmark $((($interface_number*256)+32768))/65280 &> /dev/null
-		iptables -I mwan3_post 1 -t mangle -o $DEVICE -m mark ! --mark 32512/65280 -j MARK --set-xmark $(($interface_number*256))/65280 &> /dev/null
+	if [ -n "$connected" ]; then
+		iptables -D mwan3_pre -t mangle -i $DEVICE ! -s $connected -j MARK --set-xmark $((($interface_number*256)+32768))/65280 &> /dev/null
+		iptables -D mwan3_post -t mangle -o $DEVICE ! -d $connected -m mark ! --mark 32512/65280 -j MARK --set-xmark $(($interface_number*256))/65280 &> /dev/null
+
+		if [ $ACTION == "ifup" ]; then
+			iptables -I mwan3_pre 2 -t mangle -i $DEVICE ! -s $connected -j MARK --set-xmark $((($interface_number*256)+32768))/65280 &> /dev/null
+			iptables -I mwan3_post 1 -t mangle -o $DEVICE ! -d $connected -m mark ! --mark 32512/65280 -j MARK --set-xmark $(($interface_number*256))/65280 &> /dev/null
+		fi
+	else
+		iptables -D mwan3_pre -t mangle -i $DEVICE -j MARK --set-xmark $((($interface_number*256)+32768))/65280 &> /dev/null
+		iptables -D mwan3_post -t mangle -o $DEVICE -m mark ! --mark 32512/65280 -j MARK --set-xmark $(($interface_number*256))/65280 &> /dev/null
+
+		if [ $ACTION == "ifup" ]; then
+			iptables -I mwan3_pre 2 -t mangle -i $DEVICE -j MARK --set-xmark $((($interface_number*256)+32768))/65280 &> /dev/null
+			iptables -I mwan3_post 1 -t mangle -o $DEVICE -m mark ! --mark 32512/65280 -j MARK --set-xmark $(($interface_number*256))/65280 &> /dev/null
+		fi
 	fi
 }
 
