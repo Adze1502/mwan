@@ -168,16 +168,6 @@ up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 		end
 	end
 
-reroute = mwan_interface:option(DummyValue, "reroute", translate("Reroute"))
-	reroute.rawhtml = true
-	function reroute.cfgvalue(self, s)
-		if self.map:get(s, "reroute") == "1" then
-			return "Yes"
-		else
-			return "No"
-		end
-	end
-
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)

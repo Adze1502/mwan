@@ -132,15 +132,6 @@ up = mwan_interface:option(ListValue, "up", translate("Interface up"),
 	up:value("9")
 	up:value("10")
 
-reroute = mwan_interface:option(ListValue, "reroute", translate("Reroute"),
-	translate("Reroute allows MWAN3 to control router-generated traffic<br />" ..
-	"This works by ignoring the source IP in packets from the router<br />" ..
-	"New sessions from the router with the source IP of this interface will be matched by MWAN3 rules<br />" ..
-	"If control of router-generated traffic is desired in all scenarios then enable on all interfaces"))
-	reroute.default = "0"
-	reroute:value("1", translate("Yes"))
-	reroute:value("0", translate("No"))
-
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"),
 	translate("This displays the metric assigned to this interface in /etc/config/network<br />"))
 	metric.rawhtml = true

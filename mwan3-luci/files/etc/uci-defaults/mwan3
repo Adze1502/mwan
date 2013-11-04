@@ -10,6 +10,6 @@ EOF
 
 # make controller file addition take effect without system restart
 rm -f /tmp/luci-indexcache
-rm -rf /tmp/luci-modulecache
+rm -f /tmp/luci-modulecache
 
 exit 0

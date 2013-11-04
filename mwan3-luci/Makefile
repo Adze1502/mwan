@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-mwan3
 PKG_VERSION:=1.1
-PKG_RELEASE:=13
+PKG_RELEASE:=14
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -17,7 +17,7 @@ define Package/luci-app-mwan3
   SECTION:=LuCI
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
-  TITLE:=LuCI Support for mwan3 multiwan policy routing
+  TITLE:=LuCI Support for MWAN3 multiwan policy routing
   DEPENDS:=+mwan3
   PKGARCH:=all
   MAINTAINER:=Aedan Renner <chipdankly@gmail.com>
