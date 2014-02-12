@@ -106,7 +106,7 @@ interval = mwan_interface:option(ListValue, "interval", translate("Ping interval
 	interval:value("600", translate("10 minutes"))
 	interval:value("900", translate("15 minutes"))
 	interval:value("1800", translate("30 minutes"))
-	interval:value("3600", translate("60 minutes"))
+	interval:value("3600", translate("1 hour"))
 
 down = mwan_interface:option(ListValue, "down", translate("Interface down"),
 	translate("Interface will be deemed down after this many failed ping tests"))

@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# needed to get the network_get_ipaddr function
+source /lib/functions/network.sh
+
 # to enable this script uncomment the case loop at the bottom
 # to report the interface up/down events modify the lines in the send_reportdata function
 
@@ -52,6 +55,11 @@ find_status()
 	local ENABLED TRACK_IP
 	config_get ENABLED "$1" enabled
 	config_get TRACK_IP "$1" track_ip
+	local CURRENT_IP
+		network_get_ipaddr CURRENT_IP "$1"
+		if [ "$CURRENT_IP" != "" ]; then
+			CURRENT_IP="*with*IP*$CURRENT_IP"
+		fi
 	local STATUS
 		if [ "$ENABLED" == "1" ]; then
 			[ "$TRACK_IP" ] && STATUS="(monitored)" || STATUS="(not monitored)"
@@ -59,10 +67,10 @@ find_status()
 			STATUS="(not enabled)"
 		fi
 	local RULE="$(ip route list table "$RULENUM")"
-	if [ "$RULE" ]; then
-		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*"ONLINE*$STATUS""
+	if [ "$RULE" ]; then	
+		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*ONLINE*"$STATUS""$CURRENT_IP""
 	else
-		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*"OFFLINE*$STATUS""
+		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*OFFLINE*"$STATUS""$CURRENT_IP""
 	fi
 }
 
