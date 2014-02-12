@@ -67,7 +67,7 @@ find_status()
 			STATUS="(not enabled)"
 		fi
 	local RULE="$(ip route list table "$RULENUM")"
-	if [ "$RULE" ]; then	
+	if [ "$RULE" ]; then
 		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*ONLINE*"$STATUS""$CURRENT_IP""
 	else
 		CURRENTSTATUS=""$CURRENTSTATUS"+"$1"*-*OFFLINE*"$STATUS""$CURRENT_IP""
