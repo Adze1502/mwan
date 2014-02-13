@@ -34,7 +34,7 @@ search_policies()
 	local USE_MEMBER
 	config_get USE_MEMBER "$1" use_member
 	[ "$USE_MEMBER" ] && USE_MEMBER="$(echo "$USE_MEMBER" | tr -d '\n' | sed 's/ /\n/g')"
-	for LINE in "$USE_MEMBER"; do
+	for LINE in $USE_MEMBER; do
 		[ "$(echo "$MEMBERLIST" | grep -c "$LINE")" != "0" ] && {
 			POLICYLIST=""$POLICYLIST"++"$1":+"$USE_MEMBER""
 			break
