@@ -195,7 +195,7 @@ mwan3_set_policies_iptables()
 
 	policy=$1
 
-	[ "$policy" == $(echo "$policy" | cut -c1-17) ] || return 0
+	[ "$policy" == $(echo "$policy" | cut -c1-15) ] || return 0
 
 	if ! iptables -S mwan3_policy_$policy -t mangle &> /dev/null; then
 		iptables -N mwan3_policy_$policy -t mangle
