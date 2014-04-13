@@ -2,11 +2,11 @@
 START=99
 
 start() {
-	/usr/sbin/mwan3 mwan_apply
+	/usr/sbin/mwan3 start
 }
 
 stop() {
-	/usr/sbin/mwan3 mwan_unload
+	/usr/sbin/mwan3 stop
 }
 
 restart() {

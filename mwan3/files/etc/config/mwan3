@@ -1,15 +1,5 @@
-# This is a mwan3 example config. For mwan3 to work you will need at least:
-#
-# - 2 interfaces
-# - 2 members
-# - 1 policy
-# - 1 rule
-#
-# First define all your wan interfaces. Interface name must match with the
-# name used in your network configuration:
-
-config 'interface' 'wan1'
-	option 'enabled' '1'
+config 'interface' 'wan'
+	option 'enabled' '0'
 	list 'track_ip' '8.8.4.4'
 	list 'track_ip' '8.8.8.8'
 	list 'track_ip' '208.67.222.222'
@@ -20,10 +10,9 @@ config 'interface' 'wan1'
 	option 'interval' '5'
 	option 'down' '3'
 	option 'up' '8'
-	option 'reroute' '0'
 
 config 'interface' 'wan2'
-	option 'enabled' '1'
+	option 'enabled' '0'
 	list 'track_ip' '8.8.8.8'
 	list 'track_ip' '208.67.220.220'
 	option 'reliability' '1'
@@ -32,92 +21,45 @@ config 'interface' 'wan2'
 	option 'interval' '5'
 	option 'down' '3'
 	option 'up' '8'
-	option 'reroute' '0'
 
-# Next define a member and configure metric and weight values for this member.
-# Each interface can have multiple member definitions. Give each member a correct
-# name (A-Z, a-z, 0-9, "_" and no spaces).
-
-config 'member' 'wan1_m1_w3'
-	option 'interface' 'wan1'
+config 'member' 'wan_m1_w3'
+	option 'interface' 'wan'
 	option 'metric' '1'
 	option 'weight' '3'
 
-config 'member' 'wan1_m2_w3'
-	option 'interface' 'wan1'
+config 'member' 'wan_m2_w3'
+	option 'interface' 'wan'
 	option 'metric' '2'
 	option 'weight' '3'
 
 config 'member' 'wan2_m1_w2'
 	option 'interface' 'wan2'
 	option 'metric' '1'
-	option 'weight' '2'
+	option 'weight' '10'
 
 config 'member' 'wan2_m2_w2'
 	option 'interface' 'wan2'
 	option 'metric' '2'
-	option 'weight' '2'
-
-# After that create a routing policy. A routing policy consist of one or more
-# members. Give each policy a correct name (A-Z, a-z, 0-9, "_" and no spaces). You 
-# can create multiple policies, so that it is possible for different traffic to
-# have different primary and/or backup interfaces.
+	option 'weight' '10'
 
 config 'policy' 'wan1_only'
-	list 'use_member' 'wan1_m1_w3'
+	list 'use_member' 'wan_m1_w3'
 
 config 'policy' 'wan2_only'
 	list 'use_member' 'wan2_m1_w2'
 
-config 'policy' 'wan1_wan2_loadbalanced'
-	list 'use_member' 'wan1_m1_w3'
+config 'policy' 'balanced'
+	list 'use_member' 'wan_m1_w3'
 	list 'use_member' 'wan2_m1_w2'
 
-config 'policy' 'wan1_pri_wan2_sec'
-	list 'use_member' 'wan1_m1_w3'
+config 'policy' 'wan1_wan2'
+	list 'use_member' 'wan_m1_w3'
 	list 'use_member' 'wan2_m2_w2'
 
-config 'policy' 'wan2_pri_wan1_sec'
-	list 'use_member' 'wan1_m2_w3'
+config 'policy' 'wan2_wan1'
+	list 'use_member' 'wan_m2_w3'
 	list 'use_member' 'wan2_m1_w2'
 
-# And to finish the config define your traffic rules. Rules are matched in top to
-# bottom order. If you define a rule and it matches, all following rules are ignored.
-#
-# If the option equalize is set, mwan3 will load-balance each new session to the same
-# host. If not set, it will load-balance based on destination.
-
-config 'rule' 'rule1'
-	option 'src_ip' '192.168.21.0/24'
-	option 'proto' 'tcp'
-	option 'dest_port' '563'
-	option 'use_policy' 'wan2_only'
-
-config 'rule' 'rule2'
-	option 'src_ip' '192.168.21.0/24'
-	option 'proto' 'tcp'
-	option 'dest_port' '995'
-	option 'use_policy' 'wan1_only'
-
-config 'rule' 'rule3'
-	option 'dest_ip' '88.154.0.0/16'
-	option 'proto' 'tcp'
-	option 'dest_port' '1024:65535'
-	option 'equalize' '1'
-	option 'use_policy' 'wan1_wan2_loadbalanced'
-
-config 'rule' 'rule4'
-	option 'dest_ip' '77.11.41.0/24'
-	option 'proto' 'tcp'
-	option 'dest_port' '1024:65535'
-	option 'use_policy' 'wan1_pri_wan2_sec'
-
-config 'rule' 'rule5'
-	option 'dest_ip' '112.136.0.0/16'
-	option 'proto' 'udp'
-	option 'dest_port' '5352'
-	option 'use_policy' 'wan2_pri_wan1_sec'
-
-config 'rule' 'rule6'
+config 'rule' 'default_rule'
 	option 'dest_ip' '0.0.0.0/0'
-	option 'use_policy' 'wan1_wan2_loadbalanced'
+	option 'use_policy' 'balanced'
