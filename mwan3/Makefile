@@ -8,22 +8,23 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mwan3
-PKG_VERSION:=1.3
-PKG_RELEASE:=0
+PKG_VERSION:=1.4
+PKG_RELEASE:=5
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/mwan3
    SECTION:=net
    CATEGORY:=Network
+   SUBMENU:=Routing and Redirection
    DEPENDS:=+ip +iptables +iptables-mod-conntrack-extra +iptables-mod-ipopt
-   TITLE:=A multiwan hotplug script with connection tracking support
+   TITLE:=Multiwan hotplug script with connection tracking support
    MAINTAINER:=Jeroen Louwes <jeroen.louwes@gmail.com>
    PKGARCH:=all
 endef
 
 define Package/mwan3/description
-   A hotplug script that makes configuration of multiple WAN interfaces simple, easy and manageable. With load balancing support, connection tracking with failover and an easy to manage traffic ruleset.
+   Hotplug script which makes configuration of multiple WAN interfaces simple and manageable. With loadbalancing/failover support for up to 250 wan interfaces, connection tracking and an easy to manage traffic ruleset.
 endef
 
 define Package/mwan3/conffiles
