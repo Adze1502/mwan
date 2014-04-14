@@ -13,3 +13,8 @@ restart() {
 	stop
 	start
 }
+
+boot() {
+	# Don't start on boot, mwan3 is started by hotplug event.
+	return 0
+}
