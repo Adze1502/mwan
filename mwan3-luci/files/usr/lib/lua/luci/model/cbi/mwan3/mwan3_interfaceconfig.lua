@@ -30,7 +30,7 @@ function iface_check()
 	end
 	-- check if any interfaces are not properly configured in /etc/config/network or have no default route in main routing table
 	if ut.trim(sys.exec("uci get -p /var/state network." .. arg[1])) == "interface" then
-		local ifdev = ut.trim(sys.exec("uci get -p /var/state network." .. arg[1] .. ".device"))
+		local ifdev = ut.trim(sys.exec("uci get -p /var/state network." .. arg[1] .. ".ifname"))
 		if ifdev == "uci: Entry not found" or ifdev == "" then
 			err_netcfg = 1
 			err_route = 1
