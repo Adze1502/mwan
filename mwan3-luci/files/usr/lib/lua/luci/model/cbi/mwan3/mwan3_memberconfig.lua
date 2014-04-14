@@ -15,7 +15,7 @@ arg[1] = arg[1] or ""
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Member Configuration - ") .. arg[1])
-	m5.redirect = dsp.build_url("admin", "network", "mwan3", "member")
+	m5.redirect = dsp.build_url("admin", "network", "mwan3", "configuration", "member")
 
 
 mwan_member = m5:section(NamedSection, arg[1], "member", "")

@@ -1,0 +1,58 @@
+<%+header%>
+
+<ul class="cbi-tabmenu">
+	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/overview")%>"><%:Interface Status%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/overview/over_policy")%>"><%:Policy Status%></a></li>
+	<li class="cbi-tab"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/overview/over_rule")%>"><%:Rule Status%></a></li>
+</ul>
+
+<script type="text/javascript" src="<%=resource%>/cbi.js"></script>
+<script type="text/javascript">//<![CDATA[
+	XHR.poll(5, '<%=luci.dispatcher.build_url("admin", "network", "mwan3", "overview", "rule_status")%>', null,
+		function(x, st)
+		{
+			var tx = document.getElementById('mwan3_rule_text');
+			if (st.mwan3rst)
+			{
+				var temp = '';
+				temp = String.format(
+					'%s',
+						st.mwan3rst[0].rulestat
+				);
+				tx.innerHTML = temp;
+			}
+			else
+			{
+				var temp = '';
+				var nslg = 'No MWAN3 rule information available';
+				temp = String.format(
+					'<strong>%s</strong>',
+						nslg
+				);
+				tx.innerHTML = temp;
+			}
+		}
+	);
+//]]></script>
+
+<div id="mwan3_rule_status">
+	<fieldset class="cbi-section">
+		<legend><%:MWAN3 Multi-WAN Rule Live Status%></legend>
+		<div id="mwan3_rule_text" style="text-align:left; white-space:pre-wrap;"><em><%:Collecting data...%></em></div>
+	</fieldset>
+</div>
+
+<style type="text/css">
+  #mwan3_rule_status {
+	border: 1px dotted #555555;
+	background-color: #FFFFFF;
+	padding: 20px;
+  }
+  #mwan3_rule_text {
+	padding: 20px;
+	text-align:left;
+	white-space:pre-wrap;
+  }
+</style>
+
+<%+footer%>

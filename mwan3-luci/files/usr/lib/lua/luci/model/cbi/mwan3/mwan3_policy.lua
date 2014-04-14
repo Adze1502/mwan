@@ -1,22 +1,32 @@
 -- ------ extra functions ------ --
 
-function policy_warn() -- display status and warning messages at the top of the page
-	local polnum = 0
+function policy_check() -- check to see if any policy names exceed the maximum of 15 characters
 	uci.cursor():foreach("mwan3", "policy",
-		function ()
-			polnum = polnum+1
+		function (section)
+			if string.len(section[".name"]) > 15 then
+				toolong = 1
+				err_name_list = err_name_list .. section[".name"] .. " "
+			end
 		end
 	)
-	if polnum <= 84 then
-		return "<strong><em>There are currently " .. polnum .. " of 84 supported policies configured!</em></strong>"
+end
+
+function policy_warn() -- display status and warning messages at the top of the page
+	if toolong == 1 then
+		return "<font color=\"ff0000\"><strong>WARNING: Some policies have names exceeding the maximum of 15 characters!</strong></font>"
 	else
-		return "<font color=\"ff0000\"><strong><em>WARNING: " .. polnum .. " policies are configured exceeding the maximum of 84!</em></strong></font>"
+		return ""
 	end
 end
 
 -- ------ policy configuration ------ --
 
 ds = require "luci.dispatcher"
+sys = require "luci.sys"
+
+toolong = 0
+err_name_list = ""
+policy_check()
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration"),
@@ -24,18 +34,21 @@ m5 = Map("mwan3", translate("MWAN3 Multi-WAN Policy Configuration"),
 
 
 mwan_policy = m5:section(TypedSection, "policy", translate("Policies"),
-	translate("MWAN3 supports up to 84 policies<br />" ..
-	"Name may contain characters A-Z, a-z, 0-9, _ and no spaces<br />" ..
+	translate("Policies are profiles grouping one or more members controlling how MWAN3 distributes traffic<br />" ..
+	"Member interfaces with lower metrics are used first. Interfaces with the same metric load-balance<br />" ..
+	"Load-balanced member interfaces distribute more traffic out those with higher weights<br />" ..
+	"Names may contain characters A-Z, a-z, 0-9, _ and no spaces. Names must be 15 characters or less<br />" ..
 	"Policies may not share the same name as configured interfaces, members or rules"))
 	mwan_policy.addremove = true
 	mwan_policy.dynamic = false
-	mwan_policy.sortable = false
+	mwan_policy.sectionhead = "Policy"
+	mwan_policy.sortable = true
 	mwan_policy.template = "cbi/tblsection"
-	mwan_policy.extedit = ds.build_url("admin", "network", "mwan3", "policy", "%s")
+	mwan_policy.extedit = ds.build_url("admin", "network", "mwan3", "configuration", "policy", "%s")
 	function mwan_policy.create(self, section)
 		TypedSection.create(self, section)
 		m5.uci:save("mwan3")
-		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "policy", section))
+		luci.http.redirect(ds.build_url("admin", "network", "mwan3", "configuration", "policy", section))
 	end
 
 
@@ -51,7 +64,17 @@ use_member = mwan_policy:option(DummyValue, "use_member", translate("Members ass
 		else
 			str = "<br /><font size=\"+4\">-</font>"
 		end
-		return str .. "<br />"
+		return str
+	end
+
+errors = mwan_policy:option(DummyValue, "errors", translate("Errors"))
+	errors.rawhtml = true
+	function errors.cfgvalue(self, s)
+		if sys.exec("echo '" .. err_name_list .. "' | grep -w " .. s) == "" then
+			return ""
+		else
+			return "<span title=\"Name exceeds 15 characters\"><img src=\"/luci-static/resources/cbi/reset.gif\" alt=\"error\"></img></span>"
+		end
 	end
 
 

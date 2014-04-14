@@ -10,36 +10,42 @@ function index()
 
 	entry({"admin", "network", "mwan3"},
 		alias("admin", "network", "mwan3", "overview"),
-		_("MWAN3 Multi-WAN"), 600)
-
-	entry({"admin", "network", "mwan3", "status"},
-		call("mwan3_status"))
-
-	entry({"admin", "network", "mwan3", "tshoot"},
-		call("mwan3_tshoot"))
+		_("Load Balancing"), 600)
 
 	entry({"admin", "network", "mwan3", "overview"},
-		template("mwan3/mwan3_overview"),
+		alias("admin", "network", "mwan3", "overview", "over_iface"),
 		_("Overview"), 10)
+	entry({"admin", "network", "mwan3", "overview", "over_iface"},
+		template("mwan3/mwan3_over_interface"))
+	entry({"admin", "network", "mwan3", "overview", "iface_status"},
+		call("mwan3_iface_status"))
+	entry({"admin", "network", "mwan3", "overview", "over_policy"},
+		template("mwan3/mwan3_over_policy"))
+	entry({"admin", "network", "mwan3", "overview", "policy_status"},
+		call("mwan3_policy_status"))
+	entry({"admin", "network", "mwan3", "overview", "over_rule"},
+		template("mwan3/mwan3_over_rule"))
+	entry({"admin", "network", "mwan3", "overview", "rule_status"},
+		call("mwan3_rule_status"))
 
-	entry({"admin", "network", "mwan3", "interface"},
+	entry({"admin", "network", "mwan3", "configuration"},
+		alias("admin", "network", "mwan3", "configuration", "interface"),
+		_("Configuration"), 20)
+	entry({"admin", "network", "mwan3", "configuration", "interface"},
 		arcombine(cbi("mwan3/mwan3_interface"), cbi("mwan3/mwan3_interfaceconfig")),
-		_("Interfaces"), 20).leaf = true
-
-	entry({"admin", "network", "mwan3", "member"},
+		_("Interfaces"), 10).leaf = true
+	entry({"admin", "network", "mwan3", "configuration", "member"},
 		arcombine(cbi("mwan3/mwan3_member"), cbi("mwan3/mwan3_memberconfig")),
-		_("Members"), 30).leaf = true
-
-	entry({"admin", "network", "mwan3", "policy"},
+		_("Members"), 20).leaf = true
+	entry({"admin", "network", "mwan3", "configuration", "policy"},
 		arcombine(cbi("mwan3/mwan3_policy"), cbi("mwan3/mwan3_policyconfig")),
-		_("Policies"), 40).leaf = true
-
-	entry({"admin", "network", "mwan3", "rule"},
+		_("Policies"), 30).leaf = true
+	entry({"admin", "network", "mwan3", "configuration", "rule"},
 		arcombine(cbi("mwan3/mwan3_rule"), cbi("mwan3/mwan3_ruleconfig")),
-		_("Rules"), 50).leaf = true
+		_("Rules"), 40).leaf = true
 
 	entry({"admin", "network", "mwan3", "advanced"},
-		call("mwan3_advanced"),
+		alias("admin", "network", "mwan3", "advanced", "hotplug"),
 		_("Advanced"), 100)
 	entry({"admin", "network", "mwan3", "advanced", "hotplug"},
 		form("mwan3/mwan3_adv_hotplug"))
@@ -47,11 +53,13 @@ function index()
 		form("mwan3/mwan3_adv_mwan3"))
 	entry({"admin", "network", "mwan3", "advanced", "network"},
 		form("mwan3/mwan3_adv_network"))
-	entry({"admin", "network", "mwan3", "advanced", "startup"},
-		form("mwan3/mwan3_adv_startup"))
+	entry({"admin", "network", "mwan3", "advanced", "tshoot"},
+		template("mwan3/mwan3_adv_troubleshoot"))
+	entry({"admin", "network", "mwan3", "advanced", "tshoot_display"},
+		call("mwan3_tshoot_data"))
 end
 
-function mwan3_get_status(rulenum, ifname)
+function mwan3_get_iface_status(rulenum, ifname)
 	if ut.trim(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".enabled")) == "1" then
 		if ut.trim(sys.exec("ip route list table " .. rulenum)) ~= "" then
 			if ut.trim(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".track_ip")) ~= "" then
@@ -69,17 +77,17 @@ end
 
 function mwan3_get_iface()
 	local str = ""
-	local rulenum = 1000
+	local rulenum = 0
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			rulenum = rulenum+1
-			str = str .. section[".name"] .. "[" .. mwan3_get_status(rulenum, section[".name"]) .. "]"
+			str = str .. section[".name"] .. "[" .. mwan3_get_iface_status(rulenum, section[".name"]) .. "]"
 		end
 	)
 	return str
 end
 
-function mwan3_status()
+function mwan3_iface_status()
 	local ntm = require "luci.model.network".init()
 
 	local rv = {	}
@@ -93,7 +101,7 @@ function mwan3_status()
 		for wanname, ifstat in string.gfind(statstr, "([^%[]+)%[([^%]]+)%]") do
 			local wanifname = ut.trim(sys.exec("uci get -p /var/state network." .. wanname .. ".ifname"))
 				if wanifname == "" then
-					wanifname = "x"
+					wanifname = "X"
 				end
 			local wanlink = ntm:get_interface(wanifname)
 				wanlink = wanlink and wanlink:get_network()
@@ -116,7 +124,39 @@ function mwan3_status()
 	luci.http.write_json(rv)
 end
 
-function mwan3_tshoot()
+function mwan3_policy_status()
+	local rv = {	}
+
+	-- policy status
+	local pst = ut.trim(sys.exec("mwan3 policies"))
+	if pst ~= "" then
+		rv.mwan3pst = { }
+		plstat = {}
+		plstat[pst] = #rv.mwan3pst + 1
+		rv.mwan3pst[plstat[pst]] = { polstat = pst }
+	end
+
+	luci.http.prepare_content("application/json")
+	luci.http.write_json(rv)
+end
+
+function mwan3_rule_status()
+	local rv = {	}
+
+	-- rule status
+	local rst = ut.trim(sys.exec("mwan3 rules"))
+	if rst ~= "" then
+		rv.mwan3rst = { }
+		rlst = {}
+		rlst[rst] = #rv.mwan3rst + 1
+		rv.mwan3rst[rlst[rst]] = { rulestat = rst }
+	end
+
+	luci.http.prepare_content("application/json")
+	luci.http.write_json(rv)
+end
+
+function mwan3_tshoot_data()
 	local rv = {	}
 
 	-- software versions
@@ -176,8 +216,8 @@ function mwan3_tshoot()
 	rv.iprule[ipruleid[ipr]] = { rule = ipr }
 
 	-- ip route list table
-	local routelisting = ut.trim(sys.exec("ip rule | awk -F: '{ print $1 }' | awk '$1>=1001 && $1<=1099'"))
-	local rlstr = ""
+	local routelisting = ut.trim(sys.exec("ip rule | sed 's/://g' | awk -F' ' '$1>=2001 && $1<=2250' | awk -F' ' '{ print $NF }'"))
+	local rlstr = "main\n" .. sys.exec("ip route list table main")
 		if routelisting ~= "" then
 			for line in routelisting:gmatch("[^\r\n]+") do
 				rlstr = rlstr .. line .. "\n" .. sys.exec("ip route list table " .. line)
@@ -192,7 +232,7 @@ function mwan3_tshoot()
 	rv.routelist[rtlist[rlstr]] = { iprtlist = rlstr }
 
 	-- iptables
-	local iptbl = ut.trim(sys.exec("iptables -L -t mangle -v -n | awk '/mwan3/' RS= | sed -e 's/.*Chain.*/\\n&/'"))
+	local iptbl = ut.trim(sys.exec("iptables -L -t mangle -v -n"))
 		if iptbl == "" then
 			iptbl = "No data found"
 		end
@@ -227,8 +267,4 @@ function mwan3_tshoot()
 
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(rv)
-end
-
-function mwan3_advanced()
-	luci.template.render("mwan3/mwan3_adv_troubleshoot")
 end

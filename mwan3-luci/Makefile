@@ -8,8 +8,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-mwan3
-PKG_VERSION:=1.1
-PKG_RELEASE:=17
+PKG_VERSION:=1.2
+PKG_RELEASE:=7
 
 include $(INCLUDE_DIR)/package.mk
 

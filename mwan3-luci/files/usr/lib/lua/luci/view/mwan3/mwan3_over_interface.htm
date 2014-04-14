@@ -1,3 +1,12 @@
+<%+header%>
+
+<ul class="cbi-tabmenu">
+	<li class="cbi-tab"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/overview")%>"><%:Interface Status%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/overview/over_policy")%>"><%:Policy Status%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/overview/over_rule")%>"><%:Rule Status%></a></li>
+</ul>
+
+<script type="text/javascript" src="<%=resource%>/cbi.js"></script>
 <script type="text/javascript">//<![CDATA[
 	XHR.poll(5, '<%=luci.dispatcher.build_url("admin", "network", "mwan3", "overview", "iface_status")%>', null,
 		function(x, st)
@@ -46,9 +55,32 @@
 			{
 				var temp = '';
 				var ncint = 'No MWAN3 interfaces found';
-				temp += String.format(
+				temp = String.format(
 					'<strong>%s</strong>',
 						ncint
+				);
+				tx.innerHTML = temp;
+			}
+
+			var tx = document.getElementById('mwan3_statuslog_text');
+			if (st.mwan3log)
+			{
+				var temp = '';
+				var mwan3lg = 'Last 50 MWAN3 systemlog entries. Newest entries sorted at the top :';
+
+				temp = String.format(
+					'%s<br /><br />%s',
+						mwan3lg, st.mwan3log[0].mwanlog
+				);
+				tx.innerHTML = temp;
+			}
+			else
+			{
+				var temp = '';
+				var nslg = 'No MWAN3 systemlog history found';
+				temp = String.format(
+					'<strong>%s</strong>',
+						nslg
 				);
 				tx.innerHTML = temp;
 			}
@@ -56,10 +88,16 @@
 	);
 //]]></script>
 
-<fieldset id="interface_field" class="cbi-section">
-	<legend><%:MWAN3 Multi-WAN Interface Live Status%></legend>
-	<div id="mwan3_status_text"><em><%:Collecting data...%></em></div>
-</fieldset>
+<div id="mwan3_interface_status">
+	<fieldset id="interface_field" class="cbi-section">
+		<legend><%:MWAN3 Multi-WAN Interface Live Status%></legend>
+		<div id="mwan3_status_text"><em><%:Collecting data...%></em></div>
+	</fieldset>
+	<fieldset class="cbi-section">
+		<legend><%:MWAN3 Multi-WAN Interface Systemlog%></legend>
+		<div id="mwan3_statuslog_text"><em><%:Collecting data...%></em></div>
+	</fieldset>
+</div>
 
 <style type="text/css">
   .wanon { background-color: rgb(144, 240, 144); }
@@ -73,6 +111,11 @@
     min-width: 235px;
     padding: 5px 10px 8px 10px;
     text-align: center;
+  }
+  #mwan3_interface_status {
+	background-color: #FFFFFF;
+	border: 1px dotted #555555;
+	padding: 20px;
   }
   #interface_field {
 	padding: 20px 0px 20px 0px
@@ -89,4 +132,11 @@
   #mwan3_status_text a {
 	font-weight: bold;
   }
+  #mwan3_statuslog_text {
+	padding: 20px;
+	text-align:left;
+	white-space:pre-wrap;
+  }
 </style>
+
+<%+footer%>

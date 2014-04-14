@@ -1,52 +1,62 @@
 <%+header%>
 
 <ul class="cbi-tabmenu">
-	<li class="cbi-tab"><a href="#"><%:Troubleshooting%></a></li>
-	<li class="cbi-tab-disabled"><a href="<%=REQUEST_URI%>/hotplug"><%:Hotplug Script%></a></li>
-	<li class="cbi-tab-disabled"><a href="<%=REQUEST_URI%>/mwan3"><%:MWAN3 Config%></a></li>
-	<li class="cbi-tab-disabled"><a href="<%=REQUEST_URI%>/network"><%:Network Config%></a></li>
-	<li class="cbi-tab-disabled"><a href="<%=REQUEST_URI%>/startup"><%:Startup Commands%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/hotplug")%>"><%:Hotplug Script%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/mwan3")%>"><%:MWAN3 Config%></a></li>
+	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/network")%>"><%:Network Config%></a></li>
+	<li class="cbi-tab"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/tshoot")%>"><%:Troubleshooting%></a></li>
 </ul>
 
 <script type="text/javascript" src="<%=resource%>/cbi.js"></script>
 <script type="text/javascript">//<![CDATA[
-	XHR.poll(15, '<%=luci.dispatcher.build_url("admin", "network", "mwan3", "tshoot")%>', null,
+	XHR.poll(15, '<%=luci.dispatcher.build_url("admin", "network", "mwan3", "advanced", "tshoot_display")%>', null,
 		function(x, st)
 		{
 			var tx = document.getElementById('mwan3_tshoot_text');
 			if (st.fidef)
 			{
 				var temp = '';
-				var mwanvers = '<br />Software versions : <br /><br />';
+				var mwanvers = 'Software versions : <br /><br />';
 				var firewalldef = '<br /><br />Firewall default output policy (must be ACCEPT) : <br /><br />';
 				var iproute = '<br /><br />Output of &#34;ip route show&#34; : <br /><br />';
-				var iprulesh = '<br /><br />Output of &#34;ip rule show&#34; : <br /><br />';
-				var routelisttbl = '<br /><br />Output of &#34;ip route list table 1001-1099&#34; (1001-1015 = interface tables, 1016-1099 = policy tables) : <br /><br />';
-				var iptable = '<br /><br />Output of &#34;iptables -L -t mangle -v -n | awk &#39;/mwan3/&#39; RS=&#34; : <br /><br />';
-				var ifcnfg = '<br /><br />Output of &#34;ifconfig&#34; : <br /><br />';
 				var mwan3cnfg = '<br /><br />Output of &#34;cat /etc/config/mwan3&#34; : <br /><br />';
 				var netcnfg = '<br /><br />Output of &#34;cat /etc/config/network&#34; : <br /><br />';
+				var ifcnfg = '<br /><br />Output of &#34;ifconfig&#34; : <br /><br />';
+				var iprulesh = '<br /><br />Output of &#34;ip rule show&#34; : <br /><br />';
+				var routelisttbl = '<br /><br />Output of main routing table and &#34;ip route list table 1-250&#34; : <br /><br />';
+				var iptable = '<br /><br />Output of &#34;iptables -L -t mangle -v -n&#34; : <br /><br />';
 
 				temp = String.format(
 					'<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<br /><br />',
-						mwanvers, st.mw3ver[0].mwan3v, firewalldef, st.fidef[0].firedef, iproute, st.rtshow[0].iprtshow, iprulesh, st.iprule[0].rule, routelisttbl, st.routelist[0].iprtlist, iptable, st.iptables[0].iptbls, ifcnfg, st.ifconfig[0].ifcfg, mwan3cnfg, st.mwan3config[0].mwn3cfg, netcnfg, st.netconfig[0].netcfg
+						mwanvers, st.mw3ver[0].mwan3v, firewalldef, st.fidef[0].firedef, iproute, st.rtshow[0].iprtshow, mwan3cnfg, st.mwan3config[0].mwn3cfg, netcnfg, st.netconfig[0].netcfg, ifcnfg, st.ifconfig[0].ifcfg, iprulesh, st.iprule[0].rule, routelisttbl, st.routelist[0].iprtlist, iptable, st.iptables[0].iptbls
 				);
 				tx.innerHTML = temp;
 			}
 			else
 			{
-				tx.innerHTML = '';
+				var temp = '';
+				var terror = 'Error collecting troubleshooting information';
+				temp = String.format(
+					'<strong>%s</strong>',
+						terror
+				);
+				tx.innerHTML = temp;
 			}
 		}
 	);
 //]]></script>
 
-<style type="text/css">
-	.tsht { background-color: rgb(78, 186, 241); }
-</style>
-
 <fieldset class="cbi-section">
-	<div id="mwan3_tshoot_text" style="text-align:left; white-space:pre-wrap;"><em><%:Collecting data...%></em></div>
+	<div id="mwan3_tshoot_text"><em><%:Collecting data...%></em></div>
 </fieldset>
+
+<style type="text/css">
+  .tsht { background-color: rgb(78, 186, 241); }
+  #mwan3_tshoot_text {
+	padding: 20px 0px 20px 0px;
+	text-align: left;
+	white-space: pre-wrap;
+  }
+</style>
 
 <%+footer%>
