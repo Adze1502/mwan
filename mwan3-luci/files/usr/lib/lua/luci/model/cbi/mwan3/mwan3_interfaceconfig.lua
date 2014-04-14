@@ -13,13 +13,13 @@ function iface_check()
 		)
 		-- compare metric against list
 		local metric_dupnums = sys.exec("echo '" .. metric_list .. "' | awk -F' ' '{ print $2 }' | uniq -d")
-		if sys.exec("echo '" .. metric_list .. "' | grep -w " .. arg[1]) ~= "" then
-			err_dupmet = 1
-		end
 		local metric_dupes = ""
 		for line in metric_dupnums:gmatch("[^\r\n]+") do
 			metric_dupes = sys.exec("echo '" .. metric_list .. "' | grep '" .. line .. "' | awk -F' ' '{ print $1 }'")
 			err_dupmet_list = err_dupmet_list .. metric_dupes
+		end
+		if sys.exec("echo '" .. err_dupmet_list .. "' | grep -w " .. arg[1]) ~= "" then
+			err_dupmet = 1
 		end
 	end
 	-- check if this interface has a higher reliability requirement than track IPs configured
