@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mwan3
 PKG_VERSION:=1.4
-PKG_RELEASE:=8
+PKG_RELEASE:=9
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -36,11 +36,6 @@ endef
 
 define Package/mwan3/install
    $(CP) ./files/* $(1)
-endef
-
-define Package/mwan3/postinst
-   [ -n "$${IPKG_INSTROOT}" ] || /etc/init.d/mwan3 enable
-   exit 0
 endef
 
 $(eval $(call BuildPackage,mwan3))

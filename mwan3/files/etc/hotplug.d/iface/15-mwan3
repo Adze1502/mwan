@@ -269,11 +269,19 @@ mwan3_ifupdown()
 		while [ -z "$(ip -4 route list dev $DEVICE default | sed '/.*metric \([^ ]*\) .*$/!d;s//\1/;q' | awk '$1 == ("'$wan_metric'")')" -a "$count" -lt 5 ]; do
 			sleep 1
 			let count++
-			[ "$count" -ge 5 ] || exit 0
+			if [ "$count" -ge 5 ]; then
+				logger -t mwan3 -p warn "Could not find gateway for interface $INTERFACE ($DEVICE)" && exit 0
+			fi
 		done
 
-		[ "$(pgrep -f -o hotplug-call)" -ne $$ ] && sleep $(head /dev/urandom | tr -dc "123456789" | head -c1)
-
+		while [ "$(pgrep -f -o hotplug-call)" -ne $$ -a "$count" -lt 60 ]; do
+			sleep 1
+			let count++
+			if [ "$count" -ge 60 ]; then
+				logger -t mwan3 -p warn "Timeout while waiting for other hotplug processes to finish. $ACTION interface $INTERFACE ($DEVICE) cancelled" && exit 0
+			fi
+		done
+								
 		unset count
 	fi
 
