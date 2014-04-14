@@ -104,11 +104,11 @@ mwan3_set_iface_route()
 
 mwan3_set_iface_rules()
 {
-	while [ -n "$(ip -4 rule list | awk '$1 == ("$(($iface_id+1000)):")')" ]; do
+	while [ -n "$(ip -4 rule list | awk '$1 == ("'$(($iface_id+1000)):'")')" ]; do
 		ip -4 rule del pref $(($iface_id+1000))
 	done
 
-	while [ -n "$(ip -4 rule list | awk '$1 == ("$(($iface_id+2000)):")')" ]; do
+	while [ -n "$(ip -4 rule list | awk '$1 == ("'$(($iface_id+2000)):'")')" ]; do
 		ip -4 rule del pref $(($iface_id+2000))
 	done
 
@@ -283,6 +283,7 @@ mwan3_ifupdown()
 		done
 								
 		unset count
+		mwan3_get_route_args
 	fi
 
 	config_foreach mwan3_get_iface_id interface
@@ -293,7 +294,6 @@ mwan3_ifupdown()
 
 	logger -t mwan3 -p notice "$ACTION interface $INTERFACE ($DEVICE)"
 
-	mwan3_get_route_args
 	mwan3_set_general_iptables
 	mwan3_set_connected_iptables
 	mwan3_set_iface_iptables
