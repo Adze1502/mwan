@@ -161,21 +161,20 @@ function mwan3_tshoot_data()
 
 	-- software versions
 	local wrtrelease = ut.trim(luci.version.distversion)
-		local wrtrev = ut.trim(sys.exec("cat /etc/openwrt_release | grep REVISION | awk -F'\"' '{print $2}'"))
 		if wrtrelease ~= "" then
-			if wrtrev ~= "" then
-				wrtrelease = "OpenWrt - " .. wrtrelease .. " (" .. wrtrev .. ")"
-			else
-				wrtrelease = "OpenWrt - " .. wrtrelease
-			end
-		elseif wrtrev ~= "" then
-			wrtrelease = "OpenWrt - " .. wrtrev
+			wrtrelease = "OpenWrt - " .. wrtrelease
 		else
 			wrtrelease = "OpenWrt - unknown"
 		end
+	local lucirelease = ut.trim(luci.version.luciversion)
+		if lucirelease ~= "" then
+			lucirelease = "\nLuCI - " .. lucirelease
+		else
+			lucirelease = "\nLuCI - unknown"
+		end
 	local mwan3version = ut.trim(sys.exec("opkg info mwan3 | grep Version | awk -F' ' '{ print $2 }'"))
 		if mwan3version ~= "" then
-			mwan3version = "\nmwan3 - " .. mwan3version
+			mwan3version = "\n\nmwan3 - " .. mwan3version
 		else
 			mwan3version = "\nmwan3 - unknown"
 		end
@@ -185,7 +184,7 @@ function mwan3_tshoot_data()
 		else
 			mwan3lversion = "\nluci-app-mwan3 - unknown"
 		end
-	local softrev = wrtrelease .. mwan3version .. mwan3lversion
+	local softrev = wrtrelease .. lucirelease .. mwan3version .. mwan3lversion
 	rv.mw3ver = { }
 	mwv = {}
 	mwv[softrev] = #rv.mw3ver + 1
