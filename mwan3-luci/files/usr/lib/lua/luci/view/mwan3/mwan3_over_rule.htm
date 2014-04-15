@@ -16,7 +16,7 @@
 			{
 				var temp = '';
 				temp = String.format(
-					'%s',
+					'<pre>%s</pre>',
 						st.mwan3rst[0].rulestat
 				);
 				tx.innerHTML = temp;
@@ -38,7 +38,7 @@
 <div id="mwan3_rule_status">
 	<fieldset class="cbi-section">
 		<legend><%:MWAN3 Multi-WAN Rule Live Status%></legend>
-		<div id="mwan3_rule_text" style="text-align:left; white-space:pre-wrap;"><em><%:Collecting data...%></em></div>
+		<div id="mwan3_rule_text"><em><%:Collecting data...%></em></div>
 	</fieldset>
 </div>
 
@@ -50,8 +50,8 @@
   }
   #mwan3_rule_text {
 	padding: 20px;
-	text-align:left;
-	white-space:pre-wrap;
+	text-align: left;
+	white-space: pre-wrap;
   }
 </style>
 

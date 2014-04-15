@@ -27,7 +27,7 @@
 				var iptable = '<br /><br />Output of &#34;iptables -L -t mangle -v -n&#34; : <br /><br />';
 
 				temp = String.format(
-					'<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<br /><br />',
+					'<pre><span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s</pre>',
 						mwanvers, st.mw3ver[0].mwan3v, firewalldef, st.fidef[0].firedef, iproute, st.rtshow[0].iprtshow, mwan3cnfg, st.mwan3config[0].mwn3cfg, netcnfg, st.netconfig[0].netcfg, ifcnfg, st.ifconfig[0].ifcfg, iprulesh, st.iprule[0].rule, routelisttbl, st.routelist[0].iprtlist, iptable, st.iptables[0].iptbls
 				);
 				tx.innerHTML = temp;
@@ -51,7 +51,9 @@
 </fieldset>
 
 <style type="text/css">
-  .tsht { background-color: rgb(78, 186, 241); }
+  .tsht {
+	background-color: rgb(78, 186, 241);
+  }
   #mwan3_tshoot_text {
 	padding: 20px 0px 20px 0px;
 	text-align: left;

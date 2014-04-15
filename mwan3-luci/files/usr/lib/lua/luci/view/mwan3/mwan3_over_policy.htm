@@ -16,7 +16,7 @@
 			{
 				var temp = '';
 				temp = String.format(
-					'%s',
+					'<pre>%s</pre>',
 						st.mwan3pst[0].polstat
 				);
 				tx.innerHTML = temp;
@@ -38,7 +38,7 @@
 <div id="mwan3_policy_status">
 	<fieldset class="cbi-section">
 		<legend><%:MWAN3 Multi-WAN Policy Live Status%></legend>
-		<div id="mwan3_policy_text" style="text-align:left; white-space:pre-wrap;"><em><%:Collecting data...%></em></div>
+		<div id="mwan3_policy_text"><em><%:Collecting data...%></em></div>
 	</fieldset>
 </div>
 
@@ -50,8 +50,8 @@
   }
   #mwan3_policy_text {
 	padding: 20px;
-	text-align:left;
-	white-space:pre-wrap;
+	text-align: left;
+	white-space: pre-wrap;
   }
 </style>
 
