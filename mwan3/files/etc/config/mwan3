@@ -13,7 +13,7 @@ config interface 'wan'
 	option up '8'
 
 config interface 'wan2'
-	option enabled '1'
+	option enabled '0'
 	list track_ip '8.8.8.8'
 	list track_ip '208.67.220.220'
 	option reliability '1'
