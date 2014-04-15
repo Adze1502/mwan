@@ -4,6 +4,7 @@ ds = require "luci.dispatcher"
 
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Member Configuration"))
+	m5:append(Template("mwan3/mwan3_config_css"))
 
 
 mwan_member = m5:section(TypedSection, "member", translate("Members"),
@@ -28,22 +29,22 @@ interface = mwan_member:option(DummyValue, "interface", translate("Interface"))
 	function interface.cfgvalue(self, s)
 		local interfc = self.map:get(s, "interface")
 		if interfc then
-			return "<br />" .. interfc .. "<br /><br />"
+			return interfc
 		else
-			return "<br /><font size=\"+4\">-</font>"
+			return "<font size=\"+4\">-</font>"
 		end
 	end
 
 metric = mwan_member:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		return self.map:get(s, "metric") or "<br /><font size=\"+4\">-</font>"
+		return self.map:get(s, "metric") or "<font size=\"+4\">-</font>"
 	end
 
 weight = mwan_member:option(DummyValue, "weight", translate("Weight"))
 	weight.rawhtml = true
 	function weight.cfgvalue(self, s)
-		return self.map:get(s, "weight") or "<br /><font size=\"+4\">-</font>"
+		return self.map:get(s, "weight") or "<font size=\"+4\">-</font>"
 	end
 
 

@@ -91,6 +91,7 @@ iface_check()
 
 m5 = Map("mwan3", translate("MWAN3 Multi-WAN Interface Configuration"),
 	translate(iface_warn()))
+	m5:append(Template("mwan3/mwan3_config_css"))
 
 
 mwan_interface = m5:section(TypedSection, "interface", translate("Interfaces"),
@@ -116,32 +117,32 @@ enabled = mwan_interface:option(DummyValue, "enabled", translate("Enabled"))
 	enabled.rawhtml = true
 	function enabled.cfgvalue(self, s)
 		if self.map:get(s, "enabled") == "1" then
-			return "<br />Yes<br /><br />"
+			return "Yes"
 		else
-			return "<br />No<br /><br />"
+			return "No"
 		end
 	end
 
 track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Test IP"))
 	track_ip.rawhtml = true
 	function track_ip.cfgvalue(self, s)
-		local str = "<br />"
+		local str = ""
 		tracked = self.map:get(s, "track_ip")
 		if tracked then
 			for k,v in pairs(tracked) do
 				str = str .. v .. "<br />"
 			end
+			return str
 		else
-			str = "<br /><font size=\"+4\">-</font>"
+			return "<font size=\"+4\">-</font>"
 		end
-		return str .. "<br />"
 	end
 
 reliability = mwan_interface:option(DummyValue, "reliability", translate("Test IP reliability"))
 	reliability.rawhtml = true
 	function reliability.cfgvalue(self, s)
 		if tracked then
-			return self.map:get(s, "reliability") or "<br /><font size=\"+4\">-</font>"
+			return self.map:get(s, "reliability") or "<font size=\"+4\">-</font>"
 		else
 			return "n/a"
 		end
@@ -151,7 +152,7 @@ count = mwan_interface:option(DummyValue, "count", translate("Ping count"))
 	count.rawhtml = true
 	function count.cfgvalue(self, s)
 		if tracked then
-			return self.map:get(s, "count") or "<br /><font size=\"+4\">-</font>"
+			return self.map:get(s, "count") or "<font size=\"+4\">-</font>"
 		else
 			return "n/a"
 		end
@@ -165,7 +166,7 @@ timeout = mwan_interface:option(DummyValue, "timeout", translate("Ping timeout")
 			if tcheck then
 				return tcheck .. "s"
 			else
-				return "<br /><font size=\"+4\">-</font>"
+				return "<font size=\"+4\">-</font>"
 			end
 		else
 			return "n/a"
@@ -180,7 +181,7 @@ interval = mwan_interface:option(DummyValue, "interval", translate("Ping interva
 			if icheck then
 				return icheck .. "s"
 			else
-				return "<br /><font size=\"+4\">-</font>"
+				return "<font size=\"+4\">-</font>"
 			end
 		else
 			return "n/a"
@@ -191,7 +192,7 @@ down = mwan_interface:option(DummyValue, "down", translate("Interface down"))
 	down.rawhtml = true
 	function down.cfgvalue(self, s)
 		if tracked then
-			return self.map:get(s, "down") or "<br /><font size=\"+4\">-</font>"
+			return self.map:get(s, "down") or "<font size=\"+4\">-</font>"
 		else
 			return "n/a"
 		end
@@ -201,7 +202,7 @@ up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 	up.rawhtml = true
 	function up.cfgvalue(self, s)
 		if tracked then
-			return self.map:get(s, "up") or "<br /><font size=\"+4\">-</font>"
+			return self.map:get(s, "up") or "<font size=\"+4\">-</font>"
 		else
 			return "n/a"
 		end
@@ -214,7 +215,7 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 		if metcheck ~= "" then
 			return metcheck
 		else
-			return "<br /><font size=\"+4\">-</font>"
+			return "<font size=\"+4\">-</font>"
 		end
 	end
 
