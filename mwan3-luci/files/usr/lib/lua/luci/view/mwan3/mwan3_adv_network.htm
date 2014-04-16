@@ -4,3 +4,12 @@
 	<li class="cbi-tab"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/network")%>"><%:Network Config%></a></li>
 	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/tshoot")%>"><%:Troubleshooting%></a></li>
 </ul>
+
+<style type="text/css">
+  .container {  /*container for entire page. fixes bootstrap theme's ridiculously small page width*/
+	max-width: none;
+	margin: 0px 0px 0px 30px;
+	padding-right: 30px;
+	width: auto;
+  }
+</style>

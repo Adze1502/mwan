@@ -100,21 +100,11 @@
 </div>
 
 <style type="text/css">
-  .wanon {
-	background-color: rgb(144, 240, 144);
-  }
-  .wanoff {
-	background-color: rgb(240, 144, 144);
-  }
-  .wanon, .wanoff {
-	border-radius: 60px;
-	box-shadow: 0px 2px 5px -3px;
-	float: left;
-	margin: 4px 3px 4px 3px;
-	min-height: 31px;
-	min-width: 235px;
-	padding: 5px 10px 8px 10px;
-	text-align: center;
+  .container {  /*container for entire page. fixes bootstrap theme's ridiculously small page width*/
+	max-width: none;
+	margin: 0px 0px 0px 30px;
+	padding-right: 30px;
+	width: auto;
   }
   #mwan3_interface_status {
 	background-color: #FFFFFF;
@@ -135,6 +125,22 @@
   }
   #mwan3_status_text a {
 	font-weight: bold;
+  }
+  .wanon {
+	background-color: rgb(144, 240, 144);
+  }
+  .wanoff {
+	background-color: rgb(240, 144, 144);
+  }
+  .wanon, .wanoff {
+	border-radius: 60px;
+	box-shadow: 0px 2px 5px -3px;
+	float: left;
+	margin: 4px 3px 4px 3px;
+	min-height: 31px;
+	min-width: 235px;
+	padding: 5px 10px 8px 10px;
+	text-align: center;
   }
   #mwan3_statuslog_text {
 	padding: 20px;
