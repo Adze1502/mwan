@@ -244,7 +244,7 @@ errors = mwan_interface:option(DummyValue, "errors", translate("Errors"))
 			mouseover = mouseover .. linebrk .. "Duplicate metric configured in /etc/config/network"
 		end
 		if mouseover == "" then
-			return mouseover
+			return ""
 		else
 			return "<span title=\"" .. mouseover .. "\"><img src=\"/luci-static/resources/cbi/reset.gif\" alt=\"error\"></img></span>"
 		end

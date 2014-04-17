@@ -24,7 +24,7 @@ function iface_check()
 	end
 	-- check if this interface has a higher reliability requirement than track IPs configured
 	local relnum = ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".reliability"))
-	local tipnum = ut.trim(sys.exec("echo $(uci get -p /var/state mwan3." .. arg[1] .. ".track_ip) | wc - w"))
+	local tipnum = ut.trim(sys.exec("echo $(uci get -p /var/state mwan3." .. arg[1] .. ".track_ip) | wc -w"))
 	if relnum > tipnum then
 		err_reliability = 1
 	end

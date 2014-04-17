@@ -202,6 +202,9 @@ function mwan3_tshoot_data()
 
 	-- ip route show
 	local routeshow = ut.trim(sys.exec("ip route show"))
+		if routeshow == "" then
+			routeshow = "No data found"
+		end
 	rv.rtshow = { }
 	rshw = {}
 	rshw[routeshow] = #rv.rtshow + 1
@@ -209,6 +212,9 @@ function mwan3_tshoot_data()
 
 	-- ip rule show
 	local ipr = ut.trim(sys.exec("ip rule show"))
+		if ipr == "" then
+			ipr = "No data found"
+		end
 	rv.iprule = { }
 	ipruleid = {}
 	ipruleid[ipr] = #rv.iprule + 1
@@ -242,6 +248,9 @@ function mwan3_tshoot_data()
 
 	-- ifconfig
 	local ifcg = ut.trim(sys.exec("ifconfig"))
+		if ifcg == "" then
+			ifcg = "No data found"
+		end
 	rv.ifconfig = { }
 	icfg = {}
 	icfg[ifcg] = #rv.ifconfig + 1
@@ -259,6 +268,9 @@ function mwan3_tshoot_data()
 
 	-- network config
 	local netcg = ut.trim(sys.exec("cat /etc/config/network | sed -e 's/.*username.*/	USERNAME HIDDEN/' -e 's/.*password.*/	PASSWORD HIDDEN/'"))
+		if netcg == "" then
+			netcg = "No data found"
+		end
 	rv.netconfig = { }
 	ncfg = {}
 	ncfg[netcg] = #rv.netconfig + 1

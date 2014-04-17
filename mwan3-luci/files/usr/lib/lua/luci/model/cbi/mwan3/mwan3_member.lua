@@ -27,12 +27,7 @@ mwan_member = m5:section(TypedSection, "member", translate("Members"),
 interface = mwan_member:option(DummyValue, "interface", translate("Interface"))
 	interface.rawhtml = true
 	function interface.cfgvalue(self, s)
-		local interfc = self.map:get(s, "interface")
-		if interfc then
-			return interfc
-		else
-			return "<font size=\"+4\">-</font>"
-		end
+		return self.map:get(s, "interface") or "<font size=\"+4\">-</font>"
 	end
 
 metric = mwan_member:option(DummyValue, "metric", translate("Metric"))
