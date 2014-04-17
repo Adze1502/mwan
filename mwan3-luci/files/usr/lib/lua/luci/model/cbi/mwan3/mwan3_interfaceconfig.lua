@@ -108,10 +108,8 @@ track_ip = mwan_interface:option(DynamicList, "track_ip", translate("Test IP"),
 	track_ip.datatype = "ipaddr"
 
 reliability = mwan_interface:option(Value, "reliability", translate("Test IP reliability"),
-	translate("This many Test IP addresses must respond for the link to be deemed up"),
-	translate("Do not specify a number higher than the ammount of Test IP addresses you have configured"),
-	translate("Acceptable values: 1-1000"))
-	reliability.datatype = "range(1, 1000)"
+	translate("Acceptable values: 1-100. This many Test IP addresses must respond for the link to be deemed up"))
+	reliability.datatype = "range(1, 100)"
 	reliability.default = "1"
 
 count = mwan_interface:option(ListValue, "count", translate("Ping count"))
@@ -166,7 +164,7 @@ down = mwan_interface:option(ListValue, "down", translate("Interface down"),
 
 up = mwan_interface:option(ListValue, "up", translate("Interface up"),
 	translate("Downed interface will be deemed up after this many successful ping tests"))
-	up.default = "5"
+	up.default = "3"
 	up:value("1")
 	up:value("2")
 	up:value("3")
