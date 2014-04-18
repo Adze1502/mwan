@@ -19,14 +19,10 @@ function index()
 		template("mwan3/mwan3_over_interface"))
 	entry({"admin", "network", "mwan3", "overview", "iface_status"},
 		call("mwan3_iface_status"))
-	entry({"admin", "network", "mwan3", "overview", "over_policy"},
-		template("mwan3/mwan3_over_policy"))
-	entry({"admin", "network", "mwan3", "overview", "policy_status"},
-		call("mwan3_policy_status"))
-	entry({"admin", "network", "mwan3", "overview", "over_rule"},
-		template("mwan3/mwan3_over_rule"))
-	entry({"admin", "network", "mwan3", "overview", "rule_status"},
-		call("mwan3_rule_status"))
+	entry({"admin", "network", "mwan3", "overview", "over_detail"},
+		template("mwan3/mwan3_over_detail"))
+	entry({"admin", "network", "mwan3", "overview", "detail_status"},
+		call("mwan3_detail_status"))
 
 	entry({"admin", "network", "mwan3", "configuration"},
 		alias("admin", "network", "mwan3", "configuration", "interface"),
@@ -53,6 +49,8 @@ function index()
 		form("mwan3/mwan3_adv_mwan3"))
 	entry({"admin", "network", "mwan3", "advanced", "network"},
 		form("mwan3/mwan3_adv_network"))
+	entry({"admin", "network", "mwan3", "advanced", "diagnostics"},
+		template("mwan3/mwan3_adv_diagnostics"))
 	entry({"admin", "network", "mwan3", "advanced", "tshoot"},
 		template("mwan3/mwan3_adv_troubleshoot"))
 	entry({"admin", "network", "mwan3", "advanced", "tshoot_display"},
@@ -124,32 +122,16 @@ function mwan3_iface_status()
 	luci.http.write_json(rv)
 end
 
-function mwan3_policy_status()
+function mwan3_detail_status()
 	local rv = {	}
 
-	-- policy status
-	local pst = ut.trim(sys.exec("mwan3 policies"))
-	if pst ~= "" then
-		rv.mwan3pst = { }
-		plstat = {}
-		plstat[pst] = #rv.mwan3pst + 1
-		rv.mwan3pst[plstat[pst]] = { polstat = pst }
-	end
-
-	luci.http.prepare_content("application/json")
-	luci.http.write_json(rv)
-end
-
-function mwan3_rule_status()
-	local rv = {	}
-
-	-- rule status
-	local rst = ut.trim(sys.exec("mwan3 rules"))
-	if rst ~= "" then
-		rv.mwan3rst = { }
-		rlst = {}
-		rlst[rst] = #rv.mwan3rst + 1
-		rv.mwan3rst[rlst[rst]] = { rulestat = rst }
+	-- detailed mwan3 status
+	local dst = ut.trim(sys.exec("mwan3 interfaces; echo; mwan3 policies; echo; mwan3 rules"))
+	if dst ~= "" then
+		rv.mwan3dst = { }
+		dstat = {}
+		dstat[dst] = #rv.mwan3dst + 1
+		rv.mwan3dst[dstat[dst]] = { detailstat = dst }
 	end
 
 	luci.http.prepare_content("application/json")

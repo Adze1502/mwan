@@ -41,7 +41,8 @@ m5 = Map("mwan3", translate("MWAN3 Multi-WAN traffic Rule Configuration"),
 
 mwan_rule = m5:section(TypedSection, "rule", translate("Traffic Rules"),
 	translate("Rules specify which traffic will use a particular MWAN3 policy based on IP address, port or protocol<br />" ..
-	"Rules are matched from top to bottom. Rules after matching rule are ignored. Traffic not matching any rule will be blackholed<br />" ..
+	"Rules are matched from top to bottom. Rules below a matching rule are ignored. Traffic not matching any rule is routed using the main routing table<br />" ..
+	"Traffic destined for known (other than default) networks is handled by the main routing table. Traffic matching a rule, but all WAN interfaces for that policy are down will be blackholed<br />" ..
 	"Names may contain characters A-Z, a-z, 0-9, _ and no spaces<br />" ..
 	"Rules may not share the same name as configured interfaces, members or policies"))
 	mwan_rule.addremove = true
