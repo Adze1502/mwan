@@ -126,18 +126,20 @@ policies()
 			[ -n "$total_weight" ] || total_weight=$(iptables -S $policy -t mangle | grep "$iface " | cut -s -d'"' -f2 | awk '{print $3}')
 		done
 
-		for iface in $(iptables -S $policy -t mangle | cut -s -d'"' -f2 | awk '{print $1}'); do
-			weight=$(iptables -S $policy -t mangle | grep "$iface " | cut -s -d'"' -f2 | awk '{print $2}')
-			percent=$((($weight*100)/$total_weight))
-			echo " $iface ($percent%)"
-		done
-
-		[ -n "$iface" ] || echo " $(iptables -S $policy -t mangle | sed '/.*--comment \([^ ]*\) .*$/!d;s//\1/;q')"
-		
-		unset iface
-		unset total_weight
+		if [ ! -z "${total_weight##*[!0-9]*}" ]; then
+			for iface in $(iptables -S $policy -t mangle | cut -s -d'"' -f2 | awk '{print $1}'); do
+				weight=$(iptables -S $policy -t mangle | grep "$iface " | cut -s -d'"' -f2 | awk '{print $2}')
+				percent=$(($weight*100/$total_weight))
+				echo " $iface ($percent%)"
+			done
+		else
+			echo " $(iptables -S $policy -t mangle | sed '/.*--comment \([^ ]*\) .*$/!d;s//\1/;q')"
+		fi
 
 		echo -e
+
+		unset iface
+		unset total_weight
 	done
 }
 rules()
