@@ -37,14 +37,14 @@
 <div id="mwan3_detail_status">
 	<fieldset class="cbi-section">
 		<legend><%:MWAN3 Multi-WAN Detailed Status%></legend>
-		<div id="mwan3_detail_text"><em><%:Collecting data...%></em></div>
+		<div id="mwan3_detail_text"><img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" /> Collecting data...</div>
 	</fieldset>
 </div>
 
 <style type="text/css">
   .container {  /*container for entire page. fixes bootstrap theme's ridiculously small page width*/
 	max-width: none;
-	margin: 0px 0px 0px 30px;
+	margin-left: 30px;
 	padding-right: 30px;
 	width: auto;
   }
@@ -56,7 +56,6 @@
   #mwan3_detail_text {
 	padding: 20px;
 	text-align: left;
-	white-space: pre-wrap;
   }
 </style>
 

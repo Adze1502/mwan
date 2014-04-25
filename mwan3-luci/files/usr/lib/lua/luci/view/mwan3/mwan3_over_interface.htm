@@ -90,18 +90,18 @@
 <div id="mwan3_interface_status">
 	<fieldset id="interface_field" class="cbi-section">
 		<legend><%:MWAN3 Multi-WAN Interface Live Status%></legend>
-		<div id="mwan3_status_text"><em><%:Collecting data...%></em></div>
+		<div id="mwan3_status_text"><img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" /> Collecting data...</div>
 	</fieldset>
 	<fieldset class="cbi-section">
 		<legend><%:MWAN3 Multi-WAN Interface Systemlog%></legend>
-		<div id="mwan3_statuslog_text"><em><%:Collecting data...%></em></div>
+		<div id="mwan3_statuslog_text"><img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" /> Collecting data...</div>
 	</fieldset>
 </div>
 
 <style type="text/css">
   .container {  /*container for entire page. fixes bootstrap theme's ridiculously small page width*/
 	max-width: none;
-	margin: 0px 0px 0px 30px;
+	margin-left: 30px;
 	padding-right: 30px;
 	width: auto;
   }
@@ -111,7 +111,7 @@
 	padding: 20px;
   }
   #interface_field {
-	padding: 20px 0px 20px 0px;
+	padding: 20px;
   }
   #mwan3_status_text {
 	display: table;
@@ -144,7 +144,6 @@
   #mwan3_statuslog_text {
 	padding: 20px;
 	text-align: left;
-	white-space: pre-wrap;
   }
 </style>
 

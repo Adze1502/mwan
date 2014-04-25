@@ -4,67 +4,102 @@
 	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/hotplug")%>"><%:Hotplug Script%></a></li>
 	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/mwan3")%>"><%:MWAN3 Config%></a></li>
 	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/network")%>"><%:Network Config%></a></li>
-	<li class="cbi-tab"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/diagnostics")%>"><%:Diagnostics%></a></li>
+	<li class="cbi-tab"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/diag")%>"><%:Diagnostics%></a></li>
 	<li class="cbi-tab-disabled"><a href="<%=luci.dispatcher.build_url("admin/network/mwan3/advanced/tshoot")%>"><%:Troubleshooting%></a></li>
 </ul>
 
+<%
+	local uci = require "luci.model.uci"
+
+	str = ""
+	uci.cursor():foreach("mwan3", "interface",
+		function (section)
+			str = str .. section[".name"] .. " "
+		end
+	)
+%>
+
 <script type="text/javascript" src="<%=resource%>/cbi.js"></script>
 <script type="text/javascript">//<![CDATA[
-	XHR.poll(15, '<%=luci.dispatcher.build_url("admin", "network", "mwan3", "advanced", "tshoot_display")%>', null,
-		function(x, st)
-		{
-			var tx = document.getElementById('mwan3_tshoot_text');
-			if (st.fidef)
-			{
-				var temp = '';
-				var mwanvers = 'Software versions : <br /><br />';
-				var firewalldef = '<br /><br />Firewall default output policy (must be ACCEPT) : <br /><br />';
-				var iproute = '<br /><br />Output of &#34;ip route show&#34; : <br /><br />';
-				var mwan3cnfg = '<br /><br />Output of &#34;cat /etc/config/mwan3&#34; : <br /><br />';
-				var netcnfg = '<br /><br />Output of &#34;cat /etc/config/network&#34; : <br /><br />';
-				var ifcnfg = '<br /><br />Output of &#34;ifconfig&#34; : <br /><br />';
-				var iprulesh = '<br /><br />Output of &#34;ip rule show&#34; : <br /><br />';
-				var routelisttbl = '<br /><br />Output of main routing table and &#34;ip route list table 1-250&#34; : <br /><br />';
-				var iptable = '<br /><br />Output of &#34;iptables -L -t mangle -v -n&#34; : <br /><br />';
+	var stxhr = new XHR();
 
-				temp = String.format(
-					'<pre><span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s</pre>',
-						mwanvers, st.mw3ver[0].mwan3v, firewalldef, st.fidef[0].firedef, iproute, st.rtshow[0].iprtshow, mwan3cnfg, st.mwan3config[0].mwn3cfg, netcnfg, st.netconfig[0].netcfg, ifcnfg, st.ifconfig[0].ifcfg, iprulesh, st.iprule[0].rule, routelisttbl, st.routelist[0].iprtlist, iptable, st.iptables[0].iptbls
-				);
-				tx.innerHTML = temp;
-			}
-			else
-			{
-				var temp = '';
-				var terror = 'Error collecting troubleshooting information';
-				temp = String.format(
-					'<strong>%s</strong>',
-						terror
-				);
-				tx.innerHTML = temp;
-			}
+	function update_status(tool, alt)
+	{
+		var iface = document.getElementById('mwan3iface').value;
+		var output = document.getElementById('diag_output');
+
+		if (output)
+		{
+			output.innerHTML =
+				'<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="padding: 20px; vertical-align: middle;" /> ' +
+				'<%:Waiting for diagnostic results...%>'
+			;
+
+			output.parentNode.style.display = 'block';
+			output.style.display = 'inline';
+
+			stxhr.get('<%=luci.dispatcher.build_url("admin", "network", "mwan3", "advanced")%>/diag_display' + '/' + iface + '/' + tool + '/' + alt, null,
+				function(x, st)
+				{
+					if (st.diagres)
+					{
+						output.innerHTML = String.format('<pre id="diag_output_css">%h</pre>', st.diagres[0].diagresult);
+					}
+					else
+					{
+						var temp = '';
+						var ncint = 'No diagnostic results returned';
+						temp = String.format(
+							'<pre id="diag_output_css"><strong>%s</strong></pre>',
+								ncint
+						);
+						output.innerHTML = temp;
+					}
+				}
+			);
 		}
-	);
+	}
 //]]></script>
 
-<fieldset class="cbi-section">
-	<div id="mwan3_tshoot_text"><em><%:Collecting data...%></em></div>
-</fieldset>
+<div id="mwan3_diagnostics" class="cbi-map">
+	<fieldset id="diag_select" class="cbi-section">
+		<legend><%:MWAN3 Diagnostics%></legend>
+		<select id="mwan3iface">
+			<% for z in str:gmatch("[^ ]+") do -%><option value="<%=z%>"><%=z%></option><%- end %>
+		</select>
+		<input type="button" value="<%:Ping default gateway%>" class="cbi-button cbi-button-apply" onclick="update_status('ping', 'gateway')" />
+		<input type="button" value="<%:Ping tracking IP%>" class="cbi-button cbi-button-apply" onclick="update_status('ping', 'track_ip')" />
+		<input type="button" value="<%:Check IP rules%>" class="cbi-button cbi-button-apply" onclick="update_status('rulechk', null)" />
+		<input type="button" value="<%:Check routing table%>" class="cbi-button cbi-button-apply" onclick="update_status('routechk', null)" />
+	</fieldset>
+	<fieldset class="cbi-section" style="display:none">
+		<legend><%:Diagnostic Results%></legend>
+		<div id="diag_output"></div>
+	</fieldset>
+</div>
 
 <style type="text/css">
   .container {  /*container for entire page. fixes bootstrap theme's ridiculously small page width*/
 	max-width: none;
-	margin: 0px 0px 0px 30px;
+	margin-left: 30px;
 	padding-right: 30px;
 	width: auto;
   }
-  #mwan3_tshoot_text {
-	padding: 20px 0px 20px 0px;
-	text-align: left;
-	white-space: pre-wrap;
+  #mwan3_diagnostics {
+	background-color: #FFFFFF;
+	border: 1px dotted #555555;
+	padding: 20px;
   }
-  .tsht {
-	background-color: rgb(78, 186, 241);
+  #diag_select {
+	padding: 20px;
+  }
+  .cbi-button {
+	margin-left: 20px;
+	min-width: 153px;
+  }
+  #diag_output_css {
+	padding: 20px;
+	text-align: left;
   }
 </style>
 

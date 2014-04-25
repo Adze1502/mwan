@@ -50,7 +50,7 @@ function iface_warn() -- display warning messages at the top of the page
 	local warns = ""
 	local linebrk = ""
 	if err_reliability == 1 then
-		warns = "<font color=\"ff0000\"><strong>WARNING: this interface has a higher reliability requirement than there are test IP addresses!</strong></font>"
+		warns = "<font color=\"ff0000\"><strong>WARNING: this interface has a higher reliability requirement than there are tracking IP addresses!</strong></font>"
 		linebrk = "<br /><br />"
 	end
 	if err_route == 1 then
@@ -103,12 +103,12 @@ enabled = mwan_interface:option(ListValue, "enabled", translate("Enabled"))
 	enabled:value("1", translate("Yes"))
 	enabled:value("0", translate("No"))
 
-track_ip = mwan_interface:option(DynamicList, "track_ip", translate("Test IP"),
-	translate("This IP address will be pinged to dermine if the link is up or down"))
+track_ip = mwan_interface:option(DynamicList, "track_ip", translate("Tracking IP"),
+	translate("This IP address will be pinged to dermine if the link is up or down. Leave blank to assume interface is always online"))
 	track_ip.datatype = "ipaddr"
 
-reliability = mwan_interface:option(Value, "reliability", translate("Test IP reliability"),
-	translate("Acceptable values: 1-100. This many Test IP addresses must respond for the link to be deemed up"))
+reliability = mwan_interface:option(Value, "reliability", translate("Tracking IP reliability"),
+	translate("Acceptable values: 1-100. This many Tracking IP addresses must respond for the link to be deemed up"))
 	reliability.datatype = "range(1, 100)"
 	reliability.default = "1"
 

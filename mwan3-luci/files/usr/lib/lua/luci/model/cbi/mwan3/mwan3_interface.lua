@@ -11,7 +11,7 @@ function iface_check() -- find issues with too many interfaces, reliability and 
 			else
 				metric_list = metric_list .. section[".name"] .. " " .. metlkp .. "\n"
 			end
-			-- check if any interfaces have a higher reliability requirement than track IPs configured
+			-- check if any interfaces have a higher reliability requirement than tracking IPs configured
 			local relnum = tonumber(ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".reliability")))
 			local tipnum = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".track_ip"))
 			if relnum and tipnum then
@@ -51,12 +51,12 @@ end
 function iface_warn() -- display status and warning messages at the top of the page
 	local warns = ""
 	if ifnum <= 250 then
-		warns = "<strong>There are currently " .. ifnum .. " of 250 supported interfaces configured!</strong>"
+		warns = "<strong>There are currently " .. ifnum .. " of 250 supported interfaces configured</strong>"
 	else
 		warns = "<font color=\"ff0000\"><strong>WARNING: " .. ifnum .. " interfaces are configured exceeding the maximum of 250!</strong></font>"
 	end
 	if err_rel_list ~= "" then
-		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces have a higher reliability requirement than there are test IP addresses!</strong></font>"
+		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces have a higher reliability requirement than there are tracking IP addresses!</strong></font>"
 	end
 	if err_route_list ~= "" then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces have no default route in the main routing table!</strong></font>"
@@ -123,7 +123,7 @@ enabled = mwan_interface:option(DummyValue, "enabled", translate("Enabled"))
 		end
 	end
 
-track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Test IP"))
+track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Tracking IP"))
 	track_ip.rawhtml = true
 	function track_ip.cfgvalue(self, s)
 		local str = ""
@@ -138,7 +138,7 @@ track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Test IP"))
 		end
 	end
 
-reliability = mwan_interface:option(DummyValue, "reliability", translate("Test IP reliability"))
+reliability = mwan_interface:option(DummyValue, "reliability", translate("Tracking IP reliability"))
 	reliability.rawhtml = true
 	function reliability.cfgvalue(self, s)
 		if tracked then
@@ -225,7 +225,7 @@ errors = mwan_interface:option(DummyValue, "errors", translate("Errors"))
 		local mouseover = ""
 		local linebrk = ""
 		if sys.exec("echo '" .. err_rel_list .. "' | grep -w " .. s) ~= "" then
-			mouseover = "Higher reliability requirement than there are test IP addresses"
+			mouseover = "Higher reliability requirement than there are tracking IP addresses"
 			linebrk = "&#10;&#10;"
 		end
 		if sys.exec("echo '" .. err_route_list .. "' | grep -w " .. s) ~= "" then

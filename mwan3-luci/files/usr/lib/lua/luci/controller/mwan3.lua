@@ -49,8 +49,10 @@ function index()
 		form("mwan3/mwan3_adv_mwan3"))
 	entry({"admin", "network", "mwan3", "advanced", "network"},
 		form("mwan3/mwan3_adv_network"))
-	entry({"admin", "network", "mwan3", "advanced", "diagnostics"},
+	entry({"admin", "network", "mwan3", "advanced", "diag"},
 		template("mwan3/mwan3_adv_diagnostics"))
+	entry({"admin", "network", "mwan3", "advanced", "diag_display"},
+		call("mwan3_diag_data"), nil).leaf = true
 	entry({"admin", "network", "mwan3", "advanced", "tshoot"},
 		template("mwan3/mwan3_adv_troubleshoot"))
 	entry({"admin", "network", "mwan3", "advanced", "tshoot_display"},
@@ -132,6 +134,79 @@ function mwan3_detail_status()
 		dstat = {}
 		dstat[dst] = #rv.mwan3dst + 1
 		rv.mwan3dst[dstat[dst]] = { detailstat = dst }
+	end
+
+	luci.http.prepare_content("application/json")
+	luci.http.write_json(rv)
+end
+
+function mwan3_diag_data(iface, tool, alt)
+	function get_ifnum()
+		local num = 0
+		uci.cursor():foreach("mwan3", "interface",
+			function (section)
+				num = num+1
+				if section[".name"] == iface then
+					ifnum = num
+				end
+			end
+		)
+	end
+
+	local rv = {	}
+
+	local res = ""
+	local ifdev = ut.trim(sys.exec("uci get -p /var/state network." .. iface .. ".ifname"))
+	if ifdev ~= "" then
+		if tool == "ping" then
+			local gateway = ut.trim(sys.exec("route -n | awk -F' ' '{ if ($8 == \"" .. ifdev .. "\" && $1 == \"0.0.0.0\") print $2 }'"))
+			if gateway ~= "" then
+				if alt == "gateway" then
+					local cmd = "ping -c 3 -W 2 -I " .. ifdev .. " " .. gateway
+					res = cmd .. "\n\n" .. sys.exec(cmd)
+				elseif alt == "track_ip" then
+					local str = ut.trim(sys.exec("uci get -p /var/state mwan3." .. iface .. ".track_ip"))
+					if str ~= "" then
+						for z in str:gmatch("[^ ]+") do
+							local cmd = "ping -c 3 -W 2 -I " .. ifdev .. " " .. z
+							res = res .. cmd .. "\n\n" .. sys.exec(cmd) .. "\n\n"
+						end
+					else
+						res = "No tracking IP addresses configured on " .. iface
+					end
+				end
+			else
+				res = "No default gateway for " .. iface .. " found. Default route does not exist or is configured incorrectly"
+			end
+		elseif tool == "rulechk" then
+			get_ifnum()
+			local rule1 = sys.exec("ip rule | grep $(echo $((" .. ifnum .. " + 1000)))")
+			local rule2 = sys.exec("ip rule | grep $(echo $((" .. ifnum .. " + 2000)))")
+			if rule1 ~= "" and rule2 ~= "" then
+				res = "All required interface IP rules found\n\n\nRules found:\n\n" .. rule1 .. rule2
+			elseif rule1 ~= "" or rule2 ~= "" then
+				res = "Missing 1 of the 2 required interface IP rules\n\n\nRules found:\n\n" .. rule1 .. rule2
+			else
+				res = "Missing both of the required interface IP rules"
+			end
+		elseif tool == "routechk" then
+			get_ifnum()
+			local table = sys.exec("ip route list table " .. ifnum)
+			if table ~= "" then
+				res = "Interface routing table " .. ifnum .. " was found:\n\n" .. table
+			else
+				res = "Missing required interface routing table " .. ifnum
+			end
+		end
+	else
+		res = "Unable to perform diagnostic tests on " .. iface .. ". There is no physical or virtual device associated with this interface"
+	end
+	if res ~= "" then
+		res = ut.trim(res)
+		rv.diagres = { }
+		dres = {}
+		dres[res] = #rv.diagres + 1
+		rv.diagres[dres[res]] = { diagresult = res }
 	end
 
 	luci.http.prepare_content("application/json")
