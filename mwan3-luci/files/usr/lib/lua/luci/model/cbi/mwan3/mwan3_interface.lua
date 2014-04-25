@@ -3,39 +3,36 @@
 function iface_check() -- find issues with too many interfaces, reliability and metric
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
+			local ifname = section[".name"]
 			ifnum = ifnum+1 -- count number of mwan3 interfaces configured
 			-- create list of metrics for none and duplicate checking
-			local metlkp = ut.trim(sys.exec("uci get -p /var/state network." .. section[".name"] .. ".metric"))
+			local metlkp = ut.trim(sys.exec("uci get -p /var/state network." .. ifname .. ".metric"))
 			if metlkp == "" then
-				err_nomet_list = err_nomet_list .. section[".name"] .. " "
+				err_nomet_list = err_nomet_list .. ifname .. " "
 			else
-				metric_list = metric_list .. section[".name"] .. " " .. metlkp .. "\n"
+				metric_list = metric_list .. ifname .. " " .. metlkp .. "\n"
 			end
 			-- check if any interfaces have a higher reliability requirement than tracking IPs configured
-			local relnum = tonumber(ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".reliability")))
-			local tipnum = ut.trim(sys.exec("uci get -p /var/state mwan3." .. section[".name"] .. ".track_ip"))
-			if relnum and tipnum then
-				local _, tipnum = string.gsub(tipnum, " ", " ")
-				tipnum = tipnum + 1
-				if relnum > tipnum then
-					err_rel_list = err_rel_list .. section[".name"] .. " "
-				end
+			local relnum = tonumber(ut.trim(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".reliability")))
+			local tipnum = tonumber(ut.trim(sys.exec("echo $(uci get -p /var/state mwan3." .. ifname .. ".track_ip) | wc -w")))
+			if relnum and tipnum and relnum > tipnum then
+				err_rel_list = err_rel_list .. ifname .. " "
 			end
 			-- check if any interfaces are not properly configured in /etc/config/network or have no default route in main routing table
-			if ut.trim(sys.exec("uci get -p /var/state network." .. section[".name"])) == "interface" then
-				local ifdev = ut.trim(sys.exec("uci get -p /var/state network." .. section[".name"] .. ".ifname"))
+			if ut.trim(sys.exec("uci get -p /var/state network." .. ifname)) == "interface" then
+				local ifdev = ut.trim(sys.exec("uci get -p /var/state network." .. ifname .. ".ifname"))
 				if ifdev == "uci: Entry not found" or ifdev == "" then
-					err_netcfg_list = err_netcfg_list .. section[".name"] .. " "
-					err_route_list = err_route_list .. section [".name"] .. " "
+					err_netcfg_list = err_netcfg_list .. ifname .. " "
+					err_route_list = err_route_list .. ifname .. " "
 				else
 					local rtcheck = ut.trim(sys.exec("route -n | awk -F' ' '{ if ($8 == \"" .. ifdev .. "\" && $1 == \"0.0.0.0\") print $1 }'"))
 					if rtcheck == "" then
-						err_route_list = err_route_list .. section [".name"] .. " "
+						err_route_list = err_route_list .. ifname .. " "
 					end
 				end
 			else
-				err_netcfg_list = err_netcfg_list .. section[".name"] .. " "
-				err_route_list = err_route_list .. section [".name"] .. " "
+				err_netcfg_list = err_netcfg_list .. ifname .. " "
+				err_route_list = err_route_list .. ifname .. " "
 			end
 		end
 	)
@@ -46,6 +43,7 @@ function iface_check() -- find issues with too many interfaces, reliability and 
 		metric_dupes = sys.exec("echo '" .. metric_list .. "' | grep '" .. line .. "' | awk -F' ' '{ print $1 }'")
 		err_dupmet_list = err_dupmet_list .. metric_dupes
 	end
+	err_dupmet_list = sys.exec("echo '" .. err_dupmet_list .. "' | tr '\n' ' '")
 end
 
 function iface_warn() -- display status and warning messages at the top of the page
@@ -55,19 +53,19 @@ function iface_warn() -- display status and warning messages at the top of the p
 	else
 		warns = "<font color=\"ff0000\"><strong>WARNING: " .. ifnum .. " interfaces are configured exceeding the maximum of 250!</strong></font>"
 	end
-	if err_rel_list ~= "" then
+	if err_rel_list ~= " " then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces have a higher reliability requirement than there are tracking IP addresses!</strong></font>"
 	end
-	if err_route_list ~= "" then
+	if err_route_list ~= " " then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces have no default route in the main routing table!</strong></font>"
 	end
-	if err_netcfg_list ~= "" then
+	if err_netcfg_list ~= " " then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces are configured incorrectly or not at all in /etc/config/network!</strong></font>"
 	end
-	if err_nomet_list ~= "" then
+	if err_nomet_list ~= " " then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces have no metric configured in /etc/config/network!</strong></font>"
 	end
-	if err_dupmet_list ~= "" then
+	if err_dupmet_list ~= "  " then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces have duplicate metrics configured in /etc/config/network!</strong></font>"
 	end
 	return warns
@@ -81,11 +79,11 @@ ut = require "luci.util"
 
 ifnum = 0
 metric_list = ""
-err_dupmet_list = ""
-err_netcfg_list = ""
-err_nomet_list = ""
-err_rel_list = ""
-err_route_list = ""
+err_dupmet_list = " "
+err_netcfg_list = " "
+err_nomet_list = " "
+err_rel_list = " "
+err_route_list = " "
 iface_check()
 
 
@@ -138,7 +136,7 @@ track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Tracking IP"
 		end
 	end
 
-reliability = mwan_interface:option(DummyValue, "reliability", translate("Tracking IP reliability"))
+reliability = mwan_interface:option(DummyValue, "reliability", translate("Tracking reliability"))
 	reliability.rawhtml = true
 	function reliability.cfgvalue(self, s)
 		if tracked then
@@ -211,7 +209,7 @@ up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		local metcheck = ut.trim(sys.exec("uci get -p /var/state network." .. s .. ".metric"))
+		local metcheck = sys.exec("uci get -p /var/state network." .. s .. ".metric")
 		if metcheck ~= "" then
 			return metcheck
 		else
@@ -224,23 +222,23 @@ errors = mwan_interface:option(DummyValue, "errors", translate("Errors"))
 	function errors.cfgvalue(self, s)
 		local mouseover = ""
 		local linebrk = ""
-		if sys.exec("echo '" .. err_rel_list .. "' | grep -w " .. s) ~= "" then
+		if string.find(err_rel_list, " " .. s .. " ") then
 			mouseover = "Higher reliability requirement than there are tracking IP addresses"
 			linebrk = "&#10;&#10;"
 		end
-		if sys.exec("echo '" .. err_route_list .. "' | grep -w " .. s) ~= "" then
+		if string.find(err_route_list, " " .. s .. " ") then
 			mouseover = mouseover .. linebrk .. "No default route in the main routing table"
 			linebrk = "&#10;&#10;"
 		end
-		if sys.exec("echo '" .. err_netcfg_list .. "' | grep -w " .. s) ~= "" then
+		if string.find(err_netcfg_list, " " .. s .. " ") then
 			mouseover = mouseover .. linebrk .. "Configured incorrectly or not at all in /etc/config/network"
 			linebrk = "&#10;&#10;"
 		end
-		if sys.exec("echo '" .. err_nomet_list .. "' | grep -w " .. s) ~= "" then
+		if string.find(err_nomet_list, " " .. s .. " ") then
 			mouseover = mouseover .. linebrk .. "No metric configured in /etc/config/network"
 			linebrk = "&#10;&#10;"
 		end
-		if sys.exec("echo '" .. err_dupmet_list .. "' | grep -w " .. s) ~= "" then
+		if string.find(err_dupmet_list, " " .. s .. " ") then
 			mouseover = mouseover .. linebrk .. "Duplicate metric configured in /etc/config/network"
 		end
 		if mouseover == "" then

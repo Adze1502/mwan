@@ -16,7 +16,7 @@ function rule_check() -- determine if rules needs a proper protocol configured
 end
 
 function rule_warn() -- display warning messages at the top of the page
-	if err_proto_list ~= "" then
+	if err_proto_list ~= " " then
 		return "<font color=\"ff0000\"><strong>WARNING: some rules have a port configured with no or improper protocol specified! Please configure a specific protocol!</strong></font>"
 	else
 		return ""
@@ -30,7 +30,7 @@ sys = require "luci.sys"
 ut = require "luci.util"
 
 err_proto = 0
-err_proto_list = ""
+err_proto_list = " "
 rule_check()
 
 
@@ -98,7 +98,7 @@ use_policy = mwan_rule:option(DummyValue, "use_policy", translate("Policy assign
 errors = mwan_rule:option(DummyValue, "errors", translate("Errors"))
 	errors.rawhtml = true
 	function errors.cfgvalue(self, s)
-		if sys.exec("echo '" .. err_proto_list .. "' | grep -w " .. s) == "" then
+		if not string.find(err_proto_list, " " .. s .. " ") then
 			return ""
 		else
 			return "<span title=\"No protocol specified\"><img src=\"/luci-static/resources/cbi/reset.gif\" alt=\"error\"></img></span>"

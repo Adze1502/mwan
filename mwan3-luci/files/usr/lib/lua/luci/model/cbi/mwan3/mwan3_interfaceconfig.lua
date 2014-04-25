@@ -23,9 +23,9 @@ function iface_check()
 		end
 	end
 	-- check if this interface has a higher reliability requirement than track IPs configured
-	local relnum = ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".reliability"))
-	local tipnum = ut.trim(sys.exec("echo $(uci get -p /var/state mwan3." .. arg[1] .. ".track_ip) | wc -w"))
-	if relnum > tipnum then
+	local relnum = tonumber(ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".reliability")))
+	local tipnum = tonumber(ut.trim(sys.exec("echo $(uci get -p /var/state mwan3." .. arg[1] .. ".track_ip) | wc -w")))
+	if relnum and tipnum and relnum > tipnum then
 		err_reliability = 1
 	end
 	-- check if any interfaces are not properly configured in /etc/config/network or have no default route in main routing table
@@ -107,7 +107,7 @@ track_ip = mwan_interface:option(DynamicList, "track_ip", translate("Tracking IP
 	translate("This IP address will be pinged to dermine if the link is up or down. Leave blank to assume interface is always online"))
 	track_ip.datatype = "ipaddr"
 
-reliability = mwan_interface:option(Value, "reliability", translate("Tracking IP reliability"),
+reliability = mwan_interface:option(Value, "reliability", translate("Tracking reliability"),
 	translate("Acceptable values: 1-100. This many Tracking IP addresses must respond for the link to be deemed up"))
 	reliability.datatype = "range(1, 100)"
 	reliability.default = "1"
