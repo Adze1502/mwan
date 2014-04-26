@@ -13,10 +13,12 @@ function iface_check() -- find issues with too many interfaces, reliability and 
 				metric_list = metric_list .. ifname .. " " .. metlkp .. "\n"
 			end
 			-- check if any interfaces have a higher reliability requirement than tracking IPs configured
-			local relnum = tonumber(ut.trim(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".reliability")))
 			local tipnum = tonumber(ut.trim(sys.exec("echo $(uci get -p /var/state mwan3." .. ifname .. ".track_ip) | wc -w")))
-			if relnum and tipnum and relnum > tipnum then
-				err_rel_list = err_rel_list .. ifname .. " "
+			if tipnum > 0 then
+				local relnum = tonumber(ut.trim(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".reliability")))
+				if relnum and relnum > tipnum then
+					err_rel_list = err_rel_list .. ifname .. " "
+				end
 			end
 			-- check if any interfaces are not properly configured in /etc/config/network or have no default route in main routing table
 			if ut.trim(sys.exec("uci get -p /var/state network." .. ifname)) == "interface" then

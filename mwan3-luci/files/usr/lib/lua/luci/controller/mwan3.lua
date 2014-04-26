@@ -128,7 +128,7 @@ function mwan3_detail_status()
 	local rv = {	}
 
 	-- detailed mwan3 status
-	local dst = ut.trim(sys.exec("mwan3 interfaces; echo; mwan3 policies; echo; mwan3 rules"))
+	local dst = ut.trim(sys.exec("mwan3 status"))
 	if dst ~= "" then
 		rv.mwan3dst = { }
 		dstat = {}

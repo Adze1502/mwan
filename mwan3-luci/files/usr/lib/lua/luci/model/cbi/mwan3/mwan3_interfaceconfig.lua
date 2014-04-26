@@ -23,10 +23,12 @@ function iface_check()
 		end
 	end
 	-- check if this interface has a higher reliability requirement than track IPs configured
-	local relnum = tonumber(ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".reliability")))
 	local tipnum = tonumber(ut.trim(sys.exec("echo $(uci get -p /var/state mwan3." .. arg[1] .. ".track_ip) | wc -w")))
-	if relnum and tipnum and relnum > tipnum then
-		err_reliability = 1
+	if tipnum > 0 then
+		local relnum = tonumber(ut.trim(sys.exec("uci get -p /var/state mwan3." .. arg[1] .. ".reliability")))
+		if relnum and relnum > tipnum then
+			err_reliability = 1
+		end
 	end
 	-- check if any interfaces are not properly configured in /etc/config/network or have no default route in main routing table
 	if ut.trim(sys.exec("uci get -p /var/state network." .. arg[1])) == "interface" then

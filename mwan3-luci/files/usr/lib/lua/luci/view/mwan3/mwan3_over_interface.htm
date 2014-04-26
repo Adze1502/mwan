@@ -23,22 +23,22 @@
 					switch (st.wans[i].status)
 					{
 						case 'on':
-							stat = 'ONLINE';
+							stat = 'Online (tracking active)';
 							cssc = 'wanon';
 							break;
 
 						case 'nm':
-							stat = 'not monitored';
+							stat = 'Online (tracking off)';
 							cssc = 'wanon';
 							break;
 
 						case 'off':
-							stat = 'OFFLINE';
+							stat = 'Offline';
 							cssc = 'wanoff';
 							break;
 
 						case 'ne':
-							stat = 'not enabled';
+							stat = 'Disabled';
 							cssc = 'wanoff';
 							break;
 					}
