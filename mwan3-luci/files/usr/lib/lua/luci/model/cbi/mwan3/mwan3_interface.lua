@@ -8,6 +8,7 @@ function iface_check() -- find issues with too many interfaces, reliability and 
 			-- create list of metrics for none and duplicate checking
 			local metlkp = ut.trim(sys.exec("uci get -p /var/state network." .. ifname .. ".metric"))
 			if metlkp == "" then
+				err_found = 1
 				err_nomet_list = err_nomet_list .. ifname .. " "
 			else
 				metric_list = metric_list .. ifname .. " " .. metlkp .. "\n"
@@ -17,6 +18,7 @@ function iface_check() -- find issues with too many interfaces, reliability and 
 			if tipnum > 0 then
 				local relnum = tonumber(ut.trim(sys.exec("uci get -p /var/state mwan3." .. ifname .. ".reliability")))
 				if relnum and relnum > tipnum then
+					err_found = 1
 					err_rel_list = err_rel_list .. ifname .. " "
 				end
 			end
@@ -24,15 +26,18 @@ function iface_check() -- find issues with too many interfaces, reliability and 
 			if ut.trim(sys.exec("uci get -p /var/state network." .. ifname)) == "interface" then
 				local ifdev = ut.trim(sys.exec("uci get -p /var/state network." .. ifname .. ".ifname"))
 				if ifdev == "uci: Entry not found" or ifdev == "" then
+					err_found = 1
 					err_netcfg_list = err_netcfg_list .. ifname .. " "
 					err_route_list = err_route_list .. ifname .. " "
 				else
 					local rtcheck = ut.trim(sys.exec("route -n | awk -F' ' '{ if ($8 == \"" .. ifdev .. "\" && $1 == \"0.0.0.0\") print $1 }'"))
 					if rtcheck == "" then
+						err_found = 1
 						err_route_list = err_route_list .. ifname .. " "
 					end
 				end
 			else
+				err_found = 1
 				err_netcfg_list = err_netcfg_list .. ifname .. " "
 				err_route_list = err_route_list .. ifname .. " "
 			end
@@ -40,12 +45,15 @@ function iface_check() -- find issues with too many interfaces, reliability and 
 	)
 	-- check if any interfaces have duplicate metrics
 	local metric_dupnums = sys.exec("echo '" .. metric_list .. "' | awk -F' ' '{ print $2 }' | uniq -d")
-	local metric_dupes = ""
-	for line in metric_dupnums:gmatch("[^\r\n]+") do
-		metric_dupes = sys.exec("echo '" .. metric_list .. "' | grep '" .. line .. "' | awk -F' ' '{ print $1 }'")
-		err_dupmet_list = err_dupmet_list .. metric_dupes
+	if metric_dupnums ~= "" then
+		err_found = 1
+		local metric_dupes = ""
+		for line in metric_dupnums:gmatch("[^\r\n]+") do
+			metric_dupes = sys.exec("echo '" .. metric_list .. "' | grep '" .. line .. "' | awk -F' ' '{ print $1 }'")
+			err_dupmet_list = err_dupmet_list .. metric_dupes
+		end
+		err_dupmet_list = sys.exec("echo '" .. err_dupmet_list .. "' | tr '\n' ' '")
 	end
-	err_dupmet_list = sys.exec("echo '" .. err_dupmet_list .. "' | tr '\n' ' '")
 end
 
 function iface_warn() -- display status and warning messages at the top of the page
@@ -67,7 +75,7 @@ function iface_warn() -- display status and warning messages at the top of the p
 	if err_nomet_list ~= " " then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces have no metric configured in /etc/config/network!</strong></font>"
 	end
-	if err_dupmet_list ~= "  " then
+	if err_dupmet_list ~= " " then
 		warns = warns .. "<br /><br /><font color=\"ff0000\"><strong>WARNING: some interfaces have duplicate metrics configured in /etc/config/network!</strong></font>"
 	end
 	return warns
@@ -81,6 +89,7 @@ ut = require "luci.util"
 
 ifnum = 0
 metric_list = ""
+err_found = 0
 err_dupmet_list = " "
 err_netcfg_list = " "
 err_nomet_list = " "
@@ -222,31 +231,34 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 errors = mwan_interface:option(DummyValue, "errors", translate("Errors"))
 	errors.rawhtml = true
 	function errors.cfgvalue(self, s)
-		local mouseover = ""
-		local linebrk = ""
-		if string.find(err_rel_list, " " .. s .. " ") then
-			mouseover = "Higher reliability requirement than there are tracking IP addresses"
-			linebrk = "&#10;&#10;"
-		end
-		if string.find(err_route_list, " " .. s .. " ") then
-			mouseover = mouseover .. linebrk .. "No default route in the main routing table"
-			linebrk = "&#10;&#10;"
-		end
-		if string.find(err_netcfg_list, " " .. s .. " ") then
-			mouseover = mouseover .. linebrk .. "Configured incorrectly or not at all in /etc/config/network"
-			linebrk = "&#10;&#10;"
-		end
-		if string.find(err_nomet_list, " " .. s .. " ") then
-			mouseover = mouseover .. linebrk .. "No metric configured in /etc/config/network"
-			linebrk = "&#10;&#10;"
-		end
-		if string.find(err_dupmet_list, " " .. s .. " ") then
-			mouseover = mouseover .. linebrk .. "Duplicate metric configured in /etc/config/network"
-		end
-		if mouseover == "" then
-			return ""
+		if err_found == 1 then
+			local mouseover, linebrk = "", ""
+			if string.find(err_rel_list, " " .. s .. " ") then
+				mouseover = "Higher reliability requirement than there are tracking IP addresses"
+				linebrk = "&#10;&#10;"
+			end
+			if string.find(err_route_list, " " .. s .. " ") then
+				mouseover = mouseover .. linebrk .. "No default route in the main routing table"
+				linebrk = "&#10;&#10;"
+			end
+			if string.find(err_netcfg_list, " " .. s .. " ") then
+				mouseover = mouseover .. linebrk .. "Configured incorrectly or not at all in /etc/config/network"
+				linebrk = "&#10;&#10;"
+			end
+			if string.find(err_nomet_list, " " .. s .. " ") then
+				mouseover = mouseover .. linebrk .. "No metric configured in /etc/config/network"
+				linebrk = "&#10;&#10;"
+			end
+			if string.find(err_dupmet_list, " " .. s .. " ") then
+				mouseover = mouseover .. linebrk .. "Duplicate metric configured in /etc/config/network"
+			end
+			if mouseover == "" then
+				return ""
+			else
+				return "<span title=\"" .. mouseover .. "\"><img src=\"/luci-static/resources/cbi/reset.gif\" alt=\"error\"></img></span>"
+			end
 		else
-			return "<span title=\"" .. mouseover .. "\"><img src=\"/luci-static/resources/cbi/reset.gif\" alt=\"error\"></img></span>"
+			return ""
 		end
 	end
 

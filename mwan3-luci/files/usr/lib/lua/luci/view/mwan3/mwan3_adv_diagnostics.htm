@@ -67,10 +67,12 @@
 		<select id="mwan3iface">
 			<% for z in str:gmatch("[^ ]+") do -%><option value="<%=z%>"><%=z%></option><%- end %>
 		</select>
-		<input type="button" value="<%:Ping default gateway%>" class="cbi-button cbi-button-apply" onclick="update_status('ping', 'gateway')" />
-		<input type="button" value="<%:Ping tracking IP%>" class="cbi-button cbi-button-apply" onclick="update_status('ping', 'track_ip')" />
-		<input type="button" value="<%:Check IP rules%>" class="cbi-button cbi-button-apply" onclick="update_status('rulechk', null)" />
-		<input type="button" value="<%:Check routing table%>" class="cbi-button cbi-button-apply" onclick="update_status('routechk', null)" />
+		<div id="buttoncss">
+			<input type="button" value="<%:Ping default gateway%>" class="cbi-button cbi-button-apply" onclick="update_status('ping', 'gateway')" />
+			<input type="button" value="<%:Ping tracking IP%>" class="cbi-button cbi-button-apply" onclick="update_status('ping', 'track_ip')" />
+			<input type="button" value="<%:Check IP rules%>" class="cbi-button cbi-button-apply" onclick="update_status('rulechk', null)" />
+			<input type="button" value="<%:Check routing table%>" class="cbi-button cbi-button-apply" onclick="update_status('routechk', null)" />
+		</div>
 	</fieldset>
 	<fieldset class="cbi-section" style="display:none">
 		<legend><%:Diagnostic Results%></legend>
@@ -91,10 +93,19 @@
 	padding: 20px;
   }
   #diag_select {
-	padding: 20px;
+	padding: 12px 20px 20px 20px;
+  }
+  #mwan3iface {
+	float: left;
+	margin: 8px 20px 0px 0px;
+  }
+  #buttoncss {
+	display: table;
+	float: left;
+	text-align: left;
   }
   .cbi-button {
-	margin-left: 20px;
+	margin: 8px 20px 0px 0px;
 	min-width: 153px;
   }
   #diag_output_css {

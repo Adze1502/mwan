@@ -76,8 +76,7 @@ function mwan3_get_iface_status(rulenum, ifname)
 end
 
 function mwan3_get_iface()
-	local str = ""
-	local rulenum = 0
+	local rulenum, str = 0, ""
 	uci.cursor():foreach("mwan3", "interface",
 		function (section)
 			rulenum = rulenum+1
@@ -155,8 +154,7 @@ function mwan3_diag_data(iface, tool, alt)
 
 	local rv = {	}
 
-	local res = ""
-	local ifdev = ut.trim(sys.exec("uci get -p /var/state network." .. iface .. ".ifname"))
+	local ifdev, res = ut.trim(sys.exec("uci get -p /var/state network." .. iface .. ".ifname")), ""
 	if ifdev ~= "" then
 		if tool == "ping" then
 			local gateway = ut.trim(sys.exec("route -n | awk -F' ' '{ if ($8 == \"" .. ifdev .. "\" && $1 == \"0.0.0.0\") print $2 }'"))

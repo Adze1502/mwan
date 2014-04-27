@@ -12,8 +12,7 @@ function iface_check()
 			end
 		)
 		-- compare metric against list
-		local metric_dupnums = sys.exec("echo '" .. metric_list .. "' | awk -F' ' '{ print $2 }' | uniq -d")
-		local metric_dupes = ""
+		local metric_dupnums, metric_dupes = sys.exec("echo '" .. metric_list .. "' | awk -F' ' '{ print $2 }' | uniq -d"), ""
 		for line in metric_dupnums:gmatch("[^\r\n]+") do
 			metric_dupes = sys.exec("echo '" .. metric_list .. "' | grep '" .. line .. "' | awk -F' ' '{ print $1 }'")
 			err_dupmet_list = err_dupmet_list .. metric_dupes
@@ -49,8 +48,7 @@ function iface_check()
 end
 
 function iface_warn() -- display warning messages at the top of the page
-	local warns = ""
-	local linebrk = ""
+	local warns, linebrk = "", ""
 	if err_reliability == 1 then
 		warns = "<font color=\"ff0000\"><strong>WARNING: this interface has a higher reliability requirement than there are tracking IP addresses!</strong></font>"
 		linebrk = "<br /><br />"
