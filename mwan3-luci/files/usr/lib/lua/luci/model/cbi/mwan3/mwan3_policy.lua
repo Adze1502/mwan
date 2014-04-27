@@ -63,7 +63,7 @@ use_member = mwan_policy:option(DummyValue, "use_member", translate("Members ass
 			end
 			return str
 		else
-			return "<font size=\"+4\">-</font>"
+			return "&#8212;"
 		end
 		
 	end

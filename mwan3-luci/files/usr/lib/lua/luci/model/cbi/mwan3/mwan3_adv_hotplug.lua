@@ -18,7 +18,7 @@ m5 = SimpleForm("luci", nil)
 	m5:append(Template("mwan3/mwan3_adv_hotplug")) -- highlight current tab
 
 f = m5:section(SimpleSection, nil,
-	translate("<br />This section allows you to modify the contents of /etc/hotplug.d/iface/16-mwan3custom<br />" ..
+	translate("This section allows you to modify the contents of /etc/hotplug.d/iface/16-mwan3custom<br />" ..
 	"This is useful for running system commands and/or scripts based on interface ifup or ifdown hotplug events<br /><br />" ..
 	"Notes:<br />" ..
 	"The first line of the script must be &#34;#!/bin/sh&#34; without quotes<br />" ..
@@ -26,7 +26,7 @@ f = m5:section(SimpleSection, nil,
 	"Available variables:<br />" ..
 	"$ACTION is the hotplug event (ifup, ifdown)<br />" ..
 	"$INTERFACE is the interface name (wan1, wan2, etc.)<br />" ..
-	"$DEVICE is the device name attached to the interface (eth0.1, eth1, etc.)<br /><br />"))
+	"$DEVICE is the device name attached to the interface (eth0.1, eth1, etc.)"))
 
 
 restore = f:option(Button, "_restorebak", translate("Restore default hotplug script"))

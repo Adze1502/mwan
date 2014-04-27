@@ -143,7 +143,7 @@ track_ip = mwan_interface:option(DummyValue, "track_ip", translate("Tracking IP"
 			end
 			return str
 		else
-			return "<font size=\"+4\">-</font>"
+			return "&#8212;"
 		end
 	end
 
@@ -151,9 +151,9 @@ reliability = mwan_interface:option(DummyValue, "reliability", translate("Tracki
 	reliability.rawhtml = true
 	function reliability.cfgvalue(self, s)
 		if tracked then
-			return self.map:get(s, "reliability") or "<font size=\"+4\">-</font>"
+			return self.map:get(s, "reliability") or "&#8212;"
 		else
-			return "n/a"
+			return "&#8212;"
 		end
 	end
 
@@ -161,9 +161,9 @@ count = mwan_interface:option(DummyValue, "count", translate("Ping count"))
 	count.rawhtml = true
 	function count.cfgvalue(self, s)
 		if tracked then
-			return self.map:get(s, "count") or "<font size=\"+4\">-</font>"
+			return self.map:get(s, "count") or "&#8212;"
 		else
-			return "n/a"
+			return "&#8212;"
 		end
 	end
 
@@ -175,10 +175,10 @@ timeout = mwan_interface:option(DummyValue, "timeout", translate("Ping timeout")
 			if tcheck then
 				return tcheck .. "s"
 			else
-				return "<font size=\"+4\">-</font>"
+				return "&#8212;"
 			end
 		else
-			return "n/a"
+			return "&#8212;"
 		end
 	end
 
@@ -190,10 +190,10 @@ interval = mwan_interface:option(DummyValue, "interval", translate("Ping interva
 			if icheck then
 				return icheck .. "s"
 			else
-				return "<font size=\"+4\">-</font>"
+				return "&#8212;"
 			end
 		else
-			return "n/a"
+			return "&#8212;"
 		end
 	end
 
@@ -201,9 +201,9 @@ down = mwan_interface:option(DummyValue, "down", translate("Interface down"))
 	down.rawhtml = true
 	function down.cfgvalue(self, s)
 		if tracked then
-			return self.map:get(s, "down") or "<font size=\"+4\">-</font>"
+			return self.map:get(s, "down") or "&#8212;"
 		else
-			return "n/a"
+			return "&#8212;"
 		end
 	end
 
@@ -211,9 +211,9 @@ up = mwan_interface:option(DummyValue, "up", translate("Interface up"))
 	up.rawhtml = true
 	function up.cfgvalue(self, s)
 		if tracked then
-			return self.map:get(s, "up") or "<font size=\"+4\">-</font>"
+			return self.map:get(s, "up") or "&#8212;"
 		else
-			return "n/a"
+			return "&#8212;"
 		end
 	end
 
@@ -224,7 +224,7 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"))
 		if metcheck ~= "" then
 			return metcheck
 		else
-			return "<font size=\"+4\">-</font>"
+			return "&#8212;"
 		end
 	end
 

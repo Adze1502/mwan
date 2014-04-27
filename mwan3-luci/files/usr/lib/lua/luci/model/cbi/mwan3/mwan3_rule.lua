@@ -34,7 +34,7 @@ err_proto_list = " "
 rule_check()
 
 
-m5 = Map("mwan3", translate("MWAN3 Multi-WAN traffic Rule Configuration"),
+m5 = Map("mwan3", translate("MWAN3 Multi-WAN Traffic Rule Configuration"),
 	translate(rule_warn()))
 	m5:append(Template("mwan3/mwan3_config_css"))
 
@@ -62,25 +62,25 @@ mwan_rule = m5:section(TypedSection, "rule", translate("Traffic Rules"),
 src_ip = mwan_rule:option(DummyValue, "src_ip", translate("Source address"))
 	src_ip.rawhtml = true
 	function src_ip.cfgvalue(self, s)
-		return self.map:get(s, "src_ip") or "<font size=\"+4\">-</font>"
+		return self.map:get(s, "src_ip") or "&#8212;"
 	end
 
 src_port = mwan_rule:option(DummyValue, "src_port", translate("Source port"))
 	src_port.rawhtml = true
 	function src_port.cfgvalue(self, s)
-		return self.map:get(s, "src_port") or "<font size=\"+4\">-</font>"
+		return self.map:get(s, "src_port") or "&#8212;"
 	end
 
 dest_ip = mwan_rule:option(DummyValue, "dest_ip", translate("Destination address"))
 	dest_ip.rawhtml = true
 	function dest_ip.cfgvalue(self, s)
-		return self.map:get(s, "dest_ip") or "<font size=\"+4\">-</font>"
+		return self.map:get(s, "dest_ip") or "&#8212;"
 	end
 
 dest_port = mwan_rule:option(DummyValue, "dest_port", translate("Destination port"))
 	dest_port.rawhtml = true
 	function dest_port.cfgvalue(self, s)
-		return self.map:get(s, "dest_port") or "<font size=\"+4\">-</font>"
+		return self.map:get(s, "dest_port") or "&#8212;"
 	end
 
 proto = mwan_rule:option(DummyValue, "proto", translate("Protocol"))
@@ -92,7 +92,7 @@ proto = mwan_rule:option(DummyValue, "proto", translate("Protocol"))
 use_policy = mwan_rule:option(DummyValue, "use_policy", translate("Policy assigned"))
 	use_policy.rawhtml = true
 	function use_policy.cfgvalue(self, s)
-		return self.map:get(s, "use_policy") or "<font size=\"+4\">-</font>"
+		return self.map:get(s, "use_policy") or "&#8212;"
 	end
 
 errors = mwan_rule:option(DummyValue, "errors", translate("Errors"))

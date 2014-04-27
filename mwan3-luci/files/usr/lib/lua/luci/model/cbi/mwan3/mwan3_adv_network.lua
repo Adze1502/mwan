@@ -10,7 +10,7 @@ m5 = SimpleForm("networkconf", nil)
 
 
 f = m5:section(SimpleSection, nil,
-	translate("<br />This section allows you to modify the contents of /etc/config/network<br /><br />"))
+	translate("This section allows you to modify the contents of /etc/config/network"))
 
 t = f:option(TextValue, "lines")
 	t.rmempty = true

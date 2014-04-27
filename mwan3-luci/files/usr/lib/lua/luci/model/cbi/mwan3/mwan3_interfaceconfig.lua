@@ -180,10 +180,10 @@ metric = mwan_interface:option(DummyValue, "metric", translate("Metric"),
 	translate("This displays the metric assigned to this interface in /etc/config/network"))
 	metric.rawhtml = true
 	function metric.cfgvalue(self, s)
-		if err_nomet == 1 then
-			return "<font size=\"+4\">-</font>"
-		else
+		if err_nomet == 0 then
 			return metcheck
+		else
+			return "&#8212;"
 		end
 	end
 
