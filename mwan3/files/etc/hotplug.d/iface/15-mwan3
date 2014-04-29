@@ -286,7 +286,6 @@ mwan3_ifupdown()
 		[ "$enabled" -eq 1 ] || exit 0
 
 		count=0
-
 		while [ -z "$(ip -4 route list dev $DEVICE default | head -1)" -a "$count" -lt 10 ]; do
 			sleep 1
 			let count++
@@ -294,18 +293,20 @@ mwan3_ifupdown()
 				logger -t mwan3 -p warn "Could not find gateway for interface $INTERFACE ($DEVICE)" && exit 0
 			fi
 		done
-
-		while [ "$(pgrep -f -o hotplug-call)" -ne $$ -a "$count" -lt 60 ]; do
-			sleep 1
-			let count++
-			if [ "$count" -ge 60 ]; then
-				logger -t mwan3 -p warn "Timeout waiting for older hotplug processes to finish. $ACTION interface $INTERFACE ($DEVICE) aborted" && exit 0
-			fi
-		done
-								
 		unset count
+
 		mwan3_get_route_args
 	fi
+
+	count=0
+	while [ "$(pgrep -f -o hotplug-call)" -ne $$ -a "$count" -lt 60 ]; do
+		sleep 1
+		let count++
+		if [ "$count" -ge 60 ]; then
+			logger -t mwan3 -p warn "Timeout waiting for older hotplug processes to finish. $ACTION interface $INTERFACE ($DEVICE) aborted" && exit 0
+		fi
+	done
+	unset count
 
 	config_foreach mwan3_get_iface_id interface
 
