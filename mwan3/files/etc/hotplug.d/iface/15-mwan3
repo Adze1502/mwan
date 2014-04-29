@@ -36,12 +36,20 @@ mwan3_set_general_iptables()
 		iptables -A mwan3_hook -t mangle -j CONNMARK --save-mark --nfmask 0xff00 --ctmask 0xff00
 	fi
 
+	if ! iptables -S mwan3_track_hook -t mangle &> /dev/null; then
+		iptables -N mwan3_track_hook -t mangle
+	fi
+
 	if ! iptables -S PREROUTING -t mangle | grep mwan3_hook &> /dev/null; then
 		iptables -A PREROUTING -t mangle -j mwan3_hook
 	fi
 
 	if ! iptables -S OUTPUT -t mangle | grep mwan3_hook &> /dev/null; then
 		iptables -A OUTPUT -t mangle -j mwan3_hook
+	fi
+
+	if ! iptables -S OUTPUT -t mangle | grep mwan3_track_hook &> /dev/null; then
+		iptables -A OUTPUT -t mangle -j mwan3_track_hook
 	fi
 
 	iptables -F mwan3_rules -t mangle
@@ -123,7 +131,7 @@ mwan3_set_iface_rules()
 
 mwan3_track()
 {
-	local track_ips reliability count timeout interval down up
+	local track_ip track_ips reliability count timeout interval down up
 
 	mwan3_list_track_ips()
 	{
@@ -139,7 +147,21 @@ mwan3_track()
 		config_get down $INTERFACE down 5
 		config_get up $INTERFACE up 5
 
+		if ! iptables -S mwan3_track_$INTERFACE -t mangle &> /dev/null; then
+			iptables -N mwan3_track_$INTERFACE -t mangle
+			iptables -A mwan3_track_hook -t mangle -j mwan3_track_$INTERFACE
+		fi
+
+		iptables -F mwan3_track_$INTERFACE -t mangle
+
+		for track_ip in $track_ips; do
+			iptables -A mwan3_track_$INTERFACE -t mangle -p icmp -m icmp --icmp-type 8 -d $track_ip -o $DEVICE -j MARK --set-xmark 0xff00/0xff00
+		done
+
 		[ -x /usr/sbin/mwan3track ] && /usr/sbin/mwan3track $INTERFACE $DEVICE $reliability $count $timeout $interval $down $up $track_ips &
+	else
+		iptables -D mwan3_track_hook -t mangle -j mwan3_track_$INTERFACE &> /dev/null
+		iptables -X mwan3_track_$INTERFACE -t mangle &> /dev/null
 	fi
 }
 
@@ -265,7 +287,6 @@ mwan3_ifupdown()
 
 		count=0
 
-		#while [ -z "$(ip -4 route list dev $DEVICE default | sed '/.*metric \([^ ]*\) .*$/!d;s//\1/;q')" -a "$count" -lt 10 ]; do
 		while [ -z "$(ip -4 route list dev $DEVICE default | head -1)" -a "$count" -lt 10 ]; do
 			sleep 1
 			let count++

@@ -191,6 +191,7 @@ stop()
 
 	iptables -D PREROUTING -t mangle -j mwan3_hook &> /dev/null
 	iptables -D OUTPUT -t mangle -j mwan3_hook &> /dev/null
+	iptables -D OUTPUT -t mangle -j mwan3_track_hook &> /dev/null
 
 	for table in $(iptables -S -t mangle | awk '{print $2}' | grep mwan3 | sort -u); do
 		iptables -F $table -t mangle &> /dev/null
