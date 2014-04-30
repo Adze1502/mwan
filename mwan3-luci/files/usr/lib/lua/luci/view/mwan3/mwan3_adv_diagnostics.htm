@@ -28,42 +28,49 @@
 		var iface = document.getElementById('mwan3iface').value;
 		var output = document.getElementById('diag_output');
 
-		if (output)
-		{
-			output.innerHTML =
-				'<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="padding: 20px; vertical-align: middle;" /> ' +
-				'<%:Waiting for diagnostic results...%>'
-			;
+		if (tool == "service")
+			{
+				output.innerHTML =
+					'<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="padding: 20px; vertical-align: middle;" /> ' +
+					"Waiting for MWAN3 to " + alt + "..."
+				;
+			}
+			else
+			{
+				output.innerHTML =
+					'<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="padding: 20px; vertical-align: middle;" /> ' +
+					"Waiting for diagnostic results..."
+				;
+			}
 
-			output.parentNode.style.display = 'block';
-			output.style.display = 'inline';
+		output.parentNode.style.display = 'block';
+		output.style.display = 'inline';
 
-			stxhr.get('<%=luci.dispatcher.build_url("admin", "network", "mwan3", "advanced")%>/diag_display' + '/' + iface + '/' + tool + '/' + alt, null,
-				function(x, st)
+		stxhr.get('<%=luci.dispatcher.build_url("admin", "network", "mwan3", "advanced")%>/diag_display' + '/' + iface + '/' + tool + '/' + alt, null,
+			function(x, st)
+			{
+				if (st.diagres)
 				{
-					if (st.diagres)
-					{
-						output.innerHTML = String.format('<pre id="diag_output_css">%h</pre>', st.diagres[0].diagresult);
-					}
-					else
-					{
-						var temp = '';
-						var ncint = 'No diagnostic results returned';
-						temp = String.format(
-							'<pre id="diag_output_css"><strong>%s</strong></pre>',
-								ncint
-						);
-						output.innerHTML = temp;
-					}
+					output.innerHTML = String.format('<pre id="diag_output_css">%h</pre>', st.diagres[0].diagresult);
 				}
-			);
-		}
+				else
+				{
+					var temp = '';
+					var ncint = 'No diagnostic results returned';
+					temp = String.format(
+						'<pre id="diag_output_css"><strong>%s</strong></pre>',
+							ncint
+					);
+					output.innerHTML = temp;
+				}
+			}
+		);
 	}
 //]]></script>
 
 <div id="mwan3_diagnostics" class="cbi-map">
 	<fieldset id="diag_select" class="cbi-section">
-		<legend><%:MWAN3 Diagnostics%></legend>
+		<legend><%:MWAN3 Interface Diagnostics%></legend>
 		<select id="mwan3iface">
 			<% for z in str:gmatch("[^ ]+") do -%><option value="<%=z%>"><%=z%></option><%- end %>
 		</select>
@@ -72,6 +79,14 @@
 			<input type="button" value="<%:Ping tracking IP%>" class="cbi-button cbi-button-apply" onclick="update_status('ping', 'track_ip')" />
 			<input type="button" value="<%:Check IP rules%>" class="cbi-button cbi-button-apply" onclick="update_status('rulechk', null)" />
 			<input type="button" value="<%:Check routing table%>" class="cbi-button cbi-button-apply" onclick="update_status('routechk', null)" />
+		</div>
+	</fieldset>
+	<fieldset id="diag_select" class="cbi-section">
+		<legend><%:MWAN3 Service Control%></legend>
+		<div id="buttoncss">
+			<input type="button" value="<%:Restart MWAN3%>" class="cbi-button cbi-button-apply" onclick="update_status('service', 'restart')" />
+			<input type="button" value="<%:Stop MWAN3%>" class="cbi-button cbi-button-apply" onclick="update_status('service', 'stop')" />
+			<input type="button" value="<%:Start MWAN3%>" class="cbi-button cbi-button-apply" onclick="update_status('service', 'start')" />
 		</div>
 	</fieldset>
 	<fieldset class="cbi-section" style="display:none">

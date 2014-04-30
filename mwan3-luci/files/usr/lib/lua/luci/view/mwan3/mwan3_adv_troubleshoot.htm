@@ -18,18 +18,18 @@
 			{
 				var temp = '';
 				var mwanvers = 'Software versions : <br /><br />';
-				var firewalldef = '<br /><br />Firewall default output policy (must be ACCEPT) : <br /><br />';
-				var iproute = '<br /><br />Output of &#34;ip route show&#34; : <br /><br />';
 				var mwan3cnfg = '<br /><br />Output of &#34;cat /etc/config/mwan3&#34; : <br /><br />';
 				var netcnfg = '<br /><br />Output of &#34;cat /etc/config/network&#34; : <br /><br />';
 				var ifcnfg = '<br /><br />Output of &#34;ifconfig&#34; : <br /><br />';
+				var iproute = '<br /><br />Output of &#34;route -n&#34; : <br /><br />';
 				var iprulesh = '<br /><br />Output of &#34;ip rule show&#34; : <br /><br />';
-				var routelisttbl = '<br /><br />Output of main routing table and &#34;ip route list table 1-250&#34; : <br /><br />';
+				var routelisttbl = '<br /><br />Output of &#34;ip route list table 1-250&#34; : <br /><br />';
+				var firewalldef = '<br /><br />Firewall default output policy (must be ACCEPT) : <br /><br />';
 				var iptable = '<br /><br />Output of &#34;iptables -L -t mangle -v -n&#34; : <br /><br />';
 
 				temp = String.format(
 					'<pre><span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s<span class="tsht">%s</span>%s</pre>',
-						mwanvers, st.mw3ver[0].mwan3v, firewalldef, st.fidef[0].firedef, iproute, st.rtshow[0].iprtshow, mwan3cnfg, st.mwan3config[0].mwn3cfg, netcnfg, st.netconfig[0].netcfg, ifcnfg, st.ifconfig[0].ifcfg, iprulesh, st.iprule[0].rule, routelisttbl, st.routelist[0].iprtlist, iptable, st.iptables[0].iptbls
+						mwanvers, st.mw3ver[0].mwan3v, mwan3cnfg, st.mwan3config[0].mwn3cfg, netcnfg, st.netconfig[0].netcfg, ifcnfg, st.ifconfig[0].ifcfg, iproute, st.rtshow[0].iprtshow, iprulesh, st.iprule[0].rule, routelisttbl, st.routelist[0].iprtlist, firewalldef, st.fidef[0].firedef, iptable, st.iptables[0].iptbls
 				);
 				tx.innerHTML = temp;
 			}
@@ -47,11 +47,12 @@
 	);
 //]]></script>
 
-<fieldset class="cbi-section">
-	<legend><%:Troubleshooting Data%></legend>
-	<div id="mwan3_tshoot_text"><img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" /> Collecting data...</div>
-</fieldset>
-
+<div id="tshoot_div">
+	<fieldset class="cbi-section">
+		<legend><%:Troubleshooting Data%></legend>
+		<div id="mwan3_tshoot_text"><img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" /> Collecting data...</div>
+	</fieldset>
+</div>
 <style type="text/css">
   .container {  /*container for entire page. fixes bootstrap theme's ridiculously small page width*/
 	max-width: none;
@@ -59,15 +60,17 @@
 	padding-right: 30px;
 	width: auto;
   }
+  #tshoot_div {
+	background-color: #FFFFFF;
+	border: 1px dotted #555555;
+	padding: 20px;
+  }
   #mwan3_tshoot_text {
 	padding: 20px;
 	text-align: left;
   }
   .tsht {
 	background-color: rgb(78, 186, 241);
-  }
-  .cbi-section {
-	margin: 20px;
   }
 </style>
 

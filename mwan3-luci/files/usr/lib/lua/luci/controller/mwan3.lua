@@ -154,50 +154,62 @@ function mwan3_diag_data(iface, tool, alt)
 
 	local rv = {	}
 
-	local ifdev, res = ut.trim(sys.exec("uci get -p /var/state network." .. iface .. ".ifname")), ""
-	if ifdev ~= "" then
-		if tool == "ping" then
-			local gateway = ut.trim(sys.exec("route -n | awk -F' ' '{ if ($8 == \"" .. ifdev .. "\" && $1 == \"0.0.0.0\") print $2 }'"))
-			if gateway ~= "" then
-				if alt == "gateway" then
-					local cmd = "ping -c 3 -W 2 -I " .. ifdev .. " " .. gateway
-					res = cmd .. "\n\n" .. sys.exec(cmd)
-				elseif alt == "track_ip" then
-					local str = ut.trim(sys.exec("uci get -p /var/state mwan3." .. iface .. ".track_ip"))
-					if str ~= "" then
-						for z in str:gmatch("[^ ]+") do
-							local cmd = "ping -c 3 -W 2 -I " .. ifdev .. " " .. z
-							res = res .. cmd .. "\n\n" .. sys.exec(cmd) .. "\n\n"
-						end
-					else
-						res = "No tracking IP addresses configured on " .. iface
-					end
-				end
-			else
-				res = "No default gateway for " .. iface .. " found. Default route does not exist or is configured incorrectly"
-			end
-		elseif tool == "rulechk" then
-			get_ifnum()
-			local rule1 = sys.exec("ip rule | grep $(echo $((" .. ifnum .. " + 1000)))")
-			local rule2 = sys.exec("ip rule | grep $(echo $((" .. ifnum .. " + 2000)))")
-			if rule1 ~= "" and rule2 ~= "" then
-				res = "All required interface IP rules found\n\n\nRules found:\n\n" .. rule1 .. rule2
-			elseif rule1 ~= "" or rule2 ~= "" then
-				res = "Missing 1 of the 2 required interface IP rules\n\n\nRules found:\n\n" .. rule1 .. rule2
-			else
-				res = "Missing both of the required interface IP rules"
-			end
-		elseif tool == "routechk" then
-			get_ifnum()
-			local table = sys.exec("ip route list table " .. ifnum)
-			if table ~= "" then
-				res = "Interface routing table " .. ifnum .. " was found:\n\n" .. table
-			else
-				res = "Missing required interface routing table " .. ifnum
-			end
+	local res = ""
+	if tool == "service" then
+		os.execute("mwan3 " .. alt)
+		if alt == "restart" then
+			res = "MWAN3 restarted"
+		elseif alt == "stop" then
+			res = "MWAN3 stopped"
+		else
+			res = "MWAN3 started"
 		end
 	else
-		res = "Unable to perform diagnostic tests on " .. iface .. ". There is no physical or virtual device associated with this interface"
+		local ifdev = ut.trim(sys.exec("uci get -p /var/state network." .. iface .. ".ifname"))
+		if ifdev ~= "" then
+			if tool == "ping" then
+				local gateway = ut.trim(sys.exec("route -n | awk -F' ' '{ if ($8 == \"" .. ifdev .. "\" && $1 == \"0.0.0.0\") print $2 }'"))
+				if gateway ~= "" then
+					if alt == "gateway" then
+						local cmd = "ping -c 3 -W 2 -I " .. ifdev .. " " .. gateway
+						res = cmd .. "\n\n" .. sys.exec(cmd)
+					elseif alt == "track_ip" then
+						local str = ut.trim(sys.exec("uci get -p /var/state mwan3." .. iface .. ".track_ip"))
+						if str ~= "" then
+							for z in str:gmatch("[^ ]+") do
+								local cmd = "ping -c 3 -W 2 -I " .. ifdev .. " " .. z
+								res = res .. cmd .. "\n\n" .. sys.exec(cmd) .. "\n\n"
+							end
+						else
+							res = "No tracking IP addresses configured on " .. iface
+						end
+					end
+				else
+					res = "No default gateway for " .. iface .. " found. Default route does not exist or is configured incorrectly"
+				end
+			elseif tool == "rulechk" then
+				get_ifnum()
+				local rule1 = sys.exec("ip rule | grep $(echo $((" .. ifnum .. " + 1000)))")
+				local rule2 = sys.exec("ip rule | grep $(echo $((" .. ifnum .. " + 2000)))")
+				if rule1 ~= "" and rule2 ~= "" then
+					res = "All required interface IP rules found:\n\n" .. rule1 .. rule2
+				elseif rule1 ~= "" or rule2 ~= "" then
+					res = "Missing 1 of the 2 required interface IP rules\n\n\nRules found:\n\n" .. rule1 .. rule2
+				else
+					res = "Missing both of the required interface IP rules"
+				end
+			elseif tool == "routechk" then
+				get_ifnum()
+				local table = sys.exec("ip route list table " .. ifnum)
+				if table ~= "" then
+					res = "Interface routing table " .. ifnum .. " was found:\n\n" .. table
+				else
+					res = "Missing required interface routing table " .. ifnum
+				end
+			end
+		else
+			res = "Unable to perform diagnostic tests on " .. iface .. ". There is no physical or virtual device associated with this interface"
+		end
 	end
 	if res ~= "" then
 		res = ut.trim(res)
@@ -245,72 +257,6 @@ function mwan3_tshoot_data()
 	mwv[softrev] = #rv.mw3ver + 1
 	rv.mw3ver[mwv[softrev]] = { mwan3v = softrev }
 
-	-- default firewall output policy
-	local defout = ut.trim(sys.exec("uci get -p /var/state firewall.@defaults[0].output"))
-		if defout == "" then
-			defout = "No data found"
-		end
-	rv.fidef = { }
-	fwdf = {}
-	fwdf[defout] = #rv.fidef + 1
-	rv.fidef[fwdf[defout]] = { firedef = defout }
-
-	-- ip route show
-	local routeshow = ut.trim(sys.exec("ip route show"))
-		if routeshow == "" then
-			routeshow = "No data found"
-		end
-	rv.rtshow = { }
-	rshw = {}
-	rshw[routeshow] = #rv.rtshow + 1
-	rv.rtshow[rshw[routeshow]] = { iprtshow = routeshow }
-
-	-- ip rule show
-	local ipr = ut.trim(sys.exec("ip rule show"))
-		if ipr == "" then
-			ipr = "No data found"
-		end
-	rv.iprule = { }
-	ipruleid = {}
-	ipruleid[ipr] = #rv.iprule + 1
-	rv.iprule[ipruleid[ipr]] = { rule = ipr }
-
-	-- ip route list table
-	local routelisting = ut.trim(sys.exec("ip rule | sed 's/://g' | awk -F' ' '$1>=2001 && $1<=2250' | awk -F' ' '{ print $NF }'"))
-	local rlstr = "main\n" .. sys.exec("ip route list table main")
-		if routelisting ~= "" then
-			for line in routelisting:gmatch("[^\r\n]+") do
-				rlstr = rlstr .. line .. "\n" .. sys.exec("ip route list table " .. line)
-			end
-			rlstr = ut.trim(rlstr)
-		else
-			rlstr = "No data found"
-		end
-	rv.routelist = { }
-	rtlist = {}
-	rtlist[rlstr] = #rv.routelist + 1
-	rv.routelist[rtlist[rlstr]] = { iprtlist = rlstr }
-
-	-- iptables
-	local iptbl = ut.trim(sys.exec("iptables -L -t mangle -v -n"))
-		if iptbl == "" then
-			iptbl = "No data found"
-		end
-	rv.iptables = { }
-	tables = {}
-	tables[iptbl] = #rv.iptables + 1
-	rv.iptables[tables[iptbl]] = { iptbls = iptbl }
-
-	-- ifconfig
-	local ifcg = ut.trim(sys.exec("ifconfig"))
-		if ifcg == "" then
-			ifcg = "No data found"
-		end
-	rv.ifconfig = { }
-	icfg = {}
-	icfg[ifcg] = #rv.ifconfig + 1
-	rv.ifconfig[icfg[ifcg]] = { ifcfg = ifcg }
-
 	-- mwan3 config
 	local mwcg = ut.trim(sys.exec("cat /etc/config/mwan3"))
 		if mwcg == "" then
@@ -330,6 +276,71 @@ function mwan3_tshoot_data()
 	ncfg = {}
 	ncfg[netcg] = #rv.netconfig + 1
 	rv.netconfig[ncfg[netcg]] = { netcfg = netcg }
+
+	-- ifconfig
+	local ifcg = ut.trim(sys.exec("ifconfig"))
+		if ifcg == "" then
+			ifcg = "No data found"
+		end
+	rv.ifconfig = { }
+	icfg = {}
+	icfg[ifcg] = #rv.ifconfig + 1
+	rv.ifconfig[icfg[ifcg]] = { ifcfg = ifcg }
+
+	-- route -n
+	local routeshow = ut.trim(sys.exec("route -n"))
+		if routeshow == "" then
+			routeshow = "No data found"
+		end
+	rv.rtshow = { }
+	rshw = {}
+	rshw[routeshow] = #rv.rtshow + 1
+	rv.rtshow[rshw[routeshow]] = { iprtshow = routeshow }
+
+	-- ip rule show
+	local ipr = ut.trim(sys.exec("ip rule show"))
+		if ipr == "" then
+			ipr = "No data found"
+		end
+	rv.iprule = { }
+	ipruleid = {}
+	ipruleid[ipr] = #rv.iprule + 1
+	rv.iprule[ipruleid[ipr]] = { rule = ipr }
+
+	-- ip route list table 1-250
+	local routelisting, rlstr = ut.trim(sys.exec("ip rule | sed 's/://g' | awk -F' ' '$1>=2001 && $1<=2250' | awk -F' ' '{ print $NF }'")), ""
+		if routelisting ~= "" then
+			for line in routelisting:gmatch("[^\r\n]+") do
+				rlstr = rlstr .. line .. "\n" .. sys.exec("ip route list table " .. line)
+			end
+			rlstr = ut.trim(rlstr)
+		else
+			rlstr = "No data found"
+		end
+	rv.routelist = { }
+	rtlist = {}
+	rtlist[rlstr] = #rv.routelist + 1
+	rv.routelist[rtlist[rlstr]] = { iprtlist = rlstr }
+
+	-- default firewall output policy
+	local defout = ut.trim(sys.exec("uci get -p /var/state firewall.@defaults[0].output"))
+		if defout == "" then
+			defout = "No data found"
+		end
+	rv.fidef = { }
+	fwdf = {}
+	fwdf[defout] = #rv.fidef + 1
+	rv.fidef[fwdf[defout]] = { firedef = defout }
+
+	-- iptables
+	local iptbl = ut.trim(sys.exec("iptables -L -t mangle -v -n"))
+		if iptbl == "" then
+			iptbl = "No data found"
+		end
+	rv.iptables = { }
+	tables = {}
+	tables[iptbl] = #rv.iptables + 1
+	rv.iptables[tables[iptbl]] = { iptbls = iptbl }
 
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(rv)
