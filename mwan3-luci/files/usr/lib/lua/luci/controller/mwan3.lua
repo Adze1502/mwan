@@ -173,7 +173,7 @@ function mwan3_diag_data(iface, tool, alt)
 					if alt == "gateway" then
 						local cmd = "ping -c 3 -W 2 -I " .. ifdev .. " " .. gateway
 						res = cmd .. "\n\n" .. sys.exec(cmd)
-					elseif alt == "track_ip" then
+					else
 						local str = ut.trim(sys.exec("uci get -p /var/state mwan3." .. iface .. ".track_ip"))
 						if str ~= "" then
 							for z in str:gmatch("[^ ]+") do
@@ -205,6 +205,14 @@ function mwan3_diag_data(iface, tool, alt)
 					res = "Interface routing table " .. ifnum .. " was found:\n\n" .. table
 				else
 					res = "Missing required interface routing table " .. ifnum
+				end
+			elseif tool == "hotplug" then
+				if alt == "ifup" then
+					os.execute("mwan3 ifup " .. iface)
+					res = "Hotplug ifup sent to interface " .. iface .. "..."
+				else
+					os.execute("mwan3 ifdown " .. iface)
+					res = "Hotplug ifdown sent to interface " .. iface .. "..."
 				end
 			end
 		else
