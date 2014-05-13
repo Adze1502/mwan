@@ -144,15 +144,15 @@ policies()
 }
 rules()
 {
-	if [ -n "$(iptables -L mwan3_connected -t mangle 2> /dev/null)" ]; then
-		echo "Local connected networks:"
+	if [ -n "$(iptables -S mwan3_connected -t mangle 2> /dev/null)" ]; then
+		echo "Known networks:"
 		echo "destination policy hits" | awk '{ printf "%-19s%-19s%-9s%s\n",$1,$2,$3}'
 		echo "------------------------------------------------"
 		iptables -L mwan3_connected -t mangle -n -v 2> /dev/null | tail -n+3 | sed 's/mark.*//' | sed 's/mwan3_policy_//g' | awk '{printf "%-19s%-19s%-9s%s\n",$9,"default",$1}'
 		echo -e
 	fi
 
-	if [ -n "$(iptables -L mwan3_rules -t mangle 2> /dev/null)" ]; then
+	if [ -n "$(iptables -S mwan3_rules -t mangle 2> /dev/null)" ]; then
 		echo "Active rules:"
 		echo "source destination proto src-port dest-port policy hits" | awk '{ printf "%-19s%-19s%-7s%-14s%-14s%-16s%-9s%s\n",$1,$2,$3,$4,$5,$6,$7}'
 		echo "---------------------------------------------------------------------------------------------------"
