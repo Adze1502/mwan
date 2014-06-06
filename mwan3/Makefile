@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mwan3
 PKG_VERSION:=1.4
-PKG_RELEASE:=19
+PKG_RELEASE:=20
 
 include $(INCLUDE_DIR)/package.mk
 
