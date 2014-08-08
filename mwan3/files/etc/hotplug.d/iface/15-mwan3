@@ -147,18 +147,19 @@ mwan3_track()
 
 		if ! iptables -S mwan3_track_$INTERFACE -t mangle &> /dev/null; then
 			iptables -N mwan3_track_$INTERFACE -t mangle
-			iptables -A mwan3_track_hook -t mangle -j mwan3_track_$INTERFACE
+			iptables -A mwan3_track_hook -t mangle -p icmp -m icmp --icmp-type 8 -m length --length 32 -j mwan3_track_$INTERFACE
 		fi
 
 		iptables -F mwan3_track_$INTERFACE -t mangle
 
 		for track_ip in $track_ips; do
-			iptables -A mwan3_track_$INTERFACE -t mangle -p icmp -m icmp --icmp-type 8 -d $track_ip -o $DEVICE -j MARK --set-xmark 0xff00/0xff00
+			iptables -A mwan3_track_$INTERFACE -t mangle -d $track_ip -j MARK --set-xmark 0xff00/0xff00
 		done
 
 		[ -x /usr/sbin/mwan3track ] && /usr/sbin/mwan3track $INTERFACE $DEVICE $reliability $count $timeout $interval $down $up $track_ips &
 	else
-		iptables -D mwan3_track_hook -t mangle -j mwan3_track_$INTERFACE &> /dev/null
+		iptables -D mwan3_track_hook -t mangle -p icmp -m icmp --icmp-type 8 -m length --length 32 -j mwan3_track_$INTERFACE &> /dev/null
+		iptables -F mwan3_track_$INTERFACE -t mangle &> /dev/null
 		iptables -X mwan3_track_$INTERFACE -t mangle &> /dev/null
 	fi
 }
@@ -272,10 +273,10 @@ mwan3_ifupdown()
 	[ -n "$INTERFACE" ] || exit 0
 	[ "$(uci get -P /var/state mwan3.$INTERFACE 2> /dev/null)" == "interface" ] || return 0
 
-	counter=0
 	config_load mwan3
 	config_get enabled $INTERFACE enabled 0
 
+	counter=0
 
 	if [ $ACTION == "ifup" ]; then
 		[ "$enabled" -eq 1 ] || exit 0

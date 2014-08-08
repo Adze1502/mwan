@@ -85,7 +85,7 @@ interfaces()
 		config_get enabled "$1" enabled 0
 		let iface_id++
 
-		if [ -n "$(ps | grep mwan3track | grep -v grep | sed '/.*mwan3track \([^ ]*\) .*$/!d;s//\1/' | awk '$1 == ("'$1'")')" ]; then
+		if [ -n "$(ps -w | grep mwan3track | grep -v grep | sed '/.*\/usr\/sbin\/mwan3track \([^ ]*\) .*$/!d;s//\1/' | awk '$1 == ("'$1'")')" ]; then
 			tracking="active"
 		else
 			tracking="down"
