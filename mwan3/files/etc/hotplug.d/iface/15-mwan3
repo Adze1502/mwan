@@ -36,8 +36,9 @@ mwan3_set_general_iptables()
 		iptables -A mwan3_hook -t mangle -j CONNMARK --save-mark --nfmask 0xff00 --ctmask 0xff00
 	fi
 
-	if ! iptables -S mwan3_track_hook -t mangle &> /dev/null; then
-		iptables -N mwan3_track_hook -t mangle
+	if ! iptables -S mwan3_output_hook -t mangle &> /dev/null; then
+		iptables -N mwan3_output_hook -t mangle
+		iptables -A mwan3_output_hook -t mangle -p icmp -m icmp --icmp-type 3 -j MARK --set-xmark 0xff00/0xff00
 	fi
 
 	if ! iptables -S PREROUTING -t mangle | grep mwan3_hook &> /dev/null; then
@@ -48,8 +49,8 @@ mwan3_set_general_iptables()
 		iptables -A OUTPUT -t mangle -j mwan3_hook
 	fi
 
-	if ! iptables -S OUTPUT -t mangle | grep mwan3_track_hook &> /dev/null; then
-		iptables -A OUTPUT -t mangle -j mwan3_track_hook
+	if ! iptables -S OUTPUT -t mangle | grep mwan3_output_hook &> /dev/null; then
+		iptables -A OUTPUT -t mangle -j mwan3_output_hook
 	fi
 
 	iptables -F mwan3_rules -t mangle
@@ -147,7 +148,7 @@ mwan3_track()
 
 		if ! iptables -S mwan3_track_$INTERFACE -t mangle &> /dev/null; then
 			iptables -N mwan3_track_$INTERFACE -t mangle
-			iptables -A mwan3_track_hook -t mangle -p icmp -m icmp --icmp-type 8 -m length --length 32 -j mwan3_track_$INTERFACE
+			iptables -A mwan3_output_hook -t mangle -p icmp -m icmp --icmp-type 8 -m length --length 32 -j mwan3_track_$INTERFACE
 		fi
 
 		iptables -F mwan3_track_$INTERFACE -t mangle
@@ -158,7 +159,7 @@ mwan3_track()
 
 		[ -x /usr/sbin/mwan3track ] && /usr/sbin/mwan3track $INTERFACE $DEVICE $reliability $count $timeout $interval $down $up $track_ips &
 	else
-		iptables -D mwan3_track_hook -t mangle -p icmp -m icmp --icmp-type 8 -m length --length 32 -j mwan3_track_$INTERFACE &> /dev/null
+		iptables -D mwan3_output_hook -t mangle -p icmp -m icmp --icmp-type 8 -m length --length 32 -j mwan3_track_$INTERFACE &> /dev/null
 		iptables -F mwan3_track_$INTERFACE -t mangle &> /dev/null
 		iptables -X mwan3_track_$INTERFACE -t mangle &> /dev/null
 	fi
@@ -230,8 +231,6 @@ mwan3_set_policies_iptables()
 	total_weight=0
 
 	config_list_foreach $policy use_member mwan3_set_policy
-
-	iptables -X $policy -t mangle &> /dev/null
 }
 
 mwan3_set_user_rules_iptables()
