@@ -31,14 +31,13 @@ mwan3_set_general_iptables()
 		iptables -N mwan3_hook -t mangle
 		iptables -A mwan3_hook -t mangle -j CONNMARK --restore-mark --nfmask 0xff00 --ctmask 0xff00
 		iptables -A mwan3_hook -t mangle -m mark --mark 0x0/0xff00 -j mwan3_ifaces
-		iptables -A mwan3_hook -t mangle -m mark --mark 0x0/0xff00 -j mwan3_connected
 		iptables -A mwan3_hook -t mangle -m mark --mark 0x0/0xff00 -j mwan3_rules
 		iptables -A mwan3_hook -t mangle -j CONNMARK --save-mark --nfmask 0xff00 --ctmask 0xff00
+		iptables -A mwan3_hook -t mangle -j mwan3_connected
 	fi
 
 	if ! iptables -S mwan3_output_hook -t mangle &> /dev/null; then
 		iptables -N mwan3_output_hook -t mangle
-		iptables -A mwan3_output_hook -t mangle -p icmp -m icmp --icmp-type 3 -j MARK --set-xmark 0xff00/0xff00
 	fi
 
 	if ! iptables -S PREROUTING -t mangle | grep mwan3_hook &> /dev/null; then
@@ -64,11 +63,11 @@ mwan3_set_connected_iptables()
 		iptables -F mwan3_connected -t mangle
 
 		for connected_networks in $(ip -4 route | awk '{print $1}' | egrep '[0-9]{1,3}(\.[0-9]{1,3}){3}'); do
-			iptables -A mwan3_connected -t mangle -d $connected_networks -m mark --mark 0x0/0xff00 -j MARK --set-xmark 0xff00/0xff00
+			iptables -A mwan3_connected -t mangle -d $connected_networks -j MARK --set-xmark 0xff00/0xff00
 		done
 
-		iptables -I mwan3_connected -t mangle -d 224.0.0.0/3 -m mark --mark 0x0/0xff00 -j MARK --set-xmark 0xff00/0xff00
-		iptables -I mwan3_connected -t mangle -d 127.0.0.0/8 -m mark --mark 0x0/0xff00 -j MARK --set-xmark 0xff00/0xff00
+		iptables -I mwan3_connected -t mangle -d 224.0.0.0/3 -j MARK --set-xmark 0xff00/0xff00
+		iptables -I mwan3_connected -t mangle -d 127.0.0.0/8 -j MARK --set-xmark 0xff00/0xff00
 	fi
 }
 
