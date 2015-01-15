@@ -2,6 +2,8 @@
 
 This 1.4 version is compatible with OpenWrt AA and up. Version 1.5 is available at the openwrt/packages feed, but is not compatible with OpenWrt AA.
 
+Version 1.4-25 is the last 1.4 version and is no longer maintained.
+
 ## What is mwan3
 
 Mwan3 is a couple of lines of code that simplifies the usage of more (up to 250) WAN interfaces in OpenWRT. It is
