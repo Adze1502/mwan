@@ -10,7 +10,7 @@ mwan3_get_route_args()
 {
 	route_args=$(ip -4 route list dev $DEVICE default | head -1 | sed '/.*via \([^ ]*\) .*$/!d;s//\1/;q' | egrep '[0-9]{1,3}(\.[0-9]{1,3}){3}')
 	[ -n "$route_args" ] && route_args="via $route_args"
-	route_args="nexthop $route_args dev $DEVICE"
+	route_args="$route_args dev $DEVICE"
 }
 
 mwan3_set_general_iptables()
@@ -63,6 +63,10 @@ mwan3_set_connected_iptables()
 		iptables -F mwan3_connected -t mangle
 
 		for connected_networks in $(ip -4 route | awk '{print $1}' | egrep '[0-9]{1,3}(\.[0-9]{1,3}){3}'); do
+			iptables -A mwan3_connected -t mangle -d $connected_networks -j MARK --set-xmark 0xff00/0xff00
+		done
+
+		for connected_networks in $(ip -4 route list table 0 | awk '{print $2}' | egrep '[0-9]{1,3}(\.[0-9]{1,3}){3}'); do
 			iptables -A mwan3_connected -t mangle -d $connected_networks -j MARK --set-xmark 0xff00/0xff00
 		done
 
